@@ -27,7 +27,16 @@ jobs:
           node-version: '20'
 
       - name: 安装依赖
-        run: pnpm install --no-frozen-lockfile
+        run: |
+          echo "🔧 安装项目依赖..."
+          # 生成 pnpm-lock.yaml 如果不存在
+          if [ ! -f pnpm-lock.yaml ]; then
+            echo "📝 生成 pnpm-lock.yaml..."
+            pnpm install --no-frozen-lockfile
+          else
+            echo "📝 使用现有 pnpm-lock.yaml..."
+            pnpm install --frozen-lockfile
+          fi
 
       - name: 检查项目结构
         run: |
