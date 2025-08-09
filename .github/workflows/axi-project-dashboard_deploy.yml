@@ -95,15 +95,49 @@ jobs:
           echo "🔧 准备后端生产依赖..."
           # 清理构建时的 node_modules，重新安装生产依赖
           rm -rf node_modules
-          # 安装生产依赖（现在module-alias已在package.json中）
+          # 安装生产依赖，包括所有子依赖
           pnpm install --prod --no-frozen-lockfile
-          # 检查关键依赖是否存在
-          echo "检查关键依赖..."
+          
+          # 验证Express核心依赖完整性
+          echo "🔍 验证Express依赖链..."
+          MISSING_DEPS=""
+          
+          # 检查Express及其核心依赖
+          [ ! -d "node_modules/express" ] && MISSING_DEPS="$MISSING_DEPS express"
+          [ ! -d "node_modules/merge-descriptors" ] && MISSING_DEPS="$MISSING_DEPS merge-descriptors"
+          [ ! -d "node_modules/depd" ] && MISSING_DEPS="$MISSING_DEPS depd"
+          [ ! -d "node_modules/body-parser" ] && MISSING_DEPS="$MISSING_DEPS body-parser"
+          [ ! -d "node_modules/cookie" ] && MISSING_DEPS="$MISSING_DEPS cookie"
+          [ ! -d "node_modules/etag" ] && MISSING_DEPS="$MISSING_DEPS etag"
+          [ ! -d "node_modules/finalhandler" ] && MISSING_DEPS="$MISSING_DEPS finalhandler"
+          [ ! -d "node_modules/fresh" ] && MISSING_DEPS="$MISSING_DEPS fresh"
+          [ ! -d "node_modules/parseurl" ] && MISSING_DEPS="$MISSING_DEPS parseurl"
+          
+          if [ -n "$MISSING_DEPS" ]; then
+            echo "❌ 发现缺失的Express依赖: $MISSING_DEPS"
+            echo "🔧 手动安装缺失的依赖..."
+            pnpm add $MISSING_DEPS --prod
+          else
+            echo "✅ Express依赖验证通过"
+          fi
+          
+          # 最终验证
+          echo "📋 最终依赖检查..."
           ls node_modules/express || echo "❌ express 缺失"
+          ls node_modules/merge-descriptors || echo "❌ merge-descriptors 缺失"
+          ls node_modules/depd || echo "❌ depd 缺失"
           ls node_modules/mysql2 || echo "❌ mysql2 缺失"
           ls node_modules/module-alias || echo "❌ module-alias 缺失"
-          # body-parser 是 express 内置的，无需单独检查
-          echo "✅ body-parser 由 express 内置提供"
+          
+          # 检查Express模块完整性
+          echo "🔍 验证Express模块完整性..."
+          if [ -f "node_modules/express/package.json" ]; then
+            echo "✅ Express主模块存在"
+          else
+            echo "❌ Express主模块损坏"
+            exit 1
+          fi
+          
           # 将 node_modules 复制到临时目录
           mkdir -p ../temp_backend_deps
           cp -r node_modules ../temp_backend_deps/
@@ -123,7 +157,23 @@ jobs:
           echo "🔍 验证后端构建产物..."
           ls -la dist/backend/ || echo "❌ backend构建产物不存在"
           ls -la dist/backend/index.js || echo "❌ 主入口文件不存在"
+          
+          # 验证Express核心依赖
+          echo "🔍 验证Express依赖链..."
+          ls -la dist/node_modules/express/ || echo "❌ express依赖不存在"
+          ls -la dist/node_modules/merge-descriptors/ || echo "❌ merge-descriptors依赖不存在"
           ls -la dist/node_modules/depd/ || echo "❌ depd依赖不存在"
+          ls -la dist/node_modules/body-parser/ || echo "❌ body-parser依赖不存在"
+          
+          # 计算依赖数量
+          DEP_COUNT=$(ls dist/node_modules/ | wc -l)
+          echo "📊 依赖包数量: $DEP_COUNT"
+          
+          if [ "$DEP_COUNT" -lt 50 ]; then
+            echo "⚠️ 依赖包数量偏少，可能安装不完整"
+          else
+            echo "✅ 依赖包数量正常"
+          fi
           
           # 复制前端构建产物
           cp -r frontend/build dist/frontend
@@ -225,7 +275,22 @@ jobs:
           echo "📋 验证部署文件..."
           ls -la backend/index.js || echo "❌ backend/index.js 不存在"
           ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"
+          
+          # 验证Express核心依赖完整性
+          echo "📋 验证Express依赖..."
+          ls -la node_modules/express/ || echo "❌ express模块不存在"
+          ls -la node_modules/merge-descriptors/ || echo "❌ merge-descriptors模块不存在"
           ls -la node_modules/depd/ || echo "❌ depd模块不存在"
+          ls -la node_modules/body-parser/ || echo "❌ body-parser模块不存在"
+          
+          # 验证Express模块完整性
+          if [ -f "node_modules/express/package.json" ]; then
+            EXPRESS_VERSION=$(grep '"version"' node_modules/express/package.json | cut -d'"' -f4)
+            echo "✅ Express版本: $EXPRESS_VERSION"
+          else
+            echo "❌ Express模块损坏"
+            exit 1
+          fi
           
           # 验证ecosystem.config.js中的路径
           echo "📋 验证PM2配置..."
