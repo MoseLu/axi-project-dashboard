@@ -14,7 +14,7 @@ Dashboard 虽然位于 `axi-deploy` 仓库的 `dashboard/` 目录下，但与 ax
 ### 2. **部署流程分离**
 - Dashboard 有自己独立的构建和部署流程
 - 使用专用的项目名称 `project-dashboard`
-- 部署到独立的服务器路径 `/srv/apps/project-dashboard`
+- 部署到独立的服务器路径 `/srv/apps/axi-project-dashboard`
 
 ### 3. **配置分离**
 - Dashboard 有独立的 PM2 配置
@@ -73,7 +73,7 @@ repository_dispatch:
 | 组件 | 触发条件 | 部署目标 | 配置文件 | 服务名称 |
 |------|----------|----------|----------|----------|
 | **axi-deploy 核心** | 核心工作流变化 | `/srv/apps/` 各业务项目 | 各项目独立配置 | 各项目独立服务 |
-| **Dashboard** | `dashboard/**` 变化 | `/srv/apps/project-dashboard` | `ecosystem.config.js` | `dashboard-backend` |
+| **Dashboard** | `dashboard/**` 变化 | `/srv/apps/axi-project-dashboard` | `ecosystem.config.js` | `dashboard-backend` |
 
 ## 🔧 独立管理命令
 

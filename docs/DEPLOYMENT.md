@@ -86,7 +86,7 @@ gh api repos/MoseLu/axi-deploy/dispatches \
 
 ### **项目标识**
 - 项目名称: `project-dashboard`
-- 部署路径: `/srv/apps/project-dashboard`
+- 部署路径: `/srv/apps/axi-project-dashboard`
 - 服务名称: `dashboard-backend`
 - 端口配置: 8090 (API), 8091 (WebSocket)
 
@@ -197,13 +197,13 @@ ssh deploy@redamancy.com.cn "pm2 stop dashboard-backend"
 ssh deploy@redamancy.com.cn "
   if [ -d /srv/backups/project-dashboard-* ]; then
     LATEST_BACKUP=\$(ls -t /srv/backups/project-dashboard-* | head -1)
-    sudo cp -r \$LATEST_BACKUP /srv/apps/project-dashboard
-    sudo chown -R deploy:deploy /srv/apps/project-dashboard
+    sudo cp -r \$LATEST_BACKUP /srv/apps/axi-project-dashboard
+    sudo chown -R deploy:deploy /srv/apps/axi-project-dashboard
   fi
 "
 
 # 重启服务
-ssh deploy@redamancy.com.cn "cd /srv/apps/project-dashboard && pm2 start ecosystem.config.js"
+ssh deploy@redamancy.com.cn "cd /srv/apps/axi-project-dashboard && pm2 start ecosystem.config.js"
 ```
 
 ### **版本回滚**

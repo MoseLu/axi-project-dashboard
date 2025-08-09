@@ -96,7 +96,7 @@ jobs:
           echo "🚀 开始部署 axi-project-dashboard..."
           
           # 设置目标目录
-          TARGET_DIR="/srv/apps/project-dashboard"
+          TARGET_DIR="/srv/apps/axi-project-dashboard"
           
           # 检查当前用户
           echo "当前用户: $(whoami)"
@@ -114,7 +114,7 @@ jobs:
             # 备份现有部署（如果存在）
             if [ -d "$TARGET_DIR/backend" ]; then
               echo "📦 备份现有部署..."
-              cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+              cp -r $TARGET_DIR /srv/backups/axi-project-dashboard-$(date +%Y%m%d_%H%M%S) || true
             fi
             
             # 部署新版本
@@ -139,7 +139,7 @@ jobs:
             # 备份现有部署（如果存在）
             if [ -d "$TARGET_DIR/backend" ]; then
               echo "📦 备份现有部署..."
-              sudo cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+              sudo cp -r $TARGET_DIR /srv/backups/axi-project-dashboard-$(date +%Y%m%d_%H%M%S) || true
             fi
             
             # 部署新版本
@@ -315,7 +315,7 @@ jobs:
             const nginxConfig = `
               # axi-project-dashboard 配置
               location /project-dashboard {
-                  alias /srv/apps/project-dashboard/frontend;
+                  alias /srv/apps/axi-project-dashboard/frontend;
                   try_files $uri $uri/ /project-dashboard/index.html;
                   
                   location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {

@@ -235,7 +235,7 @@ main() {
     echo "  Redis: $(systemctl is-active redis)"
     echo
     echo "📂 目录结构:"
-    echo "  应用目录: /srv/apps/project-dashboard"
+    echo "  应用目录: /srv/apps/axi-project-dashboard"
     echo "  日志目录: /var/log/axi-deploy-dashboard"
     echo "  备份目录: /srv/backups"
 }
