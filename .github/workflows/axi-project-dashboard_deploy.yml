@@ -98,9 +98,8 @@ jobs:
           # 设置目标目录
           TARGET_DIR="/srv/apps/project-dashboard"
           
-          # 确保目录存在
-          sudo mkdir -p $TARGET_DIR
-          sudo chown deploy:deploy $TARGET_DIR
+          # 确保目录存在 (root用户直接创建，无需sudo)
+          mkdir -p $TARGET_DIR
           
           # 停止现有服务
           pm2 stop dashboard-backend || true
@@ -108,27 +107,27 @@ jobs:
           # 备份现有部署（如果存在）
           if [ -d "$TARGET_DIR/backend" ]; then
             echo "📦 备份现有部署..."
-            sudo cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+            cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
           fi
           
           # 部署新版本
           echo "📂 部署文件到服务器..."
-          sudo cp -r backend $TARGET_DIR/
-          sudo cp -r node_modules $TARGET_DIR/
-          sudo cp -r frontend $TARGET_DIR/
-          sudo cp package.json $TARGET_DIR/
-          sudo cp ecosystem.config.js $TARGET_DIR/
+          cp -r backend $TARGET_DIR/
+          cp -r node_modules $TARGET_DIR/
+          cp -r frontend $TARGET_DIR/
+          cp package.json $TARGET_DIR/
+          cp ecosystem.config.js $TARGET_DIR/
           
-          # 设置权限
-          sudo chown -R deploy:deploy $TARGET_DIR
+          # root用户无需更改权限，但确保PM2可以访问
+          chmod -R 755 $TARGET_DIR
           
           # 启动服务
           cd $TARGET_DIR
           pm2 start ecosystem.config.js --update-env
           
-          # 创建或更新日志目录
-          sudo mkdir -p /var/log/axi-deploy-dashboard
-          sudo chown deploy:deploy /var/log/axi-deploy-dashboard
+          # 创建或更新日志目录 (root用户直接操作)
+          mkdir -p /var/log/axi-deploy-dashboard
+          chmod 755 /var/log/axi-deploy-dashboard
           
           echo "✅ axi-project-dashboard 部署完成！"
           pm2 status
@@ -217,6 +216,25 @@ jobs:
       DEPLOY_CENTER_PAT: ${{ secrets.DEPLOY_CENTER_PAT }}
 
     steps:
+      - name: 调试SSH配置
+        run: |
+          echo "🔍 调试SSH连接配置..."
+          echo "服务器地址: ${{ secrets.SERVER_HOST }}"
+          echo "服务器用户: ${{ secrets.SERVER_USER }} (应该是 root)" 
+          echo "服务器端口: ${{ secrets.SERVER_PORT }}"
+          echo "SSH密钥长度: $(echo '${{ secrets.SERVER_KEY }}' | wc -c)"
+          echo "SSH密钥格式检查:"
+          echo '${{ secrets.SERVER_KEY }}' | head -1
+          echo "Deploy Center PAT 是否存在: $([ -n '${{ secrets.DEPLOY_CENTER_PAT }}' ] && echo '是' || echo '否')"
+          
+          # 验证关键参数
+          if [ "${{ secrets.SERVER_USER }}" != "root" ]; then
+            echo "⚠️  警告: SERVER_USER 不是 root，当前值: ${{ secrets.SERVER_USER }}"
+            echo "💡 建议: 确保 GitHub Secrets 中 SERVER_USER 设置为 root"
+          else
+            echo "✅ SERVER_USER 配置正确: root"
+          fi
+
       - name: 触发部署
         uses: actions/github-script@v7
         with:
