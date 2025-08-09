@@ -157,17 +157,5 @@ jobs:
             proxy_set_header X-Forwarded-Proto $scheme;
         }
       test_url: https://redamancy.com.cn/project-dashboard/api/health
-      deploy_secrets: |
-        {
-          "SERVER_HOST": "${{ secrets.SERVER_HOST }}",
-          "SERVER_USER": "${{ secrets.SERVER_USER }}",
-          "SERVER_KEY": "${{ secrets.SERVER_KEY }}",
-          "SERVER_PORT": "${{ secrets.SERVER_PORT }}",
-          "DEPLOY_CENTER_PAT": "${{ secrets.DEPLOY_CENTER_PAT }}"
-        }
-    secrets:
-      SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      SERVER_USER: ${{ secrets.SERVER_USER }}
-      SERVER_KEY: ${{ secrets.SERVER_KEY }}
-      SERVER_PORT: ${{ secrets.SERVER_PORT }}
-      DEPLOY_CENTER_PAT: ${{ secrets.DEPLOY_CENTER_PAT }}
+      deploy_secrets: dummy-will-be-replaced-by-secrets
+    secrets: inherit
