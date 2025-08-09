@@ -11,13 +11,45 @@
 - 拥有独立的部署流程、配置管理和版本控制
 - 使用 axi-deploy 的基础设施进行部署，但运行时完全独立
 
+## 🚀 快速开始
+
+### 📦 生产部署
+
+1. **配置 GitHub Secrets**
+   在仓库设置中添加必要的部署密钥：
+   ```
+   SERVER_HOST=redamancy.com.cn
+   SERVER_USER=deploy
+   SERVER_KEY=<SSH 私钥>
+   SERVER_PORT=22
+   DEPLOY_CENTER_PAT=<GitHub Token>
+   ```
+
+2. **触发部署**
+   ```bash
+   git push origin main  # 推送代码自动部署
+   ```
+
+3. **访问 Dashboard**
+   ```
+   https://redamancy.com.cn/project-dashboard
+   ```
+
+### 🔍 监控功能
+
+部署完成后，Dashboard 提供以下监控功能：
+
+- **实时部署状态**: 监控所有通过 axi-deploy 的项目部署
+- **详细日志查看**: 每个部署步骤的执行日志和错误信息  
+- **性能指标**: 部署时间、成功率、重试次数统计
+- **WebSocket 实时更新**: 无需刷新页面即可看到最新状态
+
 ## 📖 文档导航
 
-- **[快速开始](./docs/QUICK_START.md)** - 5分钟快速部署指南
-- **[业务分离说明](./docs/SEPARATION.md)** - 与 axi-deploy 核心分离机制
-- **[详细部署指南](./docs/DEPLOYMENT.md)** - 完整部署方式和故障排查  
-- **[端口规划](./docs/PORT_PLANNING.md)** - 端口分配和冲突避免策略
-- **[系统架构](./docs/ARCHITECTURE.md)** - 技术架构和设计说明
+- **[快速开始](./docs/QUICK_START.md)** - 详细部署指南
+- **[端口规划](./docs/PORT_PLANNING.md)** - 端口配置和冲突避免
+- **[系统架构](./docs/ARCHITECTURE.md)** - 技术架构说明
+- **[部署指南](./docs/DEPLOYMENT.md)** - 完整部署流程
 
 ## ✨ 核心特性
 
@@ -51,43 +83,76 @@
 - 个性化仪表板配置
 - 实时通知和告警系统
 
+## 📁 项目结构
+
+```
+axi-project-dashboard/
+├── README.md                    # 项目说明
+├── env.example                  # 本地开发环境配置模板
+├── ecosystem.config.js          # PM2 生产部署配置
+├── .github/workflows/           # GitHub Actions 自动部署
+│   ├── deploy.yml              # 主部署工作流
+│   └── manual-deploy.yml       # 手动部署工作流
+├── backend/                     # 后端服务 (Node.js + Express)
+│   ├── src/                    # 源码目录
+│   ├── package.json            # 后端依赖
+│   └── tsconfig.json           # TypeScript 配置
+├── frontend/                    # 前端应用 (React + TypeScript)
+│   ├── src/                    # 源码目录
+│   ├── package.json            # 前端依赖
+│   └── tsconfig.json           # TypeScript 配置
+└── docs/                        # 详细文档
+    ├── QUICK_START.md          # 快速开始
+    ├── ARCHITECTURE.md         # 系统架构
+    ├── DEPLOYMENT.md           # 部署指南
+    └── PORT_PLANNING.md        # 端口规划
+```
+
 ## 🏛️ 系统架构
 
 ```
-GitHub Actions Webhook → Nginx → React 前端 + Node.js 后端 → MongoDB + Redis
-                          ↓
-              https://redamancy.com.cn/project-dashboard
+GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8090/8091) → MongoDB + Redis
+                   ↓
+     https://redamancy.com.cn/project-dashboard
 ```
 
 **技术栈**:
-- 前端: React 18 + TypeScript + Ant Design + Socket.io Client
-- 后端: Node.js + Express + Socket.io + MongoDB + Redis (端口: 8090/8091)
-- 部署: PM2 + Nginx + 云服务器
+- **前端**: React 18 + TypeScript + Ant Design + Socket.io Client
+- **后端**: Node.js + Express + Socket.io + MongoDB + Redis (端口: 8090/8091)
+- **部署**: PM2 + Nginx + 云服务器 + GitHub Actions
 
-## 📂 目录结构
+## ⚙️ 配置说明
 
-```
-dashboard/
-├── README.md                 # 项目说明文档
-├── .github/workflows/        # GitHub Actions 工作流
-│   └── deploy.yml           # 自动部署工作流
-├── backend/                  # 后端服务
-│   ├── src/                 # 源码目录
-│   ├── package.json         # 依赖配置
-│   └── tsconfig.json        # TypeScript 配置
-├── frontend/                 # 前端应用
-│   ├── src/                 # 源码目录
-│   ├── public/              # 静态资源
-│   ├── package.json         # 依赖配置
-│   └── tsconfig.json        # TypeScript 配置
-├── docs/                     # 详细文档
-│   ├── QUICK_START.md       # 快速开始指南
-│   └── ARCHITECTURE.md      # 系统架构文档
-├── scripts/                  # 脚本工具
-│   └── setup.sh             # 服务器初始化脚本
-├── nginx.conf               # Nginx 配置
-└── ecosystem.config.js      # PM2 配置
-```
+### `env.example` 文件用途
+
+`env.example` 是**环境配置参考文件**：
+
+- **主要用途**: 提供生产环境配置的参考模板
+- **实际配置**: 生产环境使用 `ecosystem.config.js` 中的配置
+- **敏感信息**: 通过 GitHub Secrets 安全传递
+
+### 核心配置项
+
+- **端口配置**: 8090 (API), 8091 (WebSocket) - 避免与其他项目冲突
+- **数据库**: MongoDB + Redis (云服务器本地实例)
+- **GitHub 集成**: 通过 API 监控部署状态，接收 Webhook 事件
+- **前端连接**: 通过 Nginx 代理访问后端服务
+
+## 🛠️ 技术特色
+
+### 云端部署优势
+
+- **零本地依赖**: 完全云端运行，无需本地环境搭建
+- **自动化部署**: Git 推送即触发部署，无需手动操作
+- **高可用架构**: PM2 进程管理 + Nginx 负载均衡
+- **实时监控**: WebSocket 长连接，实时推送部署状态
+
+### 性能优化
+
+- **端口隔离**: 专用端口段避免冲突
+- **缓存策略**: Redis 缓存提升响应速度  
+- **CDN 加速**: 静态资源缓存优化
+- **压缩传输**: Gzip 压缩减少带宽占用
 
 ## 🚀 快速开始
 
