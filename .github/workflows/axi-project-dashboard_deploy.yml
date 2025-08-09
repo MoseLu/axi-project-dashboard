@@ -138,9 +138,11 @@ jobs:
             cp -r frontend $TARGET_DIR/
             cp package.json $TARGET_DIR/
             cp ecosystem.config.js $TARGET_DIR/
+            cp start.sh $TARGET_DIR/
             
             # root用户无需更改权限，但确保PM2可以访问
             chmod -R 755 $TARGET_DIR
+            chmod +x $TARGET_DIR/start.sh
           else
             echo "以非root用户身份部署..."
             # 确保目录存在 (非root用户使用sudo)
@@ -163,9 +165,11 @@ jobs:
             cp -r frontend $TARGET_DIR/
             cp package.json $TARGET_DIR/
             cp ecosystem.config.js $TARGET_DIR/
+            cp start.sh $TARGET_DIR/
             
             # 设置适当的权限
             sudo chown -R $(whoami):$(whoami) $TARGET_DIR
+            chmod +x $TARGET_DIR/start.sh
           fi
           
           # 创建路径别名包装器
@@ -547,7 +551,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                start_cmd    : './start.sh',
+                start_cmd    : 'bash start.sh',
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
                 deploy_secrets: deploySecrets
