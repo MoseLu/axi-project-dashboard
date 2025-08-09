@@ -306,12 +306,23 @@ jobs:
           echo '${{ secrets.SERVER_KEY }}' > ~/.ssh/test_key
           chmod 600 ~/.ssh/test_key
           
+          # 验证密钥文件格式
+          echo "🔍 验证SSH密钥文件..."
+          file ~/.ssh/test_key
+          head -1 ~/.ssh/test_key
+          tail -1 ~/.ssh/test_key
+          
           # 添加服务器到known_hosts
+          echo "🔍 添加服务器到known_hosts..."
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
           
-          # 测试SSH连接
-          echo "测试SSH连接到 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PORT }}"
-          ssh -i ~/.ssh/test_key -p ${{ secrets.SERVER_PORT }} -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH连接测试成功'; whoami; id" || echo "SSH连接测试失败"
+          # 使用更详细的SSH调试选项
+          echo "🔍 测试SSH连接（详细模式）..."
+          ssh -vvv -i ~/.ssh/test_key -p ${{ secrets.SERVER_PORT }} -o ConnectTimeout=30 -o StrictHostKeyChecking=no -o PasswordAuthentication=no -o PreferredAuthentications=publickey ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH连接测试成功'; whoami; id" || {
+            echo "❌ SSH连接测试失败"
+            echo "🔍 尝试不同的认证方法..."
+            ssh -vvv -i ~/.ssh/test_key -p ${{ secrets.SERVER_PORT }} -o ConnectTimeout=30 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH连接测试成功'" || echo "所有SSH连接尝试都失败了"
+          }
           
           # 清理临时文件
           rm -f ~/.ssh/test_key
@@ -415,8 +426,7 @@ jobs:
                 start_cmd    : './deploy.sh',
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
-                deploy_secrets: deploySecrets,
-                skip_init    : true  // 跳过服务器初始化，避免权限冲突
+                deploy_secrets: deploySecrets
               }
             });
 
