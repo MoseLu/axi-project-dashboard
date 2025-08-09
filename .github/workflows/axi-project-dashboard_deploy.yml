@@ -29,16 +29,11 @@ jobs:
       - name: 安装依赖
         run: |
           echo "🔧 安装项目依赖..."
-          # 清理可能存在的 node_modules
-          rm -rf node_modules
-          # 生成 pnpm-lock.yaml 如果不存在
-          if [ ! -f pnpm-lock.yaml ]; then
-            echo "📝 生成 pnpm-lock.yaml..."
-            pnpm install --no-frozen-lockfile
-          else
-            echo "📝 使用现有 pnpm-lock.yaml..."
-            pnpm install --frozen-lockfile
-          fi
+          # 彻底清理所有可能的冲突
+          rm -rf node_modules pnpm-lock.yaml
+          # 重新安装依赖，使用干净的安装
+          echo "📝 重新安装项目依赖..."
+          pnpm install --no-frozen-lockfile --shamefully-hoist
           # 验证关键依赖
           echo "🔍 验证关键依赖..."
           ls -la node_modules/depd/ || echo "⚠️ depd 模块未找到"
@@ -59,10 +54,10 @@ jobs:
         working-directory: backend
         run: |
           echo "🔧 开始构建后端..."
-          # 清理可能存在的 node_modules 冲突
-          rm -rf node_modules dist
+          # 彻底清理所有可能的冲突
+          rm -rf node_modules dist pnpm-lock.yaml
           # 安装所有依赖（包括 devDependencies 用于构建）
-          pnpm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile --shamefully-hoist
           # 确保关键依赖存在
           echo "🔍 验证构建依赖..."
           ls node_modules/typescript || echo "❌ TypeScript 缺失"
@@ -93,43 +88,31 @@ jobs:
         working-directory: backend
         run: |
           echo "🔧 准备后端生产依赖..."
-          # 清理构建时的 node_modules，重新安装生产依赖
-          rm -rf node_modules
-          # 安装生产依赖，包括所有子依赖
-          pnpm install --prod --no-frozen-lockfile
           
-          # 彻底解决Express依赖问题 - 使用完整重安装策略
-          echo "🔧 彻底解决Express依赖问题..."
+          # 彻底清理所有可能的冲突
+          rm -rf node_modules pnpm-lock.yaml
           
-          # 检查当前node_modules状态
-          echo "📊 当前依赖状态:"
-          echo "- node_modules目录大小: $(du -sh node_modules 2>/dev/null || echo 'N/A')"
-          echo "- 依赖包数量: $(ls node_modules 2>/dev/null | wc -l || echo '0')"
+          # 重新安装生产依赖，使用干净的安装
+          echo "🔧 重新安装生产依赖..."
+          pnpm install --prod --no-frozen-lockfile --shamefully-hoist
           
-          # 方案1: 尝试修复当前安装
-          echo "🔧 尝试修复当前Express安装..."
-          if [ -d "node_modules/express" ]; then
-            echo "Express已存在，检查其依赖完整性..."
-            EXPRESS_DEPS_MISSING=false
-            
-            # 检查关键依赖
-            for dep in merge-descriptors depd debug encodeurl utils-merge escape-html finalhandler fresh parseurl body-parser; do
-              if [ ! -d "node_modules/$dep" ]; then
-                echo "❌ 缺失依赖: $dep"
-                EXPRESS_DEPS_MISSING=true
-              fi
-            done
-            
-            if [ "$EXPRESS_DEPS_MISSING" = true ]; then
-              echo "🔧 重新安装Express及其完整依赖..."
-              pnpm remove express
-              pnpm add express@^4.18.2
-              pnpm install --prod
+          # 验证Express依赖完整性
+          echo "🔍 验证Express依赖完整性..."
+          CRITICAL_DEPS="express merge-descriptors depd debug encodeurl utils-merge escape-html finalhandler fresh parseurl body-parser"
+          MISSING_CRITICAL=""
+          
+          for dep in $CRITICAL_DEPS; do
+            if [ ! -d "node_modules/$dep" ]; then
+              echo "❌ 缺失依赖: $dep"
+              MISSING_CRITICAL="$MISSING_CRITICAL $dep"
+            else
+              echo "✅ 依赖存在: $dep"
             fi
-          else
-            echo "❌ Express不存在，重新安装..."
-            pnpm add express@^4.18.2
-            pnpm install --prod
+          done
+          
+          if [ -n "$MISSING_CRITICAL" ]; then
+            echo "🔧 手动安装缺失的关键依赖..."
+            pnpm add $MISSING_CRITICAL --prod --shamefully-hoist
           fi
           
           # 验证关键Express依赖
