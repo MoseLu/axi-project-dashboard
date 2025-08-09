@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import { getConnection } from '@/database/connection';
 import { redisService } from '@/services/redis.service';
 import { logger } from '@/utils/logger';
 
@@ -53,7 +53,9 @@ export class HealthCheckService {
     const startTime = Date.now();
     
     try {
-      if (mongoose.connection.readyState !== 1) {
+      const connection = getConnection();
+      
+      if (!connection) {
         return {
           status: 'unhealthy',
           message: 'Database not connected',
@@ -61,18 +63,16 @@ export class HealthCheckService {
         };
       }
 
-      // Ping database
-      await mongoose.connection.db.admin().ping();
+      // Ping MySQL database
+      await connection.ping();
       
       return {
         status: 'healthy',
-        message: 'Database connection is healthy',
+        message: 'MySQL connection is healthy',
         responseTime: Date.now() - startTime,
         details: {
-          readyState: mongoose.connection.readyState,
-          host: mongoose.connection.host,
-          port: mongoose.connection.port,
-          name: mongoose.connection.name
+          status: 'connected',
+          threadId: (connection as any).threadId
         }
       };
     } catch (error) {

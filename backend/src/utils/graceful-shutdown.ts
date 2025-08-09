@@ -1,6 +1,6 @@
 import { Server } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import mongoose from 'mongoose';
+import { disconnectDatabase } from '@/database/connection';
 import { disconnectRedis } from '@/services/redis.service';
 import { logger } from '@/utils/logger';
 
@@ -89,7 +89,7 @@ export class GracefulShutdown {
       // Step 3: Close database connections
       logger.info('Closing database connections...');
       await Promise.all([
-        this.closeMongoConnection(),
+        this.closeDatabaseConnection(),
         this.closeRedisConnection()
       ]);
 
@@ -107,14 +107,12 @@ export class GracefulShutdown {
     }
   }
 
-  private async closeMongoConnection(): Promise<void> {
+  private async closeDatabaseConnection(): Promise<void> {
     try {
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.connection.close();
-        logger.info('✅ MongoDB connection closed');
-      }
+      await disconnectDatabase();
+      logger.info('✅ MySQL connection closed');
     } catch (error) {
-      logger.error('❌ Error closing MongoDB connection:', error);
+      logger.error('❌ Error closing MySQL connection:', error);
       throw error;
     }
   }
