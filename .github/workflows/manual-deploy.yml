@@ -1,0 +1,33 @@
+name: Manual Deploy axi-project-dashboard
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: '强制重新构建'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 触发部署
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            console.log('🚀 手动触发 axi-project-dashboard 部署...');
+            
+            // 直接触发主要部署工作流
+            const { data: response } = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: context.ref
+            });
+            
+            console.log('✅ 部署工作流已触发');
+            console.log('- 触发者:', context.actor);
+            console.log('- 强制重建:', '${{ inputs.force_rebuild }}');

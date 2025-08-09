@@ -1,0 +1,167 @@
+name: Deploy axi-project-dashboard
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 构建后端
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+          npm prune --production
+
+      - name: 构建前端
+        working-directory: frontend
+        env:
+          REACT_APP_API_URL: https://redamancy.com.cn/project-dashboard/api
+          REACT_APP_WS_URL: wss://redamancy.com.cn/project-dashboard/ws
+          REACT_APP_ENV: production
+        run: |
+          npm ci
+          npm run build
+
+      - name: 准备部署文件
+        run: |
+          mkdir -p dist
+          
+          # 复制后端构建产物
+          cp -r backend/dist dist/backend
+          cp -r backend/node_modules dist/
+          cp backend/package.json dist/
+          
+          # 复制前端构建产物
+          cp -r frontend/build dist/frontend
+          
+          # 复制配置文件
+          cp ecosystem.config.js dist/
+          
+          # 创建部署脚本
+          cat > dist/deploy.sh << 'EOF'
+          #!/bin/bash
+          echo "🚀 开始部署 axi-project-dashboard..."
+          
+          # 设置目标目录
+          TARGET_DIR="/srv/apps/project-dashboard"
+          
+          # 确保目录存在
+          sudo mkdir -p $TARGET_DIR
+          sudo chown deploy:deploy $TARGET_DIR
+          
+          # 停止现有服务
+          pm2 stop dashboard-backend || true
+          
+          # 备份现有部署（如果存在）
+          if [ -d "$TARGET_DIR/backend" ]; then
+            echo "📦 备份现有部署..."
+            sudo cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+          fi
+          
+          # 部署新版本
+          echo "📂 部署文件到服务器..."
+          sudo cp -r backend $TARGET_DIR/
+          sudo cp -r node_modules $TARGET_DIR/
+          sudo cp -r frontend $TARGET_DIR/
+          sudo cp package.json $TARGET_DIR/
+          sudo cp ecosystem.config.js $TARGET_DIR/
+          
+          # 设置权限
+          sudo chown -R deploy:deploy $TARGET_DIR
+          
+          # 启动服务
+          cd $TARGET_DIR
+          pm2 start ecosystem.config.js --update-env
+          
+          # 创建或更新日志目录
+          sudo mkdir -p /var/log/axi-deploy-dashboard
+          sudo chown deploy:deploy /var/log/axi-deploy-dashboard
+          
+          echo "✅ axi-project-dashboard 部署完成！"
+          pm2 status
+          EOF
+          
+          chmod +x dist/deploy.sh
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-project-dashboard
+          path: dist/
+          retention-days: 30
+
+  deploy:
+    needs: build
+    uses: MoseLu/axi-deploy/.github/workflows/main-deployment.yml@master
+    with:
+      project: project-dashboard
+      source_repo: ${{ github.repository }}
+      run_id: ${{ github.run_id }}
+      deploy_type: backend
+      start_cmd: './deploy.sh'
+      nginx_config: |
+        # axi-deploy Dashboard 配置
+        location /project-dashboard {
+            alias /srv/apps/project-dashboard/frontend;
+            try_files $uri $uri/ /project-dashboard/index.html;
+            
+            location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+                expires 1y;
+                add_header Cache-Control "public, immutable";
+            }
+        }
+        
+                       location /project-dashboard/api/ {
+                   rewrite ^/project-dashboard/api/(.*) /api/$1 break;
+                   proxy_pass http://127.0.0.1:8090;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Prefix /project-dashboard;
+        }
+        
+                       location /project-dashboard/ws/ {
+                   rewrite ^/project-dashboard/ws/(.*) /socket.io/$1 break;
+                   proxy_pass http://127.0.0.1:8091;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        
+                       location /project-dashboard/webhook/github {
+                   rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break;
+                   proxy_pass http://127.0.0.1:8090;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+      test_url: https://redamancy.com.cn/project-dashboard/api/health
+      deploy_secrets: |
+        {
+          "SERVER_HOST": "${{ secrets.SERVER_HOST }}",
+          "SERVER_USER": "${{ secrets.SERVER_USER }}",
+          "SERVER_KEY": "${{ secrets.SERVER_KEY }}",
+          "SERVER_PORT": "${{ secrets.SERVER_PORT }}",
+          "DEPLOY_CENTER_PAT": "${{ secrets.DEPLOY_CENTER_PAT }}"
+        }
