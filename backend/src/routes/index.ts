@@ -1,17 +1,27 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { logger } from '@/utils/logger';
+
+// API Response 接口
+interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  timestamp?: string;
+  [key: string]: any;
+}
 
 const router = Router();
 
 // Health check route
-router.get('/health', (req, res) => {
-  res.json({
+router.get('/health', (req: Request, res: Response) => {
+  const response: ApiResponse = {
     success: true,
     message: 'axi-project-dashboard API is running',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: process.env.npm_package_version || '1.0.0'
-  });
+  };
+  res.json(response);
 });
 
 // API info route
@@ -89,4 +99,4 @@ router.use('*', (req, res) => {
   });
 });
 
-export const routes = router;
+export const routes: Router = router;

@@ -22,7 +22,7 @@ module.exports = {
         SESSION_SECRET: process.env.SESSION_SECRET || 'axi-deploy-dashboard-session-secret',
         
         // GitHub 集成
-        GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+        GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
         GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET || 'axi-deploy-webhook-secret',
         GITHUB_API_URL: 'https://api.github.com',
         

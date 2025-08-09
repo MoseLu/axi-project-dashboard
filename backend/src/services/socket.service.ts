@@ -123,8 +123,10 @@ export class SocketService {
     // 发送连接确认
     this.sendConnectionEstablished(socket);
 
-    // 记录指标
-    await this.metricsService.recordSocketConnection();
+    // 记录指标 (异步执行，不阻塞)
+    this.metricsService.recordSocketConnection().catch(error => {
+      logger.error('Error recording socket connection:', error);
+    });
 
     logger.info(`User ${userId} connected via socket ${socket.id}`);
   }
@@ -211,8 +213,10 @@ export class SocketService {
         }
       }
 
-      // 记录指标
-      await this.metricsService.recordSocketDisconnection();
+      // 记录指标 (异步执行，不阻塞)
+      this.metricsService.recordSocketDisconnection().catch(error => {
+        logger.error('Error recording socket disconnection:', error);
+      });
 
       logger.info(`User ${userId} disconnected from socket ${socket.id}`);
     }

@@ -176,6 +176,10 @@ export class MetricsService {
     logger.info('MetricsService closed');
   }
 
+  public async getMetrics(): Promise<DeploymentMetrics> {
+    return this.getDeploymentMetrics();
+  }
+
   public async isHealthy(): Promise<boolean> {
     try {
       await redisService.getClient().ping();

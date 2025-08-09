@@ -107,19 +107,36 @@ class Application {
     this.app.use('/api', routes);
 
     // 健康检查端点
-    this.app.get('/health', (req, res) => {
-      const healthStatus = this.healthService.getHealthStatus();
-      res.status(healthStatus.status === 'healthy' ? 200 : 503).json(healthStatus);
+    this.app.get('/health', async (req, res) => {
+      try {
+        const healthStatus = await this.healthService.getHealthStatus();
+        res.status(healthStatus.status === 'healthy' ? 200 : 503).json(healthStatus);
+      } catch (error) {
+        logger.error('Health check failed:', error);
+        res.status(503).json({
+          status: 'unhealthy',
+          message: 'Health check failed',
+          timestamp: new Date().toISOString()
+        });
+      }
     });
 
     // 指标端点
-    this.app.get('/metrics', (req, res) => {
-      res.set('Content-Type', 'text/plain');
-      res.end(this.metricsService.getMetrics());
+    this.app.get('/metrics', async (req, res) => {
+      try {
+        const metrics = await this.metricsService.getMetrics();
+        res.json(metrics);
+      } catch (error) {
+        logger.error('Failed to get metrics:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Failed to get metrics'
+        });
+      }
     });
 
     // API 文档
-    if (config.nodeEnv === 'development') {
+    if (config.env === 'development') {
       const swaggerUi = require('swagger-ui-express');
       const swaggerSpec = require('@/config/swagger');
       this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

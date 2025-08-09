@@ -12,6 +12,21 @@ export interface AuthRequest extends Request {
   };
 }
 
+// 为了避免类型冲突，创建一个泛型版本
+export interface AuthenticatedRequest<
+  P = any,
+  ResBody = any,
+  ReqBody = any,
+  ReqQuery = any,
+  Locals extends Record<string, any> = Record<string, any>
+> extends Request<P, ResBody, ReqBody, ReqQuery, Locals> {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+}
+
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
   try {
     const authHeader = req.headers.authorization;

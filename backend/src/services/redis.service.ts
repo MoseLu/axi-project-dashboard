@@ -10,8 +10,8 @@ export class RedisService {
     this.client = Redis.createClient({
       url: config.database.redis.uri,
       socket: {
-        reconnectDelay: 1000,
-        maxRetryDelay: 5000,
+        reconnectDelayMs: 1000,
+        connectTimeout: 5000,
       },
     });
 
