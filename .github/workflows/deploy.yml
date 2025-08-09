@@ -107,55 +107,115 @@ jobs:
 
   deploy:
     needs: build
-    uses: MoseLu/axi-deploy/.github/workflows/main-deployment.yml@master
-    with:
-      project: project-dashboard
-      source_repo: ${{ github.repository }}
-      run_id: ${{ github.run_id }}
-      deploy_type: backend
-      start_cmd: './deploy.sh'
-      nginx_config: |
-        # axi-deploy Dashboard 配置
-        location /project-dashboard {
-            alias /srv/apps/project-dashboard/frontend;
-            try_files $uri $uri/ /project-dashboard/index.html;
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: 触发部署
+        uses: actions/github-script@v7
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_KEY: ${{ secrets.SERVER_KEY }}
+          DEPLOY_CENTER_PAT: ${{ secrets.DEPLOY_CENTER_PAT }}
+          RUN_ID: ${{ github.run_id }}
+        with:
+          github-token: ${{ secrets.DEPLOY_CENTER_PAT }}
+          script: |
+            // 1. 打包机密（为了避开 workflow_call 10 条 secret 限制）
+            const deploySecrets = Buffer.from(JSON.stringify({
+              SERVER_HOST: process.env.SERVER_HOST,
+              SERVER_PORT: process.env.SERVER_PORT,
+              SERVER_USER: process.env.SERVER_USER,
+              SERVER_KEY : process.env.SERVER_KEY,
+              DEPLOY_CENTER_PAT: process.env.DEPLOY_CENTER_PAT
+            })).toString('base64');
+
+            // 2. Nginx 配置
+            const nginxConfig = `
+              # axi-project-dashboard 配置
+              location /project-dashboard {
+                  alias /srv/apps/project-dashboard/frontend;
+                  try_files $uri $uri/ /project-dashboard/index.html;
+                  
+                  location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+                      expires 1y;
+                      add_header Cache-Control "public, immutable";
+                  }
+              }
+              
+              location /project-dashboard/api/ {
+                  rewrite ^/project-dashboard/api/(.*) /api/$1 break;
+                  proxy_pass http://127.0.0.1:8090;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header X-Forwarded-Prefix /project-dashboard;
+              }
+              
+              location /project-dashboard/ws/ {
+                  rewrite ^/project-dashboard/ws/(.*) /socket.io/$1 break;
+                  proxy_pass http://127.0.0.1:8091;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+              
+              location /project-dashboard/webhook/github {
+                  rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break;
+                  proxy_pass http://127.0.0.1:8090;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+              }
+            `;
+
+            console.log('🚀 开始触发 axi-project-dashboard 部署...');
+            console.log('项目名称:', context.repo.repo);
+            console.log('源仓库:', `${context.repo.owner}/${context.repo.repo}`);
+            console.log('运行ID:', process.env.RUN_ID);
+
+            // 等待一段时间确保artifact完全可用
+            console.log('⏳ 等待artifact完全可用...');
+            await new Promise(resolve => setTimeout(resolve, 5000)); // 等待5秒
             
-            location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-                expires 1y;
-                add_header Cache-Control "public, immutable";
+            // 再次检查 workflow run 状态
+            console.log('🔍 检查 workflow run 状态...');
+            const run = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: process.env.RUN_ID
+            });
+            
+            console.log('📊 Workflow run 状态:', run.data.status);
+            console.log('📊 Workflow run 结论:', run.data.conclusion);
+            
+            if (run.data.status !== 'completed') {
+              console.log('⏳ Workflow run 尚未完成，继续等待...');
+              await new Promise(resolve => setTimeout(resolve, 5000)); // 再等待5秒
             }
-        }
-        
-                       location /project-dashboard/api/ {
-                   rewrite ^/project-dashboard/api/(.*) /api/$1 break;
-                   proxy_pass http://127.0.0.1:8090;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header X-Forwarded-Prefix /project-dashboard;
-        }
-        
-                       location /project-dashboard/ws/ {
-                   rewrite ^/project-dashboard/ws/(.*) /socket.io/$1 break;
-                   proxy_pass http://127.0.0.1:8091;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection "upgrade";
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-        
-                       location /project-dashboard/webhook/github {
-                   rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break;
-                   proxy_pass http://127.0.0.1:8090;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-      test_url: https://redamancy.com.cn/project-dashboard/api/health
-      deploy_secrets: dummy-will-be-replaced-by-secrets
-    secrets: inherit
+
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'MoseLu',
+              repo:  'axi-deploy',
+              workflow_id: 'main-deployment.yml',
+              ref: 'master',
+              inputs: {
+                project      : context.repo.repo,
+                source_repo  : `${context.repo.owner}/${context.repo.repo}`,
+                run_id       : process.env.RUN_ID,
+                deploy_type  : 'backend',
+                start_cmd    : './deploy.sh',
+                nginx_config : nginxConfig,
+                test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
+                deploy_secrets: deploySecrets
+              }
+            });
+
+            console.log('✅ axi-project-dashboard 部署工作流已成功触发！');
