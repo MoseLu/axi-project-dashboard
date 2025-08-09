@@ -494,7 +494,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                start_cmd    : 'pm2 stop dashboard-backend || true; pm2 delete dashboard-backend || true; pm2 start ecosystem.config.js --update-env',
+                start_cmd    : 'bash -c "pm2 stop dashboard-backend 2>/dev/null || true && pm2 delete dashboard-backend 2>/dev/null || true && pm2 start ecosystem.config.js --update-env"',
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
                 deploy_secrets: deploySecrets
