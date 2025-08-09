@@ -60,14 +60,21 @@ jobs:
         run: |
           echo "🔧 开始构建后端..."
           # 清理可能存在的 node_modules 冲突
-          rm -rf node_modules
+          rm -rf node_modules dist
           # 安装所有依赖（包括 devDependencies 用于构建）
           pnpm install --no-frozen-lockfile
+          # 确保关键依赖存在
+          echo "🔍 验证构建依赖..."
+          ls node_modules/typescript || echo "❌ TypeScript 缺失"
+          ls node_modules/depd || echo "❌ depd 缺失"
+          ls node_modules/express || echo "❌ express 缺失"
           # 构建项目
-          pnpm run build
+          echo "🔨 开始TypeScript编译..."
+          npx tsc
           echo "✅ 后端构建完成"
           echo "构建产物:"
-          ls -la *.js *.d.ts || echo "编译文件不存在"
+          ls -la dist/ || echo "dist目录不存在"
+          ls -la dist/*.js || echo "编译的JS文件不存在"
 
       - name: 构建前端
         working-directory: frontend
@@ -111,6 +118,12 @@ jobs:
           cp -r backend/dist dist/backend
           cp -r temp_backend_deps/node_modules dist/
           cp backend/package.json dist/
+          
+          # 验证关键构建产物
+          echo "🔍 验证后端构建产物..."
+          ls -la dist/backend/ || echo "❌ backend构建产物不存在"
+          ls -la dist/backend/index.js || echo "❌ 主入口文件不存在"
+          ls -la dist/node_modules/depd/ || echo "❌ depd依赖不存在"
           
           # 复制前端构建产物
           cp -r frontend/build dist/frontend
@@ -186,25 +199,18 @@ jobs:
             chmod +x $TARGET_DIR/start.sh
           fi
           
-          # 创建路径别名包装器
+          # 验证部署文件
           cd $TARGET_DIR
-          echo "// 设置模块路径别名" > backend/start-server.js
-          echo "const moduleAlias = require('module-alias');" >> backend/start-server.js
-          echo "" >> backend/start-server.js
-          echo "// 添加路径别名" >> backend/start-server.js
-          echo "moduleAlias.addAliases({" >> backend/start-server.js
-          echo "  '@': __dirname," >> backend/start-server.js
-          echo "  '@config': __dirname + '/config'," >> backend/start-server.js
-          echo "  '@database': __dirname + '/database'," >> backend/start-server.js
-          echo "  '@services': __dirname + '/services'," >> backend/start-server.js
-          echo "  '@utils': __dirname + '/utils'," >> backend/start-server.js
-          echo "  '@middleware': __dirname + '/middleware'," >> backend/start-server.js
-          echo "  '@routes': __dirname + '/routes'," >> backend/start-server.js
-          echo "  '@types': __dirname + '/types'" >> backend/start-server.js
-          echo "});" >> backend/start-server.js
-          echo "" >> backend/start-server.js
-          echo "// 启动主应用" >> backend/start-server.js
-          echo "require('./index.js');" >> backend/start-server.js
+          echo "🔍 验证部署文件结构..."
+          ls -la backend/ || echo "❌ backend目录不存在"
+          ls -la backend/index.js || echo "❌ backend/index.js不存在"
+          ls -la node_modules/depd/ || echo "❌ depd依赖不存在"
+          
+          # 检查构建产物是否正确
+          if [ ! -f "backend/index.js" ]; then
+            echo "❌ 后端主入口文件不存在，部署失败"
+            exit 1
+          fi
           
           # 创建或更新日志目录（在启动服务之前）
           if [ "$(whoami)" = "root" ]; then
@@ -217,20 +223,13 @@ jobs:
           
           # 验证关键文件存在
           echo "📋 验证部署文件..."
-          ls -la backend/start-server.js || echo "❌ start-server.js 不存在"
           ls -la backend/index.js || echo "❌ backend/index.js 不存在"
           ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"
+          ls -la node_modules/depd/ || echo "❌ depd模块不存在"
           
-          # 设置执行权限
-          echo "🔧 设置文件权限..."
-          chmod +x backend/start-server.js
-          chmod +x backend/index.js
-          
-          # 验证start-server.js内容
-          echo "📋 验证start-server.js内容..."
-          echo "--- start-server.js 前10行 ---"
-          head -10 backend/start-server.js || echo "❌ 无法读取start-server.js"
-          echo "--- end ---"
+          # 验证ecosystem.config.js中的路径
+          echo "📋 验证PM2配置..."
+          grep "script:" ecosystem.config.js || echo "❌ PM2脚本配置不存在"
           
           # 检查Node.js和PM2版本
           echo "🔍 检查Node.js和PM2环境..."
