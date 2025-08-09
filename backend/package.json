@@ -33,6 +33,7 @@
     "depd": "^2.0.0",
     "merge-descriptors": "^1.0.1",
     "debug": "^4.3.4",
+    "encodeurl": "^1.0.2",
     "utils-merge": "^1.0.1",
     "escape-html": "^1.0.3",
     "range-parser": "^1.2.1",

@@ -98,36 +98,59 @@ jobs:
           # 安装生产依赖，包括所有子依赖
           pnpm install --prod --no-frozen-lockfile
           
-          # 验证Express核心依赖完整性
-          echo "🔍 验证Express依赖链..."
-          MISSING_DEPS=""
+          # 彻底解决Express依赖问题 - 使用完整重安装策略
+          echo "🔧 彻底解决Express依赖问题..."
           
-          # 检查Express及其完整依赖链
-          [ ! -d "node_modules/express" ] && MISSING_DEPS="$MISSING_DEPS express"
-          [ ! -d "node_modules/merge-descriptors" ] && MISSING_DEPS="$MISSING_DEPS merge-descriptors"
-          [ ! -d "node_modules/depd" ] && MISSING_DEPS="$MISSING_DEPS depd"
-          [ ! -d "node_modules/debug" ] && MISSING_DEPS="$MISSING_DEPS debug"
-          [ ! -d "node_modules/body-parser" ] && MISSING_DEPS="$MISSING_DEPS body-parser"
-          [ ! -d "node_modules/cookie" ] && MISSING_DEPS="$MISSING_DEPS cookie"
-          [ ! -d "node_modules/etag" ] && MISSING_DEPS="$MISSING_DEPS etag"
-          [ ! -d "node_modules/finalhandler" ] && MISSING_DEPS="$MISSING_DEPS finalhandler"
-          [ ! -d "node_modules/fresh" ] && MISSING_DEPS="$MISSING_DEPS fresh"
-          [ ! -d "node_modules/parseurl" ] && MISSING_DEPS="$MISSING_DEPS parseurl"
-          [ ! -d "node_modules/utils-merge" ] && MISSING_DEPS="$MISSING_DEPS utils-merge"
-          [ ! -d "node_modules/escape-html" ] && MISSING_DEPS="$MISSING_DEPS escape-html"
-          [ ! -d "node_modules/range-parser" ] && MISSING_DEPS="$MISSING_DEPS range-parser"
-          [ ! -d "node_modules/send" ] && MISSING_DEPS="$MISSING_DEPS send"
-          [ ! -d "node_modules/serve-static" ] && MISSING_DEPS="$MISSING_DEPS serve-static"
-          [ ! -d "node_modules/mime" ] && MISSING_DEPS="$MISSING_DEPS mime"
-          [ ! -d "node_modules/ms" ] && MISSING_DEPS="$MISSING_DEPS ms"
+          # 检查当前node_modules状态
+          echo "📊 当前依赖状态:"
+          echo "- node_modules目录大小: $(du -sh node_modules 2>/dev/null || echo 'N/A')"
+          echo "- 依赖包数量: $(ls node_modules 2>/dev/null | wc -l || echo '0')"
           
-          if [ -n "$MISSING_DEPS" ]; then
-            echo "❌ 发现缺失的Express依赖: $MISSING_DEPS"
-            echo "🔧 手动安装缺失的依赖..."
-            pnpm add $MISSING_DEPS --prod
+          # 方案1: 尝试修复当前安装
+          echo "🔧 尝试修复当前Express安装..."
+          if [ -d "node_modules/express" ]; then
+            echo "Express已存在，检查其依赖完整性..."
+            EXPRESS_DEPS_MISSING=false
+            
+            # 检查关键依赖
+            for dep in merge-descriptors depd debug encodeurl utils-merge escape-html finalhandler fresh parseurl body-parser; do
+              if [ ! -d "node_modules/$dep" ]; then
+                echo "❌ 缺失依赖: $dep"
+                EXPRESS_DEPS_MISSING=true
+              fi
+            done
+            
+            if [ "$EXPRESS_DEPS_MISSING" = true ]; then
+              echo "🔧 重新安装Express及其完整依赖..."
+              pnpm remove express
+              pnpm add express@^4.18.2
+              pnpm install --prod
+            fi
           else
-            echo "✅ Express依赖验证通过"
+            echo "❌ Express不存在，重新安装..."
+            pnpm add express@^4.18.2
+            pnpm install --prod
           fi
+          
+          # 验证关键Express依赖
+          echo "🔍 验证Express依赖完整性..."
+          CRITICAL_DEPS="express merge-descriptors depd debug encodeurl utils-merge escape-html finalhandler fresh parseurl body-parser"
+          MISSING_CRITICAL=""
+          
+          for dep in $CRITICAL_DEPS; do
+            if [ ! -d "node_modules/$dep" ]; then
+              MISSING_CRITICAL="$MISSING_CRITICAL $dep"
+            fi
+          done
+          
+          if [ -n "$MISSING_CRITICAL" ]; then
+            echo "❌ 仍有关键依赖缺失: $MISSING_CRITICAL"
+            echo "🔧 手动安装缺失的关键依赖..."
+            pnpm add $MISSING_CRITICAL --prod
+          fi
+          
+          # 最终验证
+          echo "✅ Express依赖安装完成"
           
           # 最终验证
           echo "📋 最终依赖检查..."
@@ -135,9 +158,20 @@ jobs:
           ls node_modules/merge-descriptors || echo "❌ merge-descriptors 缺失"
           ls node_modules/depd || echo "❌ depd 缺失"
           ls node_modules/debug || echo "❌ debug 缺失"
+          ls node_modules/encodeurl || echo "❌ encodeurl 缺失"
           ls node_modules/finalhandler || echo "❌ finalhandler 缺失"
           ls node_modules/mysql2 || echo "❌ mysql2 缺失"
           ls node_modules/module-alias || echo "❌ module-alias 缺失"
+          
+          # 报告依赖统计
+          TOTAL_DEPS=$(ls node_modules 2>/dev/null | wc -l || echo '0')
+          echo "📊 总依赖包数量: $TOTAL_DEPS"
+          
+          if [ "$TOTAL_DEPS" -lt 80 ]; then
+            echo "⚠️ 依赖包数量偏少 ($TOTAL_DEPS < 80)，可能存在依赖缺失"
+          else
+            echo "✅ 依赖包数量正常 ($TOTAL_DEPS >= 80)"
+          fi
           
           # 检查Express模块完整性
           echo "🔍 验证Express模块完整性..."
