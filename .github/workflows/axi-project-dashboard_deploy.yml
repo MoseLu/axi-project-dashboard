@@ -75,7 +75,7 @@ jobs:
           # 清理构建时的 node_modules，重新安装生产依赖
           rm -rf node_modules
           # 安装生产依赖（现在module-alias已在package.json中）
-          pnpm install --prod --frozen-lockfile
+          pnpm install --prod
           # 检查关键依赖是否存在
           echo "检查关键依赖..."
           ls node_modules/express || echo "❌ express 缺失"
