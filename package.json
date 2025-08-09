@@ -1,0 +1,39 @@
+{
+  "name": "axi-project-dashboard",
+  "version": "1.0.0",
+  "description": "axi-project-dashboard - Independent deployment progress visualization dashboard",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend start\"",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build",
+    "start": "pnpm --filter backend start",
+    "lint": "pnpm --filter backend lint && pnpm --filter frontend lint",
+    "lint:fix": "pnpm --filter backend lint:fix && pnpm --filter frontend lint:fix",
+    "typecheck": "pnpm --filter backend typecheck && pnpm --filter frontend typecheck"
+  },
+  "keywords": [
+    "dashboard",
+    "deployment",
+    "monitoring",
+    "visualization",
+    "axi-deploy"
+  ],
+  "author": "运维团队",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MoseLu/axi-project-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MoseLu/axi-project-dashboard/issues"
+  },
+  "homepage": "https://github.com/MoseLu/axi-project-dashboard#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

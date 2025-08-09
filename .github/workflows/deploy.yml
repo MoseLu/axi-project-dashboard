@@ -13,17 +13,23 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 设置 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'pnpm'
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
 
       - name: 构建后端
         working-directory: backend
-        run: |
-          npm ci
-          npm run build
-          npm prune --production
+        run: pnpm run build
 
       - name: 构建前端
         working-directory: frontend
@@ -31,9 +37,16 @@ jobs:
           REACT_APP_API_URL: https://redamancy.com.cn/project-dashboard/api
           REACT_APP_WS_URL: wss://redamancy.com.cn/project-dashboard/ws
           REACT_APP_ENV: production
+        run: pnpm run build
+
+      - name: 准备后端生产依赖
+        working-directory: backend
         run: |
-          npm ci
-          npm run build
+          # 清理开发依赖，只安装生产依赖
+          pnpm install --prod --frozen-lockfile
+          # 将 node_modules 复制到临时目录
+          mkdir -p ../temp_backend_deps
+          cp -r node_modules ../temp_backend_deps/
 
       - name: 准备部署文件
         run: |
@@ -41,7 +54,7 @@ jobs:
           
           # 复制后端构建产物
           cp -r backend/dist dist/backend
-          cp -r backend/node_modules dist/
+          cp -r temp_backend_deps/node_modules dist/
           cp backend/package.json dist/
           
           # 复制前端构建产物
