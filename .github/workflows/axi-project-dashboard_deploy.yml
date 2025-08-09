@@ -170,25 +170,23 @@ jobs:
           
           # 创建路径别名包装器
           cd $TARGET_DIR
-          cat > backend/start-server.js << 'EOL'
-// 设置模块路径别名
-const moduleAlias = require('module-alias');
-
-// 添加路径别名
-moduleAlias.addAliases({
-  '@': __dirname,
-  '@config': __dirname + '/config',
-  '@database': __dirname + '/database',
-  '@services': __dirname + '/services',
-  '@utils': __dirname + '/utils',
-  '@middleware': __dirname + '/middleware',
-  '@routes': __dirname + '/routes',
-  '@types': __dirname + '/types'
-});
-
-// 启动主应用
-require('./index.js');
-EOL
+          echo "// 设置模块路径别名" > backend/start-server.js
+          echo "const moduleAlias = require('module-alias');" >> backend/start-server.js
+          echo "" >> backend/start-server.js
+          echo "// 添加路径别名" >> backend/start-server.js
+          echo "moduleAlias.addAliases({" >> backend/start-server.js
+          echo "  '@': __dirname," >> backend/start-server.js
+          echo "  '@config': __dirname + '/config'," >> backend/start-server.js
+          echo "  '@database': __dirname + '/database'," >> backend/start-server.js
+          echo "  '@services': __dirname + '/services'," >> backend/start-server.js
+          echo "  '@utils': __dirname + '/utils'," >> backend/start-server.js
+          echo "  '@middleware': __dirname + '/middleware'," >> backend/start-server.js
+          echo "  '@routes': __dirname + '/routes'," >> backend/start-server.js
+          echo "  '@types': __dirname + '/types'" >> backend/start-server.js
+          echo "});" >> backend/start-server.js
+          echo "" >> backend/start-server.js
+          echo "// 启动主应用" >> backend/start-server.js
+          echo "require('./index.js');" >> backend/start-server.js
           
           # 启动服务
           pm2 start ecosystem.config.js --update-env
