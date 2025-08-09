@@ -2,14 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from '@/config/config';
 import { logger } from '@/utils/logger';
-import { 
-  SocketEvent, 
-  SocketEventType, 
-  User, 
-  Deployment, 
-  DeploymentStep 
-} from '@/types';
-import { RedisService } from './redis.service';
+import { redisService } from './redis.service';
 import { MetricsService } from './metrics.service';
 
 interface SocketUser {
@@ -20,17 +13,57 @@ interface SocketUser {
   subscriptions: Set<string>;
 }
 
+// 临时类型定义
+enum SocketEventType {
+  CONNECTION_ESTABLISHED = 'connection_established',
+  USER_CONNECTED = 'user_connected',
+  USER_DISCONNECTED = 'user_disconnected',
+  DEPLOYMENT_STARTED = 'deployment_started',
+  DEPLOYMENT_UPDATED = 'deployment_updated',
+  DEPLOYMENT_COMPLETED = 'deployment_completed',
+  DEPLOYMENT_FAILED = 'deployment_failed',
+  STEP_STARTED = 'step_started',
+  STEP_UPDATED = 'step_updated',
+  STEP_COMPLETED = 'step_completed',
+  STEP_FAILED = 'step_failed',
+  STEP_RETRYING = 'step_retrying',
+  LOG_ENTRY = 'log_entry',
+  SYSTEM_ALERT = 'system_alert',
+  METRICS_UPDATE = 'metrics_update'
+}
+
+interface SocketEvent {
+  type: SocketEventType;
+  payload: any;
+  timestamp: Date;
+  userId?: string;
+  projectId?: string;
+  deploymentId?: string;
+}
+
+interface Deployment {
+  id: string;
+  projectId: string;
+  status: string;
+  [key: string]: any;
+}
+
+interface DeploymentStep {
+  id: string;
+  name: string;
+  status: string;
+  [key: string]: any;
+}
+
 export class SocketService {
   private io: SocketIOServer;
   private connectedUsers: Map<string, SocketUser> = new Map();
   private userSockets: Map<string, Set<string>> = new Map();
-  private redisService: RedisService;
-  private metricsService: MetricsService;
   private heartbeatInterval?: NodeJS.Timeout;
+  private metricsService: MetricsService;
 
   constructor(io: SocketIOServer) {
     this.io = io;
-    this.redisService = new RedisService();
     this.metricsService = new MetricsService();
   }
 
@@ -60,7 +93,7 @@ export class SocketService {
         return next(new Error('Authentication token required'));
       }
 
-      const decoded = jwt.verify(token, config.jwtSecret) as any;
+      const decoded = jwt.verify(token, config.jwt.secret) as any;
       socket.data.user = decoded;
       
       logger.debug(`Socket authentication successful for user: ${decoded.userId}`);
@@ -91,7 +124,7 @@ export class SocketService {
     this.sendConnectionEstablished(socket);
 
     // 记录指标
-    this.metricsService.recordSocketConnection();
+    await this.metricsService.recordSocketConnection();
 
     logger.info(`User ${userId} connected via socket ${socket.id}`);
   }
@@ -179,7 +212,7 @@ export class SocketService {
       }
 
       // 记录指标
-      this.metricsService.recordSocketDisconnection();
+      await this.metricsService.recordSocketDisconnection();
 
       logger.info(`User ${userId} disconnected from socket ${socket.id}`);
     }
@@ -321,7 +354,7 @@ export class SocketService {
   private startHeartbeat(): void {
     this.heartbeatInterval = setInterval(() => {
       const now = new Date();
-      const timeout = config.wsHeartbeatInterval * 2; // 2x heartbeat interval
+      const timeout = config.websocket.heartbeatInterval * 2; // 2x heartbeat interval
 
       // 检查并清理超时连接
       for (const [socketId, socketUser] of this.connectedUsers) {
@@ -339,7 +372,7 @@ export class SocketService {
       // 发送心跳到所有连接的客户端
       this.io.emit('heartbeat', { timestamp: now });
       
-    }, config.wsHeartbeatInterval);
+    }, config.websocket.heartbeatInterval);
   }
 
   // ===================================

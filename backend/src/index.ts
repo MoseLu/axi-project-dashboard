@@ -30,7 +30,7 @@ class Application {
     this.server = http.createServer(this.app);
     this.io = new SocketIOServer(this.server, {
       cors: {
-        origin: config.corsOrigin,
+        origin: config.cors.origin,
         methods: ['GET', 'POST'],
         credentials: true
       },
@@ -62,7 +62,7 @@ class Application {
 
     // CORS 配置
     this.app.use(cors({
-      origin: config.corsOrigin,
+      origin: config.cors.origin,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization']
@@ -77,8 +77,8 @@ class Application {
 
     // 限流中间件
     const limiter = rateLimit({
-      windowMs: config.rateLimitWindow * 60 * 1000, // 15 minutes
-      max: config.rateLimitMaxRequests, // limit each IP to 100 requests per windowMs
+      windowMs: config.rateLimit.window * 60 * 1000, // 15 minutes
+      max: config.rateLimit.maxRequests, // limit each IP to 100 requests per windowMs
       message: 'Too many requests from this IP, please try again later.',
       standardHeaders: true,
       legacyHeaders: false
@@ -143,12 +143,7 @@ class Application {
   }
 
   private initializeGracefulShutdown(): void {
-    gracefulShutdown(this.server, async () => {
-      logger.info('Server is shutting down gracefully...');
-      await this.socketService.close();
-      await this.metricsService.close();
-      process.exit(0);
-    });
+    gracefulShutdown.setup(this.server, this.io);
   }
 
   public async start(): Promise<void> {
@@ -176,11 +171,11 @@ class Application {
       // 启动服务器
       this.server.listen(config.port, () => {
         logger.info(`🚀 Server is running on port ${config.port}`);
-        logger.info(`📊 Environment: ${config.nodeEnv}`);
+        logger.info(`📊 Environment: ${config.env}`);
         logger.info(`🔗 API URL: http://localhost:${config.port}/api`);
         logger.info(`💻 WebSocket URL: ws://localhost:${config.websocketPort || config.port}`);
         
-        if (config.nodeEnv === 'development') {
+        if (config.env === 'development') {
           logger.info(`📚 API Docs: http://localhost:${config.port}/api-docs`);
         }
       });

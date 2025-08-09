@@ -132,7 +132,7 @@ const parseArray = (value: string | undefined, separator: string = ','): string[
 const parseCorsOrigin = (value: string | undefined): string | string[] => {
   if (!value) return '*';
   const origins = parseArray(value);
-  return origins.length === 1 ? origins[0] : origins;
+  return origins.length === 1 ? origins[0]! : origins;
 };
 
 const configData: Config = {
@@ -243,27 +243,45 @@ const configData: Config = {
 // 配置验证
 export const validateConfig = (): void => {
   const requiredFields = [
-    'jwtSecret',
-    'mongodbUri',
-    'redisUri'
+    'jwt.secret',
+    'database.mongodb.uri',
+    'database.redis.uri'
   ];
 
-  const missingFields = requiredFields.filter(field => !config[field as keyof Config]);
+  const missingFields = requiredFields.filter(field => {
+    const keys = field.split('.');
+    let current: any = config;
+    for (const key of keys) {
+      if (!current || !current[key]) {
+        return true;
+      }
+      current = current[key];
+    }
+    return false;
+  });
   
   if (missingFields.length > 0) {
     throw new Error(`Missing required configuration fields: ${missingFields.join(', ')}`);
   }
 
   // 生产环境额外验证
-  if (config.nodeEnv === 'production') {
+  if (config.env === 'production') {
     const productionRequiredFields = [
-      'githubToken',
-      'githubWebhookSecret'
+      'github.token',
+      'github.webhookSecret'
     ];
 
-    const missingProductionFields = productionRequiredFields.filter(
-      field => !config[field as keyof Config]
-    );
+    const missingProductionFields = productionRequiredFields.filter(field => {
+      const keys = field.split('.');
+      let current: any = config;
+      for (const key of keys) {
+        if (!current || !current[key]) {
+          return true;
+        }
+        current = current[key];
+      }
+      return false;
+    });
 
     if (missingProductionFields.length > 0) {
       throw new Error(
@@ -276,8 +294,14 @@ export const validateConfig = (): void => {
 // 重构配置以匹配其他服务的期望结构
 export const config = {
   env: configData.nodeEnv,
+  nodeEnv: configData.nodeEnv, // 保持兼容性
   port: configData.port,
   websocketPort: configData.websocketPort,
+  
+  // 保持扁平结构的属性以兼容现有代码
+  corsOrigin: configData.corsOrigin,
+  rateLimitWindow: configData.rateLimitWindow,
+  rateLimitMaxRequests: configData.rateLimitMaxRequests,
   
   database: {
     mongodb: {

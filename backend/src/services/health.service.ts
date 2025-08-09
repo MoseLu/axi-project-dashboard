@@ -183,6 +183,10 @@ export class HealthCheckService {
     }
   }
 
+  public async initialize(): Promise<void> {
+    logger.info('HealthCheckService initialized');
+  }
+
   public async isHealthy(): Promise<boolean> {
     try {
       const health = await this.getHealthStatus();

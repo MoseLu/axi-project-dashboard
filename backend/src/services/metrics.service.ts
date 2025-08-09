@@ -140,6 +140,42 @@ export class MetricsService {
     }
   }
 
+  public async recordRequest(method: string, path: string): Promise<void> {
+    try {
+      const key = `${this.METRICS_PREFIX}requests:${method}:${path}`;
+      await redisService.getClient().incr(key);
+      logger.debug(`Recorded request: ${method} ${path}`);
+    } catch (error) {
+      logger.error('Error recording request:', error);
+    }
+  }
+
+  public async recordSocketConnection(): Promise<void> {
+    try {
+      await redisService.getClient().incr(`${this.METRICS_PREFIX}socket_connections`);
+      logger.debug('Socket connection recorded');
+    } catch (error) {
+      logger.error('Error recording socket connection:', error);
+    }
+  }
+
+  public async recordSocketDisconnection(): Promise<void> {
+    try {
+      await redisService.getClient().incr(`${this.METRICS_PREFIX}socket_disconnections`);
+      logger.debug('Socket disconnection recorded');
+    } catch (error) {
+      logger.error('Error recording socket disconnection:', error);
+    }
+  }
+
+  public async initialize(): Promise<void> {
+    logger.info('MetricsService initialized');
+  }
+
+  public async close(): Promise<void> {
+    logger.info('MetricsService closed');
+  }
+
   public async isHealthy(): Promise<boolean> {
     try {
       await redisService.getClient().ping();
