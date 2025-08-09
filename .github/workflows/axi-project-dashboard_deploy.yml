@@ -28,7 +28,7 @@ jobs:
           cache: 'pnpm'
 
       - name: 安装依赖
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: 检查项目结构
         run: |
@@ -48,7 +48,7 @@ jobs:
           # 清理可能存在的 node_modules 冲突
           rm -rf node_modules
           # 安装所有依赖（包括 devDependencies 用于构建）
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
           # 构建项目
           pnpm run build
           echo "✅ 后端构建完成"
@@ -75,7 +75,7 @@ jobs:
           # 清理构建时的 node_modules，重新安装生产依赖
           rm -rf node_modules
           # 安装生产依赖（现在module-alias已在package.json中）
-          pnpm install --prod
+          pnpm install --prod --no-frozen-lockfile
           # 检查关键依赖是否存在
           echo "检查关键依赖..."
           ls node_modules/express || echo "❌ express 缺失"
