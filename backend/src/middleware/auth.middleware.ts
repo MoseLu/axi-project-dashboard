@@ -4,22 +4,19 @@ import { config } from '@/config/config';
 import { ApiError } from '@/middleware/error.middleware';
 import { logger } from '@/utils/logger';
 
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        email: string;
+        role: string;
+      };
+    }
+  }
 }
 
-// 为了避免类型冲突，创建一个泛型版本
-export interface AuthenticatedRequest<
-  P = any,
-  ResBody = any,
-  ReqBody = any,
-  ReqQuery = any,
-  Locals extends Record<string, any> = Record<string, any>
-> extends Request<P, ResBody, ReqBody, ReqQuery, Locals> {
+export interface AuthRequest extends Request {
   user?: {
     id: string;
     email: string;

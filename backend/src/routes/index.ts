@@ -1,14 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { logger } from '@/utils/logger';
-
-// API Response 接口
-interface ApiResponse<T = any> {
-  success: boolean;
-  message?: string;
-  data?: T;
-  timestamp?: string;
-  [key: string]: any;
-}
+import { ApiResponse } from '@/types';
 
 const router = Router();
 

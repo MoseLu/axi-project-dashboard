@@ -4,10 +4,17 @@
 
 export interface ApiResponse<T = any> {
   success: boolean;
-  message: string;
+  message?: string;
   data?: T;
-  timestamp: string;
+  timestamp?: string;
+  uptime?: number;
+  version?: string;
+  environment?: string;
+  nodeVersion?: string;
+  platform?: string;
   requestId?: string;
+  availableRoutes?: string[];
+  [key: string]: any;
 }
 
 export interface PaginationQuery {

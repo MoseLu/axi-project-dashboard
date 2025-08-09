@@ -30,7 +30,7 @@ class Application {
     this.server = http.createServer(this.app);
     this.io = new SocketIOServer(this.server, {
       cors: {
-        origin: config.cors.origin,
+        origin: config.cors.origin || '*',
         methods: ['GET', 'POST'],
         credentials: true
       },
@@ -62,7 +62,7 @@ class Application {
 
     // CORS 配置
     this.app.use(cors({
-      origin: config.cors.origin,
+      origin: config.cors.origin || '*',
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
       allowedHeaders: ['Content-Type', 'Authorization']

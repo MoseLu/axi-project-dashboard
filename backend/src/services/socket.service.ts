@@ -89,7 +89,7 @@ export class SocketService {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
       
-      if (!token) {
+      if (!token || typeof token !== 'string') {
         return next(new Error('Authentication token required'));
       }
 
