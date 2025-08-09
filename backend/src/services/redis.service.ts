@@ -11,7 +11,6 @@ export class RedisService {
       url: config.database.redis.uri,
       socket: {
         connectTimeout: 5000,
-        lazyConnect: true,
       },
     });
 

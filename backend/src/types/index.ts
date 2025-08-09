@@ -521,5 +521,3 @@ export enum FilterOperator {
 // ===================================
 
 export * from './express';
-export * from './socket';
-export * from './database';

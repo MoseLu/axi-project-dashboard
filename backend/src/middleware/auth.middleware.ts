@@ -83,10 +83,10 @@ export const requireRole = (roles: string[]) => {
   };
 };
 
-export const generateToken = (payload: object): string => {
+export const generateToken = (payload: string | object): string => {
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn
-  });
+  } as jwt.SignOptions);
 };
 
 export const verifyToken = (token: string): any => {

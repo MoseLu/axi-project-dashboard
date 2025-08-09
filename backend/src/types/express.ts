@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
-import { User } from './index';
+import { User, ApiResponse } from './index';
 
 // 扩展 Express Request 类型
 declare global {
   namespace Express {
     interface Request {
-      user?: User;
+      user?: {
+        id: string;
+        email: string;
+        role: string;
+      };
       requestId?: string;
       startTime?: number;
       ipAddress?: string;

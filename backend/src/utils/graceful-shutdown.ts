@@ -23,7 +23,9 @@ export class GracefulShutdown {
 
   public setup(server: Server, socketServer?: SocketIOServer): void {
     this.server = server;
-    this.socketServer = socketServer;
+    if (socketServer) {
+      this.socketServer = socketServer;
+    }
 
     // Listen for shutdown signals
     this.signals.forEach(signal => {

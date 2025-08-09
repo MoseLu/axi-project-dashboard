@@ -328,6 +328,8 @@ export class SocketService {
     const connectedUsersList = Array.from(this.userSockets.keys()).map(userId => {
       const socketIds = this.userSockets.get(userId)!;
       const firstSocket = Array.from(socketIds)[0];
+      if (!firstSocket) return null;
+      
       const socketUser = this.connectedUsers.get(firstSocket);
       
       return {
@@ -335,7 +337,7 @@ export class SocketService {
         connectedAt: socketUser?.connectedAt,
         socketCount: socketIds.size
       };
-    });
+    }).filter(Boolean);
 
     socket.emit('users:list', {
       users: connectedUsersList,
