@@ -64,9 +64,9 @@ module.exports = {
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       
       // 进程管理
-      restart_delay: 1000,
-      max_restarts: 10,
-      min_uptime: '10s',
+      restart_delay: 5000,
+      max_restarts: 3,
+      min_uptime: '30s',
       
       // 监控配置
       monitoring: false,

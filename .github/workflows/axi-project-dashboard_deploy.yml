@@ -102,16 +102,24 @@ jobs:
           echo "🔍 验证Express依赖链..."
           MISSING_DEPS=""
           
-          # 检查Express及其核心依赖
+          # 检查Express及其完整依赖链
           [ ! -d "node_modules/express" ] && MISSING_DEPS="$MISSING_DEPS express"
           [ ! -d "node_modules/merge-descriptors" ] && MISSING_DEPS="$MISSING_DEPS merge-descriptors"
           [ ! -d "node_modules/depd" ] && MISSING_DEPS="$MISSING_DEPS depd"
+          [ ! -d "node_modules/debug" ] && MISSING_DEPS="$MISSING_DEPS debug"
           [ ! -d "node_modules/body-parser" ] && MISSING_DEPS="$MISSING_DEPS body-parser"
           [ ! -d "node_modules/cookie" ] && MISSING_DEPS="$MISSING_DEPS cookie"
           [ ! -d "node_modules/etag" ] && MISSING_DEPS="$MISSING_DEPS etag"
           [ ! -d "node_modules/finalhandler" ] && MISSING_DEPS="$MISSING_DEPS finalhandler"
           [ ! -d "node_modules/fresh" ] && MISSING_DEPS="$MISSING_DEPS fresh"
           [ ! -d "node_modules/parseurl" ] && MISSING_DEPS="$MISSING_DEPS parseurl"
+          [ ! -d "node_modules/utils-merge" ] && MISSING_DEPS="$MISSING_DEPS utils-merge"
+          [ ! -d "node_modules/escape-html" ] && MISSING_DEPS="$MISSING_DEPS escape-html"
+          [ ! -d "node_modules/range-parser" ] && MISSING_DEPS="$MISSING_DEPS range-parser"
+          [ ! -d "node_modules/send" ] && MISSING_DEPS="$MISSING_DEPS send"
+          [ ! -d "node_modules/serve-static" ] && MISSING_DEPS="$MISSING_DEPS serve-static"
+          [ ! -d "node_modules/mime" ] && MISSING_DEPS="$MISSING_DEPS mime"
+          [ ! -d "node_modules/ms" ] && MISSING_DEPS="$MISSING_DEPS ms"
           
           if [ -n "$MISSING_DEPS" ]; then
             echo "❌ 发现缺失的Express依赖: $MISSING_DEPS"
@@ -126,6 +134,8 @@ jobs:
           ls node_modules/express || echo "❌ express 缺失"
           ls node_modules/merge-descriptors || echo "❌ merge-descriptors 缺失"
           ls node_modules/depd || echo "❌ depd 缺失"
+          ls node_modules/debug || echo "❌ debug 缺失"
+          ls node_modules/finalhandler || echo "❌ finalhandler 缺失"
           ls node_modules/mysql2 || echo "❌ mysql2 缺失"
           ls node_modules/module-alias || echo "❌ module-alias 缺失"
           
@@ -163,6 +173,8 @@ jobs:
           ls -la dist/node_modules/express/ || echo "❌ express依赖不存在"
           ls -la dist/node_modules/merge-descriptors/ || echo "❌ merge-descriptors依赖不存在"
           ls -la dist/node_modules/depd/ || echo "❌ depd依赖不存在"
+          ls -la dist/node_modules/debug/ || echo "❌ debug依赖不存在"
+          ls -la dist/node_modules/finalhandler/ || echo "❌ finalhandler依赖不存在"
           ls -la dist/node_modules/body-parser/ || echo "❌ body-parser依赖不存在"
           
           # 计算依赖数量
@@ -281,6 +293,8 @@ jobs:
           ls -la node_modules/express/ || echo "❌ express模块不存在"
           ls -la node_modules/merge-descriptors/ || echo "❌ merge-descriptors模块不存在"
           ls -la node_modules/depd/ || echo "❌ depd模块不存在"
+          ls -la node_modules/debug/ || echo "❌ debug模块不存在"
+          ls -la node_modules/finalhandler/ || echo "❌ finalhandler模块不存在"
           ls -la node_modules/body-parser/ || echo "❌ body-parser模块不存在"
           
           # 验证Express模块完整性
