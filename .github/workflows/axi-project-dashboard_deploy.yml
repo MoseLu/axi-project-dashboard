@@ -188,10 +188,7 @@ jobs:
           echo "// 启动主应用" >> backend/start-server.js
           echo "require('./index.js');" >> backend/start-server.js
           
-          # 启动服务
-          pm2 start ecosystem.config.js --update-env
-          
-          # 创建或更新日志目录
+          # 创建或更新日志目录（在启动服务之前）
           if [ "$(whoami)" = "root" ]; then
             mkdir -p /var/log/axi-deploy-dashboard
             chmod 755 /var/log/axi-deploy-dashboard
@@ -200,8 +197,30 @@ jobs:
             sudo chown $(whoami):$(whoami) /var/log/axi-deploy-dashboard
           fi
           
-          echo "✅ axi-project-dashboard 部署完成！"
+          # 验证关键文件存在
+          echo "📋 验证部署文件..."
+          ls -la backend/start-server.js || echo "❌ start-server.js 不存在"
+          ls -la backend/index.js || echo "❌ backend/index.js 不存在"
+          ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"
+          
+          # 启动服务
+          echo "🚀 启动后端服务..."
+          pm2 start ecosystem.config.js --update-env
+          
+          # 等待服务启动
+          echo "⏳ 等待服务启动..."
+          sleep 5
+          
+          # 检查服务状态
+          echo "📋 检查服务状态..."
           pm2 status
+          pm2 logs dashboard-backend --lines 10 || echo "无法获取日志"
+          
+          # 测试本地端口
+          echo "🔍 测试本地端口8090..."
+          curl -f http://localhost:8090/health || echo "❌ 本地健康检查失败"
+          
+          echo "✅ axi-project-dashboard 部署完成！"
           EOF
           
           chmod +x dist/deploy.sh
