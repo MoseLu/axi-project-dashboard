@@ -67,8 +67,13 @@ jobs:
         working-directory: backend
         run: |
           echo "🔧 准备后端生产依赖..."
-          # 清理开发依赖，只安装生产依赖
+          # 确保安装所有必要的生产依赖
           pnpm install --prod --frozen-lockfile
+          # 检查关键依赖是否存在
+          echo "检查关键依赖..."
+          ls node_modules/express || echo "express 缺失"
+          ls node_modules/mysql2 || echo "mysql2 缺失"
+          ls node_modules/body-parser || pnpm add body-parser
           # 将 node_modules 复制到临时目录
           mkdir -p ../temp_backend_deps
           cp -r node_modules ../temp_backend_deps/
