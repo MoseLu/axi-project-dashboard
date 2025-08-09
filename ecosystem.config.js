@@ -18,7 +18,7 @@ module.exports = {
         MYSQL_PORT: '3306',
         MYSQL_USER: 'root',
         MYSQL_PASSWORD: '123456',
-        MYSQL_DATABASE: 'axi_project_dashboard',
+        MYSQL_DATABASE: 'project_dashboard',
         REDIS_URI: 'redis://localhost:6379',
         
         // 安全配置

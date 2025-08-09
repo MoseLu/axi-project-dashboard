@@ -150,7 +150,7 @@ const configData: Config = {
   mysqlPort: parseNumber(process.env.MYSQL_PORT, 3306),
   mysqlUser: process.env.MYSQL_USER || 'root',
   mysqlPassword: process.env.MYSQL_PASSWORD || '123456',
-  mysqlDatabase: process.env.MYSQL_DATABASE || 'axi_project_dashboard',
+  mysqlDatabase: process.env.MYSQL_DATABASE || 'project_dashboard',
   redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
   
   // GitHub 配置
