@@ -165,3 +165,9 @@ jobs:
           "SERVER_PORT": "${{ secrets.SERVER_PORT }}",
           "DEPLOY_CENTER_PAT": "${{ secrets.DEPLOY_CENTER_PAT }}"
         }
+    secrets:
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SERVER_KEY: ${{ secrets.SERVER_KEY }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      DEPLOY_CENTER_PAT: ${{ secrets.DEPLOY_CENTER_PAT }}
