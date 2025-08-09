@@ -135,7 +135,7 @@ const parseCorsOrigin = (value: string | undefined): string | string[] => {
   return origins.length === 1 ? origins[0] : origins;
 };
 
-export const config: Config = {
+const configData: Config = {
   // 基础配置
   nodeEnv: process.env.NODE_ENV || 'development',
   port: parseNumber(process.env.PORT, 8080),
@@ -270,6 +270,62 @@ export const validateConfig = (): void => {
         `Missing required production configuration fields: ${missingProductionFields.join(', ')}`
       );
     }
+  }
+};
+
+// 重构配置以匹配其他服务的期望结构
+export const config = {
+  env: configData.nodeEnv,
+  port: configData.port,
+  websocketPort: configData.websocketPort,
+  
+  database: {
+    mongodb: {
+      uri: configData.mongodbUri
+    },
+    redis: {
+      uri: configData.redisUri
+    }
+  },
+  
+  jwt: {
+    secret: configData.jwtSecret,
+    expiresIn: configData.jwtExpiresIn
+  },
+  
+  github: {
+    token: configData.githubToken,
+    webhookSecret: configData.githubWebhookSecret,
+    apiUrl: configData.githubApiUrl
+  },
+  
+  logging: {
+    level: configData.logLevel,
+    filePath: configData.logFilePath
+  },
+  
+  cors: {
+    origin: configData.corsOrigin
+  },
+  
+  rateLimit: {
+    window: configData.rateLimitWindow,
+    maxRequests: configData.rateLimitMaxRequests
+  },
+  
+  cache: {
+    ttl: configData.cacheTtl,
+    maxItems: configData.cacheMaxItems
+  },
+  
+  websocket: {
+    heartbeatInterval: configData.wsHeartbeatInterval,
+    maxConnections: configData.wsMaxConnections
+  },
+  
+  notifications: {
+    enabled: configData.notificationEnabled,
+    channels: configData.notificationChannels
   }
 };
 
