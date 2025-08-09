@@ -29,6 +29,8 @@ jobs:
       - name: 安装依赖
         run: |
           echo "🔧 安装项目依赖..."
+          # 清理可能存在的 node_modules
+          rm -rf node_modules
           # 生成 pnpm-lock.yaml 如果不存在
           if [ ! -f pnpm-lock.yaml ]; then
             echo "📝 生成 pnpm-lock.yaml..."
@@ -37,6 +39,10 @@ jobs:
             echo "📝 使用现有 pnpm-lock.yaml..."
             pnpm install --frozen-lockfile
           fi
+          # 验证关键依赖
+          echo "🔍 验证关键依赖..."
+          ls -la node_modules/depd/ || echo "⚠️ depd 模块未找到"
+          ls -la node_modules/express/ || echo "⚠️ express 模块未找到"
 
       - name: 检查项目结构
         run: |
