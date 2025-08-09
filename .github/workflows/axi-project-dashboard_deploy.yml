@@ -274,6 +274,59 @@ jobs:
           
           chmod +x dist/deploy.sh
           
+          # 创建PM2启动脚本
+          cat > dist/start.sh << 'EOF'
+          #!/bin/bash
+          echo "🚀 Starting axi-project-dashboard backend..."
+          cd /srv/apps/axi-project-dashboard
+          
+          # 检查环境
+          echo "Current directory: $(pwd)"
+          echo "Files in directory:"
+          ls -la
+          
+          # 检查Node.js环境
+          which node && echo "Node.js: $(node --version)" || echo "Node.js not found"
+          which npm && echo "npm: $(npm --version)" || echo "npm not found"  
+          which npx && echo "npx available" || echo "npx not found"
+          
+          # 检查PM2
+          if command -v pm2 &> /dev/null; then
+              echo "PM2 found: $(pm2 --version)"
+              PM2_CMD="pm2"
+          elif command -v npx &> /dev/null; then
+              echo "Using npx pm2"
+              PM2_CMD="npx pm2"
+          else
+              echo "ERROR: PM2 not available"
+              exit 1
+          fi
+          
+          # 检查配置文件
+          if [ ! -f ecosystem.config.js ]; then
+              echo "ERROR: ecosystem.config.js not found"
+              exit 1
+          fi
+          
+          echo "Found ecosystem.config.js, starting service..."
+          
+          # 停止现有服务
+          $PM2_CMD stop dashboard-backend || true
+          $PM2_CMD delete dashboard-backend || true
+          
+          # 启动新服务
+          $PM2_CMD start ecosystem.config.js --update-env
+          
+          # 检查状态
+          sleep 2
+          $PM2_CMD list
+          $PM2_CMD logs dashboard-backend --lines 5
+          
+          echo "✅ Start script completed"
+          EOF
+          
+          chmod +x dist/start.sh
+          
           echo "✅ 部署文件准备完成"
           echo "部署包内容:"
           ls -la dist/
@@ -494,7 +547,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                start_cmd    : 'bash -c "echo \\"COMMAND RUNNING IN: $PWD\\" && echo \\"USER: $(whoami)\\" && echo \\"FILES:\\" && ls -la || echo \\"ls failed\\" && test -f ecosystem.config.js && echo \\"ecosystem.config.js exists\\" || echo \\"ecosystem.config.js NOT FOUND\\" && npx pm2 stop dashboard-backend || true && npx pm2 delete dashboard-backend || true && npx pm2 start ecosystem.config.js --update-env"',
+                start_cmd    : './start.sh',
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
                 deploy_secrets: deploySecrets
