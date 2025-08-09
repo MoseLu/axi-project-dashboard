@@ -98,36 +98,74 @@ jobs:
           # 设置目标目录
           TARGET_DIR="/srv/apps/project-dashboard"
           
-          # 确保目录存在 (root用户直接创建，无需sudo)
-          mkdir -p $TARGET_DIR
+          # 检查当前用户
+          echo "当前用户: $(whoami)"
+          echo "用户ID: $(id)"
           
-          # 停止现有服务
-          pm2 stop dashboard-backend || true
-          
-          # 备份现有部署（如果存在）
-          if [ -d "$TARGET_DIR/backend" ]; then
-            echo "📦 备份现有部署..."
-            cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+          # 根据用户类型决定操作方式
+          if [ "$(whoami)" = "root" ]; then
+            echo "以root用户身份部署..."
+            # 确保目录存在 (root用户直接创建，无需sudo)
+            mkdir -p $TARGET_DIR
+            
+            # 停止现有服务
+            pm2 stop dashboard-backend || true
+            
+            # 备份现有部署（如果存在）
+            if [ -d "$TARGET_DIR/backend" ]; then
+              echo "📦 备份现有部署..."
+              cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+            fi
+            
+            # 部署新版本
+            echo "📂 部署文件到服务器..."
+            cp -r backend $TARGET_DIR/
+            cp -r node_modules $TARGET_DIR/
+            cp -r frontend $TARGET_DIR/
+            cp package.json $TARGET_DIR/
+            cp ecosystem.config.js $TARGET_DIR/
+            
+            # root用户无需更改权限，但确保PM2可以访问
+            chmod -R 755 $TARGET_DIR
+          else
+            echo "以非root用户身份部署..."
+            # 确保目录存在 (非root用户使用sudo)
+            sudo mkdir -p $TARGET_DIR
+            sudo chown $(whoami):$(whoami) $TARGET_DIR
+            
+            # 停止现有服务
+            pm2 stop dashboard-backend || true
+            
+            # 备份现有部署（如果存在）
+            if [ -d "$TARGET_DIR/backend" ]; then
+              echo "📦 备份现有部署..."
+              sudo cp -r $TARGET_DIR /srv/backups/project-dashboard-$(date +%Y%m%d_%H%M%S) || true
+            fi
+            
+            # 部署新版本
+            echo "📂 部署文件到服务器..."
+            cp -r backend $TARGET_DIR/
+            cp -r node_modules $TARGET_DIR/
+            cp -r frontend $TARGET_DIR/
+            cp package.json $TARGET_DIR/
+            cp ecosystem.config.js $TARGET_DIR/
+            
+            # 设置适当的权限
+            sudo chown -R $(whoami):$(whoami) $TARGET_DIR
           fi
-          
-          # 部署新版本
-          echo "📂 部署文件到服务器..."
-          cp -r backend $TARGET_DIR/
-          cp -r node_modules $TARGET_DIR/
-          cp -r frontend $TARGET_DIR/
-          cp package.json $TARGET_DIR/
-          cp ecosystem.config.js $TARGET_DIR/
-          
-          # root用户无需更改权限，但确保PM2可以访问
-          chmod -R 755 $TARGET_DIR
           
           # 启动服务
           cd $TARGET_DIR
           pm2 start ecosystem.config.js --update-env
           
-          # 创建或更新日志目录 (root用户直接操作)
-          mkdir -p /var/log/axi-deploy-dashboard
-          chmod 755 /var/log/axi-deploy-dashboard
+          # 创建或更新日志目录
+          if [ "$(whoami)" = "root" ]; then
+            mkdir -p /var/log/axi-deploy-dashboard
+            chmod 755 /var/log/axi-deploy-dashboard
+          else
+            sudo mkdir -p /var/log/axi-deploy-dashboard
+            sudo chown $(whoami):$(whoami) /var/log/axi-deploy-dashboard
+          fi
           
           echo "✅ axi-project-dashboard 部署完成！"
           pm2 status
@@ -334,7 +372,8 @@ jobs:
                 start_cmd    : './deploy.sh',
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
-                deploy_secrets: deploySecrets
+                deploy_secrets: deploySecrets,
+                skip_init    : true  // 跳过服务器初始化，避免权限冲突
               }
             });
 
