@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.gracefulShutdown = exports.GracefulShutdown = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
+const connection_1 = require("@/database/connection");
 const redis_service_1 = require("@/services/redis.service");
 const logger_1 = require("@/utils/logger");
 class GracefulShutdown {
@@ -65,7 +62,7 @@ class GracefulShutdown {
             }
             logger_1.logger.info('Closing database connections...');
             await Promise.all([
-                this.closeMongoConnection(),
+                this.closeDatabaseConnection(),
                 this.closeRedisConnection()
             ]);
             logger_1.logger.info('Performing final cleanup...');
@@ -79,15 +76,13 @@ class GracefulShutdown {
             process.exit(1);
         }
     }
-    async closeMongoConnection() {
+    async closeDatabaseConnection() {
         try {
-            if (mongoose_1.default.connection.readyState !== 0) {
-                await mongoose_1.default.connection.close();
-                logger_1.logger.info('✅ MongoDB connection closed');
-            }
+            await (0, connection_1.disconnectDatabase)();
+            logger_1.logger.info('✅ MySQL connection closed');
         }
         catch (error) {
-            logger_1.logger.error('❌ Error closing MongoDB connection:', error);
+            logger_1.logger.error('❌ Error closing MySQL connection:', error);
             throw error;
         }
     }

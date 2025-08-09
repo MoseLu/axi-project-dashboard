@@ -13,7 +13,7 @@ export declare class GracefulShutdown {
     constructor(options?: ShutdownOptions);
     setup(server: Server, socketServer?: SocketIOServer): void;
     private shutdown;
-    private closeMongoConnection;
+    private closeDatabaseConnection;
     private closeRedisConnection;
 }
 declare const gracefulShutdown: GracefulShutdown;

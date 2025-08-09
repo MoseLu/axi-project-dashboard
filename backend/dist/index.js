@@ -132,7 +132,7 @@ class Application {
     }
     async start() {
         try {
-            await (0, connection_1.connectDatabase)();
+            const dbConnection = await (0, connection_1.connectDatabase)();
             logger_1.logger.info('Database connected successfully');
             await (0, redis_service_1.connectRedis)();
             logger_1.logger.info('Redis connected successfully');

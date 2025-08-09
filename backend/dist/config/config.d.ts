@@ -8,8 +8,12 @@ export declare const config: {
     rateLimitWindow: number;
     rateLimitMaxRequests: number;
     database: {
-        mongodb: {
-            uri: string;
+        mysql: {
+            host: string;
+            port: number;
+            user: string;
+            password: string;
+            database: string;
         };
         redis: {
             uri: string;

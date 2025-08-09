@@ -33,7 +33,11 @@ const configData = {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: parseNumber(process.env.PORT, 8080),
     websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8081),
-    mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/axi-deploy',
+    mysqlHost: process.env.MYSQL_HOST || '127.0.0.1',
+    mysqlPort: parseNumber(process.env.MYSQL_PORT, 3306),
+    mysqlUser: process.env.MYSQL_USER || 'root',
+    mysqlPassword: process.env.MYSQL_PASSWORD || '123456',
+    mysqlDatabase: process.env.MYSQL_DATABASE || 'project_dashboard',
     redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
     githubToken: process.env.GITHUB_TOKEN || '',
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
@@ -91,7 +95,7 @@ const configData = {
 const validateConfig = () => {
     const requiredFields = [
         'jwt.secret',
-        'database.mongodb.uri',
+        'database.mysql.host',
         'database.redis.uri'
     ];
     const missingFields = requiredFields.filter(field => {
@@ -139,8 +143,12 @@ exports.config = {
     rateLimitWindow: configData.rateLimitWindow,
     rateLimitMaxRequests: configData.rateLimitMaxRequests,
     database: {
-        mongodb: {
-            uri: configData.mongodbUri
+        mysql: {
+            host: configData.mysqlHost,
+            port: configData.mysqlPort,
+            user: configData.mysqlUser,
+            password: configData.mysqlPassword,
+            database: configData.mysqlDatabase
         },
         redis: {
             uri: configData.redisUri

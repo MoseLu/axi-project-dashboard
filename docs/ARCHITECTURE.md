@@ -354,7 +354,7 @@ class CacheService {
 #### 连接池优化
 ```typescript
 // MongoDB 连接池
-mongoose.connect(mongoUri, {
+mysql.createConnection({
   maxPoolSize: 50,
   minPoolSize: 5,
   maxIdleTimeMS: 30000,

@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HealthCheckService = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
+const connection_1 = require("@/database/connection");
 const redis_service_1 = require("@/services/redis.service");
 const logger_1 = require("@/utils/logger");
 class HealthCheckService {
@@ -33,23 +30,22 @@ class HealthCheckService {
     async checkDatabase() {
         const startTime = Date.now();
         try {
-            if (mongoose_1.default.connection.readyState !== 1) {
+            const connection = (0, connection_1.getConnection)();
+            if (!connection) {
                 return {
                     status: 'unhealthy',
                     message: 'Database not connected',
                     responseTime: Date.now() - startTime
                 };
             }
-            await mongoose_1.default.connection.db.admin().ping();
+            await connection.ping();
             return {
                 status: 'healthy',
-                message: 'Database connection is healthy',
+                message: 'MySQL connection is healthy',
                 responseTime: Date.now() - startTime,
                 details: {
-                    readyState: mongoose_1.default.connection.readyState,
-                    host: mongoose_1.default.connection.host,
-                    port: mongoose_1.default.connection.port,
-                    name: mongoose_1.default.connection.name
+                    status: 'connected',
+                    threadId: connection.threadId
                 }
             };
         }
