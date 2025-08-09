@@ -258,20 +258,63 @@ jobs:
         run: |
           echo "🔍 调试SSH连接配置..."
           echo "服务器地址: ${{ secrets.SERVER_HOST }}"
-          echo "服务器用户: ${{ secrets.SERVER_USER }} (应该是 root)" 
+          echo "服务器用户: ${{ secrets.SERVER_USER }}" 
           echo "服务器端口: ${{ secrets.SERVER_PORT }}"
           echo "SSH密钥长度: $(echo '${{ secrets.SERVER_KEY }}' | wc -c)"
-          echo "SSH密钥格式检查:"
-          echo '${{ secrets.SERVER_KEY }}' | head -1
           echo "Deploy Center PAT 是否存在: $([ -n '${{ secrets.DEPLOY_CENTER_PAT }}' ] && echo '是' || echo '否')"
           
-          # 验证关键参数
-          if [ "${{ secrets.SERVER_USER }}" != "root" ]; then
-            echo "⚠️  警告: SERVER_USER 不是 root，当前值: ${{ secrets.SERVER_USER }}"
-            echo "💡 建议: 确保 GitHub Secrets 中 SERVER_USER 设置为 root"
+          # 详细的SSH密钥格式检查
+          echo "🔑 SSH密钥格式分析:"
+          SSH_KEY='${{ secrets.SERVER_KEY }}'
+          echo "第一行: $(echo "$SSH_KEY" | head -1)"
+          echo "最后一行: $(echo "$SSH_KEY" | tail -1)"
+          
+          if echo "$SSH_KEY" | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
+            echo "✅ 检测到 OpenSSH 格式私钥"
+          elif echo "$SSH_KEY" | grep -q "BEGIN RSA PRIVATE KEY"; then
+            echo "⚠️  检测到传统 RSA 格式私钥 - 可能需要转换为 OpenSSH 格式"
+          elif echo "$SSH_KEY" | grep -q "BEGIN EC PRIVATE KEY"; then
+            echo "✅ 检测到 EC 格式私钥"
+          elif echo "$SSH_KEY" | grep -q "BEGIN PRIVATE KEY"; then
+            echo "✅ 检测到 PKCS#8 格式私钥"
           else
-            echo "✅ SERVER_USER 配置正确: root"
+            echo "❌ 无法识别的密钥格式"
           fi
+          
+          # 密钥行数检查
+          KEY_LINES=$(echo "$SSH_KEY" | wc -l)
+          echo "密钥行数: $KEY_LINES"
+          
+          if [ "$KEY_LINES" -lt 5 ]; then
+            echo "⚠️  密钥行数过少，可能不完整"
+          fi
+          
+          # 验证关键参数
+          echo "📋 参数验证:"
+          echo "- SERVER_HOST: $([ -n '${{ secrets.SERVER_HOST }}' ] && echo '✅' || echo '❌')"
+          echo "- SERVER_USER: $([ -n '${{ secrets.SERVER_USER }}' ] && echo '✅' || echo '❌')"
+          echo "- SERVER_PORT: $([ -n '${{ secrets.SERVER_PORT }}' ] && echo '✅' || echo '❌')"
+          echo "- SERVER_KEY: $([ -n '${{ secrets.SERVER_KEY }}' ] && echo '✅' || echo '❌')"
+          echo "- DEPLOY_CENTER_PAT: $([ -n '${{ secrets.DEPLOY_CENTER_PAT }}' ] && echo '✅' || echo '❌')"
+
+      - name: 测试SSH连接
+        run: |
+          echo "🧪 手动测试SSH连接..."
+          
+          # 创建临时SSH密钥文件
+          mkdir -p ~/.ssh
+          echo '${{ secrets.SERVER_KEY }}' > ~/.ssh/test_key
+          chmod 600 ~/.ssh/test_key
+          
+          # 添加服务器到known_hosts
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          
+          # 测试SSH连接
+          echo "测试SSH连接到 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PORT }}"
+          ssh -i ~/.ssh/test_key -p ${{ secrets.SERVER_PORT }} -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH连接测试成功'; whoami; id" || echo "SSH连接测试失败"
+          
+          # 清理临时文件
+          rm -f ~/.ssh/test_key
 
       - name: 触发部署
         uses: actions/github-script@v7
