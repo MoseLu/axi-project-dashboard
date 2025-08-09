@@ -14,7 +14,11 @@ module.exports = {
         WEBSOCKET_PORT: 8091, // Dashboard WebSocket 专用端口
         
         // 数据库配置 (使用云服务器本地数据库)
-        MONGODB_URI: 'mongodb://localhost:27017/axi-deploy-dashboard',
+        MYSQL_HOST: '127.0.0.1',
+        MYSQL_PORT: '3306',
+        MYSQL_USER: 'root',
+        MYSQL_PASSWORD: '123456',
+        MYSQL_DATABASE: 'axi_project_dashboard',
         REDIS_URI: 'redis://localhost:6379',
         
         // 安全配置

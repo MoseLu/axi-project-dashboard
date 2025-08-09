@@ -11,7 +11,11 @@ interface Config {
   websocketPort: number;
   
   // 数据库配置
-  mongodbUri: string;
+  mysqlHost: string;
+  mysqlPort: number;
+  mysqlUser: string;
+  mysqlPassword: string;
+  mysqlDatabase: string;
   redisUri: string;
   
   // GitHub 配置
@@ -142,7 +146,11 @@ const configData: Config = {
   websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8081),
   
   // 数据库配置
-  mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/axi-deploy',
+  mysqlHost: process.env.MYSQL_HOST || '127.0.0.1',
+  mysqlPort: parseNumber(process.env.MYSQL_PORT, 3306),
+  mysqlUser: process.env.MYSQL_USER || 'root',
+  mysqlPassword: process.env.MYSQL_PASSWORD || '123456',
+  mysqlDatabase: process.env.MYSQL_DATABASE || 'axi_project_dashboard',
   redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
   
   // GitHub 配置
@@ -244,7 +252,7 @@ const configData: Config = {
 export const validateConfig = (): void => {
   const requiredFields = [
     'jwt.secret',
-    'database.mongodb.uri',
+    'database.mysql.host',
     'database.redis.uri'
   ];
 
@@ -304,8 +312,12 @@ export const config = {
   rateLimitMaxRequests: configData.rateLimitMaxRequests,
   
   database: {
-    mongodb: {
-      uri: configData.mongodbUri
+    mysql: {
+      host: configData.mysqlHost,
+      port: configData.mysqlPort,
+      user: configData.mysqlUser,
+      password: configData.mysqlPassword,
+      database: configData.mysqlDatabase
     },
     redis: {
       uri: configData.redisUri

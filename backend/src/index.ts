@@ -166,7 +166,7 @@ class Application {
   public async start(): Promise<void> {
     try {
       // 连接数据库
-      await connectDatabase();
+      const dbConnection = await connectDatabase();
       logger.info('Database connected successfully');
 
       // 连接 Redis
