@@ -8,9 +8,11 @@ console.log('🔧 Fixing dependencies for axi-project-dashboard...');
 
 // 定义所有可能缺失的Express相关依赖
 const missingDependencies = [
+  // 核心依赖
   'on-finished',
   'ee-first',
   'finalhandler',
+  'statuses',
   'send',
   'serve-static',
   'range-parser',
@@ -41,12 +43,35 @@ const missingDependencies = [
   'path-to-regexp',
   'array-flatten',
   'setprototypeof',
-  'statuses',
   'http-errors',
   'inherits',
   'object-inspect',
   'string_decoder',
-  'safe-buffer'
+  'safe-buffer',
+  // 额外的Express相关依赖
+  'body-parser',
+  'compression',
+  'cors',
+  'helmet',
+  'express-rate-limit',
+  'express-validator',
+  'swagger-jsdoc',
+  'swagger-ui-express',
+  'socket.io',
+  'redis',
+  'mysql2',
+  'bcryptjs',
+  'jsonwebtoken',
+  'uuid',
+  'winston',
+  'dayjs',
+  'lodash',
+  'axios',
+  'node-cron',
+  'dotenv',
+  'module-alias',
+  'joi',
+  'debug'
 ];
 
 try {
