@@ -27,6 +27,191 @@ else
     npm install -g pm2
 fi
 
+# 直接修复 src 目录问题
+echo "🔧 Directly fixing src directory issue..."
+cd backend
+
+# 检查是否有 src 目录
+if [ ! -d "src" ]; then
+    echo "📁 Creating src directory..."
+    mkdir -p src
+    
+    # 检查是否有 TypeScript 源文件
+    if [ -f "index.ts" ]; then
+        echo "📄 Found index.ts, moving to src/"
+        mv index.ts src/
+    fi
+    
+    # 检查是否有其他 TypeScript 文件
+    for file in *.ts; do
+        if [ -f "$file" ] && [ "$file" != "build.js" ] && [ "$file" != "start-server.js" ]; then
+            echo "  📄 Moving $file to src/"
+            mv "$file" "src/"
+        fi
+    done
+    
+    # 检查是否有编译后的文件，如果有则复制到 src
+    if [ -f "index.js" ] && [ ! -f "src/index.ts" ]; then
+        echo "📄 Found compiled index.js, creating src/index.ts..."
+        # 创建一个简单的 index.ts 文件
+        cat > src/index.ts << 'EOF'
+import express from 'express';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import { config } from '@/config/config';
+import { connectDatabase } from '@/database/connection';
+import { connectRedis } from '@/services/redis.service';
+import { logger } from '@/utils/logger';
+import { errorHandler } from '@/middleware/error.middleware';
+import { authMiddleware } from '@/middleware/auth.middleware';
+import { routes } from '@/routes';
+import { SocketService } from '@/services/socket.service';
+import { MetricsService } from '@/services/metrics.service';
+import { HealthCheckService } from '@/services/health.service';
+import { gracefulShutdown } from '@/utils/graceful-shutdown';
+
+class Application {
+  public app: express.Application;
+  public server: http.Server;
+  public io: SocketIOServer;
+  private socketService: SocketService;
+  private metricsService: MetricsService;
+  private healthService: HealthCheckService;
+
+  constructor() {
+    this.app = express();
+    this.server = http.createServer(this.app);
+    this.io = new SocketIOServer(this.server, {
+      cors: {
+        origin: config.cors.origin || '*',
+        methods: ['GET', 'POST'],
+        credentials: true
+      },
+      transports: ['websocket', 'polling']
+    });
+
+    this.socketService = new SocketService(this.io);
+    this.metricsService = new MetricsService();
+    this.healthService = new HealthCheckService();
+
+    this.initializeMiddlewares();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
+    this.initializeGracefulShutdown();
+  }
+
+  private initializeMiddlewares(): void {
+    this.app.use(helmet());
+    this.app.use(cors({
+      origin: config.cors.origin || '*',
+      credentials: true
+    }));
+    this.app.use(compression());
+    this.app.use(express.json({ limit: '10mb' }));
+    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  }
+
+  private initializeRoutes(): void {
+    this.app.use('/api', routes);
+    this.app.get('/health', async (req, res) => {
+      res.status(200).json({
+        status: 'healthy',
+        message: 'axi-project-dashboard API is running',
+        timestamp: new Date().toISOString()
+      });
+    });
+  }
+
+  private initializeErrorHandling(): void {
+    this.app.use(errorHandler);
+  }
+
+  private initializeGracefulShutdown(): void {
+    gracefulShutdown(this.server, this.io);
+  }
+
+  public async start(): Promise<void> {
+    try {
+      await this.initializeServices();
+      const port = process.env.PORT || 8080;
+      this.server.listen(port, () => {
+        logger.info(`🚀 Server is running on port ${port}`);
+        logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+        logger.info(`🔗 API URL: http://localhost:${port}/api`);
+        logger.info(`💻 WebSocket URL: ws://localhost:${process.env.WEBSOCKET_PORT || 8081}`);
+        logger.info(`📚 API Docs: http://localhost:${port}/api-docs`);
+      });
+    } catch (error) {
+      logger.error('❌ Failed to start server:', error);
+      process.exit(1);
+    }
+  }
+
+  private async initializeServices(): Promise<void> {
+    try {
+      await connectDatabase();
+      await connectRedis();
+    } catch (error) {
+      logger.error('❌ Failed to initialize services:', error);
+      throw error;
+    }
+  }
+}
+
+// 启动应用
+const app = new Application();
+app.start();
+EOF
+    fi
+    
+    # 创建必要的子目录并复制现有文件
+    mkdir -p src/config src/services src/middleware src/utils src/types src/database src/routes
+    
+    # 复制现有目录到 src
+    if [ -d "config" ]; then
+        echo "📁 Copying config directory to src/"
+        cp -r config/* src/config/ 2>/dev/null || true
+    fi
+    
+    if [ -d "services" ]; then
+        echo "📁 Copying services directory to src/"
+        cp -r services/* src/services/ 2>/dev/null || true
+    fi
+    
+    if [ -d "middleware" ]; then
+        echo "📁 Copying middleware directory to src/"
+        cp -r middleware/* src/middleware/ 2>/dev/null || true
+    fi
+    
+    if [ -d "utils" ]; then
+        echo "📁 Copying utils directory to src/"
+        cp -r utils/* src/utils/ 2>/dev/null || true
+    fi
+    
+    if [ -d "types" ]; then
+        echo "📁 Copying types directory to src/"
+        cp -r types/* src/types/ 2>/dev/null || true
+    fi
+    
+    if [ -d "database" ]; then
+        echo "📁 Copying database directory to src/"
+        cp -r database/* src/database/ 2>/dev/null || true
+    fi
+    
+    if [ -d "routes" ]; then
+        echo "📁 Copying routes directory to src/"
+        cp -r routes/* src/routes/ 2>/dev/null || true
+    fi
+    
+    echo "✅ Src directory structure created successfully"
+fi
+
+cd ..
+
 # 自动依赖修复函数
 fix_dependencies() {
     echo "🔧 Auto-fixing dependencies and build issues..."
