@@ -28,8 +28,11 @@ try {
   if (!fs.existsSync('src')) {
     console.log('❌ No src directory found!');
     console.log('📁 Current directory contents:');
+    
+    // 获取当前目录文件列表
+    let files = [];
     try {
-      const files = fs.readdirSync('.');
+      files = fs.readdirSync('.');
       files.forEach(file => {
         const stat = fs.statSync(file);
         console.log(`  ${stat.isDirectory() ? '📁' : '📄'} ${file}`);
