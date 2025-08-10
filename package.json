@@ -9,6 +9,7 @@
     "dev:monitor": "node scripts/startup-monitor.js",
     "dev:quick": "node scripts/quick-start.js",
     "fix:deps": "node scripts/fix-dependencies.js",
+    "fix:server": "node scripts/server-fix.js",
     "batch:install": "node scripts/batch-install.js",
     "check:deps": "node scripts/check-dependencies.js",
     "build": "pnpm --filter axi-deploy-dashboard-backend build && pnpm --filter axi-deploy-dashboard-frontend build",
