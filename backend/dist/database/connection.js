@@ -19,8 +19,9 @@ const connectDatabase = async () => {
             charset: 'utf8mb4',
             timezone: '+08:00',
             connectionLimit: 10,
-            acquireTimeout: 60000,
-            timeout: 60000,
+            acquireTimeout: 10000,
+            timeout: 10000,
+            connectTimeout: 10000,
         };
         const tempConnection = await promise_1.default.createConnection({
             host: mysqlConfig.host,
@@ -29,6 +30,7 @@ const connectDatabase = async () => {
             password: mysqlConfig.password,
             charset: mysqlConfig.charset,
             timezone: mysqlConfig.timezone,
+            connectTimeout: 10000,
         });
         await tempConnection.execute(`CREATE DATABASE IF NOT EXISTS \`${mysqlConfig.database}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
         await tempConnection.end();

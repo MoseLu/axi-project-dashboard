@@ -11,7 +11,6 @@ export class RedisService {
       url: config.database.redis.uri,
       socket: {
         connectTimeout: 5000,  // 减少到5秒
-        commandTimeout: 5000,  // 命令超时5秒
       },
     });
 

@@ -158,16 +158,24 @@ class Application {
                 logger_1.logger.info(`📚 API Docs: http://localhost:${config_1.config.port}/api-docs`);
             }
         });
-        this.initializeServices();
+        setImmediate(() => {
+            this.initializeServices();
+        });
     }
     async initializeServices() {
         try {
-            try {
-                const dbConnection = await (0, connection_1.connectDatabase)();
-                logger_1.logger.info('✅ Database connected successfully');
+            const skipDbInit = process.env.SKIP_DB_INIT === 'true';
+            if (!skipDbInit) {
+                try {
+                    const dbConnection = await (0, connection_1.connectDatabase)();
+                    logger_1.logger.info('✅ Database connected successfully');
+                }
+                catch (error) {
+                    logger_1.logger.warn('⚠️ Database connection failed, continuing without database:', error);
+                }
             }
-            catch (error) {
-                logger_1.logger.warn('⚠️ Database connection failed, continuing without database:', error);
+            else {
+                logger_1.logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true)');
             }
             try {
                 await (0, redis_service_1.connectRedis)();
