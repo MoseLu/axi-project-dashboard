@@ -1,13 +1,13 @@
-import Redis from 'redis';
+import { createClient } from 'redis';
 import { config } from '@/config/config';
 import { logger } from '@/utils/logger';
 
 export class RedisService {
-  private client: Redis.RedisClientType;
+  private client: any;
   private isConnected: boolean = false;
 
   constructor() {
-    this.client = Redis.createClient({
+    this.client = createClient({
       url: config.database.redis.uri,
       socket: {
         connectTimeout: 5000,
@@ -107,7 +107,7 @@ export class RedisService {
     }
   }
 
-  public getClient(): Redis.RedisClientType {
+  public getClient(): any {
     return this.client;
   }
 

@@ -299,18 +299,14 @@ export const validateConfig = (): void => {
   }
 };
 
-// 重构配置以匹配其他服务的期望结构
+// 导出配置对象
 export const config = {
   env: configData.nodeEnv,
-  nodeEnv: configData.nodeEnv, // 保持兼容性
+  nodeEnv: configData.nodeEnv,
   port: configData.port,
   websocketPort: configData.websocketPort,
   
-  // 保持扁平结构的属性以兼容现有代码
-  corsOrigin: configData.corsOrigin,
-  rateLimitWindow: configData.rateLimitWindow,
-  rateLimitMaxRequests: configData.rateLimitMaxRequests,
-  
+  // 数据库配置
   database: {
     mysql: {
       host: configData.mysqlHost,
@@ -324,41 +320,49 @@ export const config = {
     }
   },
   
+  // JWT 配置
   jwt: {
     secret: configData.jwtSecret,
     expiresIn: configData.jwtExpiresIn
   },
   
+  // GitHub 配置
   github: {
     token: configData.githubToken,
     webhookSecret: configData.githubWebhookSecret,
     apiUrl: configData.githubApiUrl
   },
   
-  logging: {
-    level: configData.logLevel,
-    filePath: configData.logFilePath
-  },
-  
+  // CORS 配置
   cors: {
     origin: configData.corsOrigin
   },
   
+  // 限流配置
   rateLimit: {
     window: configData.rateLimitWindow,
     maxRequests: configData.rateLimitMaxRequests
   },
   
+  // 日志配置
+  logging: {
+    level: configData.logLevel,
+    filePath: configData.logFilePath
+  },
+  
+  // 缓存配置
   cache: {
     ttl: configData.cacheTtl,
     maxItems: configData.cacheMaxItems
   },
   
+  // WebSocket 配置
   websocket: {
     heartbeatInterval: configData.wsHeartbeatInterval,
     maxConnections: configData.wsMaxConnections
   },
   
+  // 通知配置
   notifications: {
     enabled: configData.notificationEnabled,
     channels: configData.notificationChannels

@@ -46,10 +46,11 @@
 
 ## 📖 文档导航
 
-- **[快速开始](./docs/QUICK_START.md)** - 详细部署指南
-- **[端口规划](./docs/PORT_PLANNING.md)** - 端口配置和冲突避免
-- **[系统架构](./docs/ARCHITECTURE.md)** - 技术架构说明
-- **[部署指南](./docs/DEPLOYMENT.md)** - 完整部署流程
+- **[📚 文档索引](./documentation/DOCS_INDEX.md)** - 完整文档导航
+- **[快速开始](./documentation/QUICK_START.md)** - 详细部署指南
+- **[端口规划](./documentation/PORT_PLANNING.md)** - 端口配置和冲突避免
+- **[系统架构](./documentation/ARCHITECTURE.md)** - 技术架构说明
+- **[部署指南](./documentation/DEPLOYMENT.md)** - 完整部署流程
 
 ## ✨ 核心特性
 
@@ -101,11 +102,12 @@ axi-project-dashboard/
 │   ├── src/                    # 源码目录
 │   ├── package.json            # 前端依赖
 │   └── tsconfig.json           # TypeScript 配置
-└── docs/                        # 详细文档
-    ├── QUICK_START.md          # 快速开始
-    ├── ARCHITECTURE.md         # 系统架构
-    ├── DEPLOYMENT.md           # 部署指南
-    └── PORT_PLANNING.md        # 端口规划
+└── documentation/              # 详细文档
+    ├── DOCS_INDEX.md          # 文档索引
+    ├── QUICK_START.md         # 快速开始
+    ├── ARCHITECTURE.md        # 系统架构
+    ├── DEPLOYMENT.md          # 部署指南
+    └── PORT_PLANNING.md       # 端口规划
 ```
 
 ## 🏛️ 系统架构
@@ -156,7 +158,7 @@ GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8090/8091) →
 
 ## 🚀 快速开始
 
-详细部署指南请参考 [快速开始文档](./docs/QUICK_START.md)
+详细部署指南请参考 [快速开始文档](./documentation/QUICK_START.md)
 
 ### 简化部署步骤
 
@@ -322,11 +324,11 @@ GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8090/8091) →
 
 ## 📚 文档资源
 
-- [API 参考文档](./docs/api-reference.md)
-- [部署指南](./docs/deployment-guide.md)
-- [用户手册](./docs/user-manual.md)
-- [开发指南](./docs/development-guide.md)
-- [故障排除](./docs/troubleshooting.md)
+- **[📚 文档索引](./documentation/DOCS_INDEX.md)** - 完整文档导航
+- **[快速开始](./documentation/QUICK_START.md)** - 详细部署指南
+- **[系统架构](./documentation/ARCHITECTURE.md)** - 技术架构说明
+- **[部署指南](./documentation/DEPLOYMENT.md)** - 完整部署流程
+- **[端口规划](./documentation/PORT_PLANNING.md)** - 端口配置说明
 
 ## 🤝 贡献指南
 
