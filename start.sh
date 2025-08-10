@@ -72,7 +72,7 @@ import { routes } from '@/routes';
 import { SocketService } from '@/services/socket.service';
 import { MetricsService } from '@/services/metrics.service';
 import { HealthCheckService } from '@/services/health.service';
-import { gracefulShutdown } from '@/utils/graceful-shutdown';
+import { GracefulShutdown } from '@/utils/graceful-shutdown';
 
 class Application {
   public app: express.Application;
@@ -81,6 +81,7 @@ class Application {
   private socketService: SocketService;
   private metricsService: MetricsService;
   private healthService: HealthCheckService;
+  private gracefulShutdown: GracefulShutdown;
 
   constructor() {
     this.app = express();
@@ -97,6 +98,7 @@ class Application {
     this.socketService = new SocketService(this.io);
     this.metricsService = new MetricsService();
     this.healthService = new HealthCheckService();
+    this.gracefulShutdown = new GracefulShutdown();
 
     this.initializeMiddlewares();
     this.initializeRoutes();
@@ -131,7 +133,7 @@ class Application {
   }
 
   private initializeGracefulShutdown(): void {
-    gracefulShutdown(this.server, this.io);
+    this.gracefulShutdown.setup(this.server, this.io);
   }
 
   public async start(): Promise<void> {
@@ -272,7 +274,7 @@ import { routes } from '@/routes';
 import { SocketService } from '@/services/socket.service';
 import { MetricsService } from '@/services/metrics.service';
 import { HealthCheckService } from '@/services/health.service';
-import { gracefulShutdown } from '@/utils/graceful-shutdown';
+import { GracefulShutdown } from '@/utils/graceful-shutdown';
 
 class Application {
   public app: express.Application;
@@ -281,6 +283,7 @@ class Application {
   private socketService: SocketService;
   private metricsService: MetricsService;
   private healthService: HealthCheckService;
+  private gracefulShutdown: GracefulShutdown;
 
   constructor() {
     this.app = express();
@@ -297,6 +300,7 @@ class Application {
     this.socketService = new SocketService(this.io);
     this.metricsService = new MetricsService();
     this.healthService = new HealthCheckService();
+    this.gracefulShutdown = new GracefulShutdown();
 
     this.initializeMiddlewares();
     this.initializeRoutes();
@@ -331,7 +335,7 @@ class Application {
   }
 
   private initializeGracefulShutdown(): void {
-    gracefulShutdown(this.server, this.io);
+    this.gracefulShutdown.setup(this.server, this.io);
   }
 
   public async start(): Promise<void> {

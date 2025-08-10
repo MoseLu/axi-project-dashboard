@@ -37,6 +37,7 @@ class Application {
         this.socketService = new socket_service_1.SocketService(this.io);
         this.metricsService = new metrics_service_1.MetricsService();
         this.healthService = new health_service_1.HealthCheckService();
+        this.gracefulShutdown = new graceful_shutdown_1.GracefulShutdown();
         this.initializeMiddlewares();
         this.initializeRoutes();
         this.initializeErrorHandling();
@@ -148,7 +149,7 @@ class Application {
         this.app.use(error_middleware_1.errorHandler);
     }
     initializeGracefulShutdown() {
-        graceful_shutdown_1.gracefulShutdown.setup(this.server, this.io);
+        this.gracefulShutdown.setup(this.server, this.io);
     }
     async start() {
         this.server.listen(config_1.config.port, () => {

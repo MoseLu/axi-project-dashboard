@@ -8,6 +8,7 @@ declare class Application {
     private socketService;
     private metricsService;
     private healthService;
+    private gracefulShutdown;
     constructor();
     private initializeMiddlewares;
     private initializeRoutes;
