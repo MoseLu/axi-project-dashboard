@@ -138,13 +138,13 @@
   },
   "homepage": "https://github.com/your-org/axi-deploy#readme",
   "_moduleAliases": {
-    "@": "./dist",
-    "@config": "./dist/config",
-    "@services": "./dist/services",
-    "@middleware": "./dist/middleware",
-    "@utils": "./dist/utils",
-    "@types": "./dist/types",
-    "@database": "./dist/database",
-    "@routes": "./dist/routes"
+    "@": ".",
+    "@config": "./config",
+    "@services": "./services",
+    "@middleware": "./middleware",
+    "@utils": "./utils",
+    "@types": "./types",
+    "@database": "./database",
+    "@routes": "./routes"
   }
 }

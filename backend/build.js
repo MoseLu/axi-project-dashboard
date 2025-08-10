@@ -238,9 +238,22 @@ ${indexContent}`;
     }
   }
 
-  // 复制必要的文件
+  // 复制必要的文件并更新模块别名配置
   if (fs.existsSync('package.json')) {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    
+    // 更新 _moduleAliases 配置，使用相对路径
+    packageJson._moduleAliases = {
+      "@": ".",
+      "@config": "./config",
+      "@services": "./services",
+      "@middleware": "./middleware",
+      "@utils": "./utils",
+      "@types": "./types",
+      "@database": "./database",
+      "@routes": "./routes"
+    };
+    
     fs.writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
     console.log('✅ Copied package.json with updated module aliases');
   }
