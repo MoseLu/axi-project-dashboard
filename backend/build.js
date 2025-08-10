@@ -5,12 +5,8 @@ const path = require('path');
 console.log('🔨 Building backend...');
 
 try {
-  // 检查是否已经有编译后的文件
-  if (fs.existsSync('dist') && fs.existsSync('dist/index.js')) {
-    console.log('✅ Compiled files already exist, skipping build');
-    console.log('🎉 Backend build completed successfully!');
-    return;
-  }
+  // 强制重新构建，确保使用最新的修复
+  console.log('🔄 Force rebuilding to ensure latest fixes are applied...');
 
   // 清理 dist 目录
   if (fs.existsSync('dist')) {
@@ -30,20 +26,27 @@ try {
 
   // 检查是否有 src 目录
   if (!fs.existsSync('src')) {
-    console.log('⚠️ No src directory found, skipping TypeScript compilation');
-    
-    // 即使跳过编译，也要处理路径别名
-    if (fs.existsSync('dist')) {
-      try {
-        execSync('npx tsc-alias', { stdio: 'inherit' });
-        console.log('✅ Path aliases processed');
-      } catch (error) {
-        console.log('⚠️ Failed to process path aliases, continuing...');
-      }
+    console.log('❌ No src directory found!');
+    console.log('📁 Current directory contents:');
+    try {
+      const files = fs.readdirSync('.');
+      files.forEach(file => {
+        const stat = fs.statSync(file);
+        console.log(`  ${stat.isDirectory() ? '📁' : '📄'} ${file}`);
+      });
+    } catch (error) {
+      console.log('⚠️ Could not list directory contents:', error.message);
     }
-    
-    console.log('🎉 Backend build completed successfully!');
-    return;
+    console.log('❌ Cannot build without src directory');
+    process.exit(1);
+  }
+
+  console.log('📁 Found src directory, checking contents...');
+  try {
+    const srcFiles = fs.readdirSync('src');
+    console.log('📄 Source files:', srcFiles.join(', '));
+  } catch (error) {
+    console.log('⚠️ Could not list src directory contents:', error.message);
   }
 
   // 编译 TypeScript
