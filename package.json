@@ -7,6 +7,8 @@
     "dev": "concurrently \"pnpm --filter axi-deploy-dashboard-backend dev\" \"pnpm --filter axi-deploy-dashboard-frontend start\"",
     "dev:fast": "concurrently \"pnpm --filter axi-deploy-dashboard-backend dev:fast\" \"pnpm --filter axi-deploy-dashboard-frontend start\"",
     "dev:monitor": "node scripts/startup-monitor.js",
+    "dev:quick": "node scripts/quick-start.js",
+    "fix:deps": "node scripts/fix-dependencies.js",
     "build": "pnpm --filter axi-deploy-dashboard-backend build && pnpm --filter axi-deploy-dashboard-frontend build",
     "start": "pnpm --filter axi-deploy-dashboard-backend start",
     "start:fast": "pnpm --filter axi-deploy-dashboard-backend start:fast",
