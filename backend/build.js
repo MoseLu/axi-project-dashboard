@@ -194,8 +194,15 @@ app.start();`;
             const sourcePath = path.join(dir, file);
             const targetPath = path.join(srcDir, file);
             if (fs.statSync(sourcePath).isFile()) {
-              fs.copyFileSync(sourcePath, targetPath);
-              console.log(`  📄 Copied ${file} to src/${dir}/`);
+              // 只复制 TypeScript 源文件，跳过编译后的文件
+              if (file.endsWith('.ts') && !file.endsWith('.d.ts')) {
+                fs.copyFileSync(sourcePath, targetPath);
+                console.log(`  📄 Copied ${file} to src/${dir}/`);
+              } else if (!file.endsWith('.js') && !file.endsWith('.d.ts') && !file.endsWith('.map')) {
+                // 复制其他非编译文件
+                fs.copyFileSync(sourcePath, targetPath);
+                console.log(`  📄 Copied ${file} to src/${dir}/`);
+              }
             }
           });
         } catch (error) {
@@ -286,7 +293,61 @@ ${indexContent}`;
 
   if (missingFiles.length > 0) {
     console.log('❌ Missing required files:', missingFiles);
-    throw new Error(`Build verification failed: Missing ${missingFiles.length} files`);
+    console.log('🔧 Attempting to fix missing files...');
+    
+    // 检查是否有源文件存在
+    const sourceFiles = [
+      'src/index.ts',
+      'src/config/config.ts',
+      'src/services/redis.service.ts',
+      'src/utils/logger.ts',
+      'src/middleware/error.middleware.ts',
+      'src/routes/index.ts',
+      'src/services/socket.service.ts',
+      'src/services/metrics.service.ts',
+      'src/services/health.service.ts',
+      'src/utils/graceful-shutdown.ts',
+      'src/database/connection.ts'
+    ];
+    
+    const missingSourceFiles = [];
+    sourceFiles.forEach(file => {
+      if (!fs.existsSync(file)) {
+        missingSourceFiles.push(file);
+      }
+    });
+    
+    if (missingSourceFiles.length > 0) {
+      console.log('❌ Missing source files:', missingSourceFiles);
+      throw new Error(`Build verification failed: Missing ${missingFiles.length} build files and ${missingSourceFiles.length} source files`);
+    } else {
+      console.log('✅ All source files are present, but build files are missing');
+      console.log('🔄 Re-running TypeScript compilation...');
+      
+      // 重新运行 TypeScript 编译
+      try {
+        execSync('npx tsc', { stdio: 'inherit' });
+        console.log('✅ TypeScript recompilation completed');
+        
+        // 重新验证
+        const stillMissingFiles = [];
+        requiredFiles.forEach(file => {
+          if (!fs.existsSync(file)) {
+            stillMissingFiles.push(file);
+          }
+        });
+        
+        if (stillMissingFiles.length > 0) {
+          console.log('❌ Still missing files after recompilation:', stillMissingFiles);
+          throw new Error(`Build verification failed: Missing ${stillMissingFiles.length} files after recompilation`);
+        } else {
+          console.log('✅ All required files are now present');
+        }
+      } catch (error) {
+        console.log('❌ TypeScript recompilation failed:', error.message);
+        throw new Error(`Build verification failed: ${error.message}`);
+      }
+    }
   } else {
     console.log('✅ All required files are present');
   }
