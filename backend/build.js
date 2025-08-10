@@ -195,11 +195,14 @@ app.start();`;
             const targetPath = path.join(srcDir, file);
             if (fs.statSync(sourcePath).isFile()) {
               fs.copyFileSync(sourcePath, targetPath);
+              console.log(`  📄 Copied ${file} to src/${dir}/`);
             }
           });
         } catch (error) {
           console.log(`⚠️ Could not copy ${dir} directory:`, error.message);
         }
+      } else {
+        console.log(`⚠️ Directory ${dir} not found, creating empty directory`);
       }
     });
     
@@ -256,6 +259,36 @@ ${indexContent}`;
     
     fs.writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
     console.log('✅ Copied package.json with updated module aliases');
+  }
+
+  // 验证构建结果
+  console.log('🔍 Verifying build results...');
+  const requiredFiles = [
+    'dist/index.js',
+    'dist/config/config.js',
+    'dist/services/redis.service.js',
+    'dist/utils/logger.js',
+    'dist/middleware/error.middleware.js',
+    'dist/routes/index.js',
+    'dist/services/socket.service.js',
+    'dist/services/metrics.service.js',
+    'dist/services/health.service.js',
+    'dist/utils/graceful-shutdown.js',
+    'dist/database/connection.js'
+  ];
+
+  const missingFiles = [];
+  requiredFiles.forEach(file => {
+    if (!fs.existsSync(file)) {
+      missingFiles.push(file);
+    }
+  });
+
+  if (missingFiles.length > 0) {
+    console.log('❌ Missing required files:', missingFiles);
+    throw new Error(`Build verification failed: Missing ${missingFiles.length} files`);
+  } else {
+    console.log('✅ All required files are present');
   }
 
   console.log('🎉 Backend build completed successfully!');
