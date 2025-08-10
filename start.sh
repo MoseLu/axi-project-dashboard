@@ -38,6 +38,13 @@ fix_dependencies() {
     cd ..
     npm install --force || echo "Dependencies installation completed"
     
+    # 修复模块别名问题
+    echo "🔧 Fixing module aliases..."
+    node scripts/fix-module-alias.js || {
+        echo "ERROR: Module alias fix failed"
+        exit 1
+    }
+    
     # 构建项目
     echo "🔨 Building project..."
     echo "Current directory before cd backend: $(pwd)"

@@ -1,4 +1,6 @@
 "use strict";
+require("module-alias/register");
+"use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -10,16 +12,16 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
-const config_1 = require("@/config/config");
-const connection_1 = require("@/database/connection");
-const redis_service_1 = require("@/services/redis.service");
-const logger_1 = require("@/utils/logger");
-const error_middleware_1 = require("@/middleware/error.middleware");
-const routes_1 = require("@/routes");
-const socket_service_1 = require("@/services/socket.service");
-const metrics_service_1 = require("@/services/metrics.service");
-const health_service_1 = require("@/services/health.service");
-const graceful_shutdown_1 = require("@/utils/graceful-shutdown");
+const config_1 = require("./config/config");
+const connection_1 = require("./database/connection");
+const redis_service_1 = require("./services/redis.service");
+const logger_1 = require("./utils/logger");
+const error_middleware_1 = require("./middleware/error.middleware");
+const routes_1 = require("./routes");
+const socket_service_1 = require("./services/socket.service");
+const metrics_service_1 = require("./services/metrics.service");
+const health_service_1 = require("./services/health.service");
+const graceful_shutdown_1 = require("./utils/graceful-shutdown");
 class Application {
     constructor() {
         this.app = (0, express_1.default)();
@@ -130,7 +132,7 @@ class Application {
         });
         if (config_1.config.env === 'development') {
             const swaggerUi = require('swagger-ui-express');
-            const swaggerSpec = require('@/config/swagger');
+            const swaggerSpec = require('./config/swagger');
             this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
         }
         this.app.use('/static', express_1.default.static('public'));

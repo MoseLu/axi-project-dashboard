@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MetricsService = void 0;
-const redis_service_1 = require("@/services/redis.service");
-const logger_1 = require("@/utils/logger");
+const redis_service_1 = require("../services/redis.service");
+const logger_1 = require("../utils/logger");
 class MetricsService {
     constructor() {
         this.METRICS_PREFIX = 'metrics:';

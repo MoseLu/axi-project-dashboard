@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.redisService = exports.disconnectRedis = exports.connectRedis = exports.RedisService = void 0;
 const redis_1 = require("redis");
-const config_1 = require("@/config/config");
-const logger_1 = require("@/utils/logger");
+const config_1 = require("../config/config");
+const logger_1 = require("../utils/logger");
 class RedisService {
     constructor() {
         this.isConnected = false;

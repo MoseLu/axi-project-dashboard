@@ -14,8 +14,18 @@ try {
 
   // 清理 dist 目录
   if (fs.existsSync('dist')) {
-    fs.rmSync('dist', { recursive: true, force: true });
-    console.log('✅ Cleaned dist directory');
+    try {
+      fs.rmSync('dist', { recursive: true, force: true });
+      console.log('✅ Cleaned dist directory');
+    } catch (error) {
+      // 如果 fs.rmSync 不可用，使用 rimraf
+      try {
+        execSync('npx rimraf dist', { stdio: 'inherit' });
+        console.log('✅ Cleaned dist directory using rimraf');
+      } catch (rimrafError) {
+        console.log('⚠️ Failed to clean dist directory, continuing...');
+      }
+    }
   }
 
   // 检查是否有 src 目录
@@ -48,10 +58,23 @@ try {
     console.log('⚠️ Failed to process path aliases, continuing...');
   }
 
+  // 添加 module-alias 注册到 index.js
+  if (fs.existsSync('dist/index.js')) {
+    const indexContent = fs.readFileSync('dist/index.js', 'utf8');
+    if (!indexContent.includes('module-alias/register')) {
+      const updatedContent = `"use strict";
+require("module-alias/register");
+${indexContent}`;
+      fs.writeFileSync('dist/index.js', updatedContent);
+      console.log('✅ Added module-alias registration to index.js');
+    }
+  }
+
   // 复制必要的文件
   if (fs.existsSync('package.json')) {
-    fs.copyFileSync('package.json', 'dist/package.json');
-    console.log('✅ Copied package.json');
+    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    fs.writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
+    console.log('✅ Copied package.json with updated module aliases');
   }
 
   console.log('🎉 Backend build completed successfully!');

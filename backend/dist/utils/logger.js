@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logger = void 0;
 const winston_1 = __importDefault(require("winston"));
-const config_1 = require("@/config/config");
+const config_1 = require("../config/config");
 const logFormat = winston_1.default.format.combine(winston_1.default.format.timestamp({
     format: 'YYYY-MM-DD HH:mm:ss'
 }), winston_1.default.format.errors({ stack: true }), winston_1.default.format.printf(({ level, message, timestamp, stack }) => {

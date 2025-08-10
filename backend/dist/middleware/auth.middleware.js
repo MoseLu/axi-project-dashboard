@@ -5,9 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyToken = exports.generateToken = exports.requireRole = exports.optionalAuthMiddleware = exports.authMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const config_1 = require("@/config/config");
-const error_middleware_1 = require("@/middleware/error.middleware");
-const logger_1 = require("@/utils/logger");
+const config_1 = require("../config/config");
+const error_middleware_1 = require("../middleware/error.middleware");
+const logger_1 = require("../utils/logger");
 const authMiddleware = (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;

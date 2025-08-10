@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.disconnectDatabase = exports.getConnection = exports.connectDatabase = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
-const config_1 = require("@/config/config");
-const logger_1 = require("@/utils/logger");
+const config_1 = require("../config/config");
+const logger_1 = require("../utils/logger");
 let connection = null;
 const connectDatabase = async () => {
     try {

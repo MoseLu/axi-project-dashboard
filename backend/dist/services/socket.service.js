@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SocketService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const config_1 = require("@/config/config");
-const logger_1 = require("@/utils/logger");
+const config_1 = require("../config/config");
+const logger_1 = require("../utils/logger");
 const metrics_service_1 = require("./metrics.service");
 var SocketEventType;
 (function (SocketEventType) {

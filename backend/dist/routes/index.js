@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.routes = void 0;
 const express_1 = require("express");
-const logger_1 = require("@/utils/logger");
+const logger_1 = require("../utils/logger");
 const router = (0, express_1.Router)();
 router.get('/health', (req, res) => {
     const response = {

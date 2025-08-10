@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HealthCheckService = void 0;
-const connection_1 = require("@/database/connection");
-const redis_service_1 = require("@/services/redis.service");
-const logger_1 = require("@/utils/logger");
+const connection_1 = require("../database/connection");
+const redis_service_1 = require("../services/redis.service");
+const logger_1 = require("../utils/logger");
 class HealthCheckService {
     async getHealthStatus() {
         const startTime = Date.now();
