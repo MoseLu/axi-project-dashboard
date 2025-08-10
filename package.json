@@ -5,8 +5,11 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"pnpm --filter axi-deploy-dashboard-backend dev\" \"pnpm --filter axi-deploy-dashboard-frontend start\"",
+    "dev:fast": "concurrently \"pnpm --filter axi-deploy-dashboard-backend dev:fast\" \"pnpm --filter axi-deploy-dashboard-frontend start\"",
+    "dev:monitor": "node scripts/startup-monitor.js",
     "build": "pnpm --filter axi-deploy-dashboard-backend build && pnpm --filter axi-deploy-dashboard-frontend build",
     "start": "pnpm --filter axi-deploy-dashboard-backend start",
+    "start:fast": "pnpm --filter axi-deploy-dashboard-backend start:fast",
     "lint": "pnpm --filter axi-deploy-dashboard-backend lint && pnpm --filter axi-deploy-dashboard-frontend lint",
     "lint:fix": "pnpm --filter axi-deploy-dashboard-backend lint:fix && pnpm --filter axi-deploy-dashboard-frontend lint:fix",
     "typecheck": "pnpm --filter axi-deploy-dashboard-backend typecheck && pnpm --filter axi-deploy-dashboard-frontend typecheck"

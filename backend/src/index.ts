@@ -197,17 +197,26 @@ class Application {
     });
 
     // 异步初始化其他服务，不阻塞HTTP服务器启动
-    this.initializeServices();
+    setImmediate(() => {
+      this.initializeServices();
+    });
   }
 
   private async initializeServices(): Promise<void> {
     try {
+      // 检查是否跳过数据库初始化
+      const skipDbInit = process.env.SKIP_DB_INIT === 'true';
+      
       // 连接数据库
-      try {
-        const dbConnection = await connectDatabase();
-        logger.info('✅ Database connected successfully');
-      } catch (error) {
-        logger.warn('⚠️ Database connection failed, continuing without database:', error);
+      if (!skipDbInit) {
+        try {
+          const dbConnection = await connectDatabase();
+          logger.info('✅ Database connected successfully');
+        } catch (error) {
+          logger.warn('⚠️ Database connection failed, continuing without database:', error);
+        }
+      } else {
+        logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true)');
       }
 
       // 连接 Redis

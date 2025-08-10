@@ -5,8 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
+    "start:fast": "NODE_ENV=development SKIP_DB_INIT=true node dist/index.js",
     "prebuild": "rm -rf dist",
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
+    "dev:fast": "SKIP_DB_INIT=true ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
     "build": "node build.js",
     "test": "jest",
     "test:watch": "jest --watch",

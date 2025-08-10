@@ -15,8 +15,9 @@ export const connectDatabase = async (): Promise<mysql.Connection> => {
       charset: 'utf8mb4',
       timezone: '+08:00',
       connectionLimit: 10,
-      acquireTimeout: 60000,
-      timeout: 60000,
+      acquireTimeout: 10000,  // 减少到10秒
+      timeout: 10000,         // 减少到10秒
+      connectTimeout: 10000,  // 连接超时10秒
     };
 
     // 首先检查数据库是否存在，如果不存在则创建
@@ -27,6 +28,7 @@ export const connectDatabase = async (): Promise<mysql.Connection> => {
       password: mysqlConfig.password,
       charset: mysqlConfig.charset,
       timezone: mysqlConfig.timezone,
+      connectTimeout: 10000,  // 连接超时10秒
     });
 
     // 创建数据库（如果不存在）
