@@ -31,27 +31,23 @@ fi
 fix_dependencies() {
     echo "🔧 Auto-fixing dependencies..."
     
-    # 检查关键依赖
-    local critical_deps=("statuses" "on-finished" "ee-first" "finalhandler")
-    local missing_deps=()
+    # 修复 side-channel 依赖
+    echo "📦 Installing side-channel dependency..."
+    cd backend
+    npm install side-channel --save || echo "side-channel already installed"
+    cd ..
+    npm install --force || echo "Dependencies installation completed"
     
-    for dep in "${critical_deps[@]}"; do
-        if [ ! -d "backend/node_modules/$dep" ]; then
-            echo "❌ Missing dependency: $dep"
-            missing_deps+=("$dep")
-        fi
-    done
+    # 构建项目
+    echo "🔨 Building project..."
+    cd backend
+    npm run build || {
+        echo "ERROR: Build failed"
+        exit 1
+    }
+    cd ..
     
-    if [ ${#missing_deps[@]} -gt 0 ]; then
-        echo "📦 Installing missing dependencies: ${missing_deps[*]}"
-        cd backend
-        pnpm add "${missing_deps[@]}"
-        cd ..
-        pnpm install --force
-        echo "✅ Dependencies fixed successfully"
-    else
-        echo "✅ All dependencies are present"
-    fi
+    echo "✅ Dependencies fixed successfully"
 }
 
 # 启动服务函数
@@ -66,15 +62,24 @@ start_service() {
         pm2 delete dashboard-backend 2>/dev/null || true
         
         # 启动服务
-        pm2 start ecosystem.config.js
+        pm2 start ecosystem.config.js --update-env
+        
+        # 等待服务启动并验证端口
+        echo "⏳ Waiting for service to start..."
+        for i in {1..30}; do
+            if netstat -tlnp 2>/dev/null | grep -q ":8080"; then
+                echo "✅ Service is listening on port 8080"
+                break
+            fi
+            if [ $i -eq 30 ]; then
+                echo "❌ Service failed to start on port 8080 after 60 seconds"
+                pm2 logs dashboard-backend --lines 10
+                exit 1
+            fi
+            sleep 2
+        done
         
         # 显示服务状态
-        pm2 status
-        
-        # 等待服务启动
-        sleep 5
-        
-        # 再次检查状态
         pm2 status
         
         echo "✅ Service started successfully"
