@@ -2,7 +2,7 @@
 
 ## 概述
 
-本指南详细说明如何在服务器上正确部署 axi-project-dashboard，解决依赖问题并确保服务正常运行。
+本指南详细说明如何在服务器上正确部署 axi-project-dashboard，解决依赖问题并确保服务正常运行，特别针对工作流环境进行了优化。
 
 ## 部署前准备
 
@@ -22,6 +22,11 @@
 ├── pnpm-workspace.yaml
 ├── ecosystem.config.js
 ├── start.sh
+├── scripts/
+│   ├── auto-fix-startup.js
+│   ├── workflow-start.sh
+│   ├── server-fix.js
+│   └── check-dependencies.js
 └── deploy.sh
 ```
 
@@ -65,12 +70,76 @@ nano backend/.env
 ```
 
 ### 5. 启动服务
+
+#### 方法1: 工作流友好启动（推荐）
+```bash
+# 使用工作流友好的启动脚本
+bash scripts/workflow-start.sh
+```
+
+#### 方法2: 自动修复启动
+```bash
+# 使用自动修复启动脚本
+pnpm auto:start
+```
+
+#### 方法3: 传统启动
 ```bash
 # 使用 PM2 启动
 pm2 start ecosystem.config.js
 
 # 或者使用启动脚本
 bash start.sh
+```
+
+## 工作流优化
+
+### 问题背景
+在 CI/CD 工作流中，如果服务因为依赖问题无法启动，会导致工作流卡住无法完成。
+
+### 解决方案
+
+#### 1. 工作流友好启动脚本
+```bash
+# 使用专门为工作流优化的启动脚本
+bash scripts/workflow-start.sh
+```
+
+**特点：**
+- 自动检测和修复依赖问题
+- 设置合理的超时时间
+- 即使服务启动失败也会正常退出
+- 提供详细的状态反馈
+
+#### 2. 自动修复启动脚本
+```bash
+# 使用 Node.js 版本的自动修复启动
+pnpm auto:start
+```
+
+**特点：**
+- 智能依赖检测和修复
+- 服务健康检查
+- 优雅的错误处理
+
+### 工作流配置示例
+
+#### GitHub Actions
+```yaml
+- name: Start Service
+  run: |
+    cd /srv/apps/axi-project-dashboard
+    bash scripts/workflow-start.sh
+  timeout-minutes: 5
+```
+
+#### GitLab CI
+```yaml
+start_service:
+  script:
+    - cd /srv/apps/axi-project-dashboard
+    - bash scripts/workflow-start.sh
+  timeout: 5m
 ```
 
 ## 依赖问题解决
@@ -82,7 +151,7 @@ bash start.sh
 
 ### 解决方案
 
-#### 方法1: 使用修复脚本
+#### 方法1: 使用修复脚本（推荐）
 ```bash
 # 修复服务器端依赖
 pnpm fix:server
@@ -91,7 +160,13 @@ pnpm fix:server
 pnpm check:deps
 ```
 
-#### 方法2: 手动安装
+#### 方法2: 工作流友好启动
+```bash
+# 自动处理所有依赖问题
+bash scripts/workflow-start.sh
+```
+
+#### 方法3: 手动安装
 ```bash
 cd backend
 pnpm add statuses on-finished ee-first finalhandler
@@ -100,7 +175,7 @@ pnpm install --force
 pnpm build
 ```
 
-#### 方法3: 批量安装
+#### 方法4: 批量安装
 ```bash
 # 安装所有缺失依赖
 pnpm batch:install
@@ -165,7 +240,16 @@ pm2 logs dashboard-backend --err
 pm2 restart dashboard-backend
 ```
 
-### 4. 端口冲突
+### 4. 工作流卡住问题
+```bash
+# 使用工作流友好启动脚本
+bash scripts/workflow-start.sh
+
+# 或者使用自动修复启动
+pnpm auto:start
+```
+
+### 5. 端口冲突
 ```bash
 # 检查端口占用
 lsof -i :8080
@@ -184,6 +268,9 @@ pnpm dev:fast
 
 # 智能启动（自动处理依赖问题）
 pnpm dev:quick
+
+# 工作流友好启动
+bash scripts/workflow-start.sh
 ```
 
 ### 2. 监控启动
@@ -272,6 +359,23 @@ pm2 logs dashboard-backend --lines 100
 # 查看错误日志
 pm2 logs dashboard-backend --err --lines 50
 ```
+
+## 工作流最佳实践
+
+### 1. 启动脚本选择
+- **开发环境**: `pnpm dev:fast` 或 `pnpm dev:quick`
+- **测试环境**: `bash scripts/workflow-start.sh`
+- **生产环境**: `pnpm auto:start` 或 `pm2 start ecosystem.config.js`
+
+### 2. 超时设置
+- 设置合理的超时时间（建议 5-10 分钟）
+- 使用工作流友好的启动脚本
+- 监控启动日志
+
+### 3. 错误处理
+- 使用 `set -e` 确保错误时退出
+- 提供详细的错误信息
+- 实现优雅的降级策略
 
 ## 联系支持
 
