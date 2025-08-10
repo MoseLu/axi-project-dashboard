@@ -40,12 +40,17 @@ fix_dependencies() {
     
     # 构建项目
     echo "🔨 Building project..."
+    echo "Current directory before cd backend: $(pwd)"
     cd backend
+    echo "Current directory after cd backend: $(pwd)"
+    echo "Files in backend directory:"
+    ls -la
     npm run build || {
         echo "ERROR: Build failed"
         exit 1
     }
     cd ..
+    echo "Current directory after cd ..: $(pwd)"
     
     echo "✅ Dependencies fixed successfully"
 }
