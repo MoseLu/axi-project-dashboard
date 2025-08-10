@@ -10,8 +10,8 @@ module.exports = {
       // 环境变量
       env: {
         NODE_ENV: 'production',
-        PORT: 8090,          // Dashboard 专用端口，避免与业务项目冲突
-        WEBSOCKET_PORT: 8091, // Dashboard WebSocket 专用端口
+        PORT: 8080,          // Dashboard 专用端口，避免与业务项目冲突
+        WEBSOCKET_PORT: 8081, // Dashboard WebSocket 专用端口
         
         // 数据库配置 (使用云服务器本地数据库)
         MYSQL_HOST: '127.0.0.1',

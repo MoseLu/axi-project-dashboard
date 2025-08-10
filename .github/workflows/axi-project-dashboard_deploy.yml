@@ -390,6 +390,7 @@ jobs:
           # 创建PM2启动脚本
           cat > dist/start.sh << 'EOF'
           #!/bin/bash
+          set -e
           echo "🚀 Starting axi-project-dashboard backend..."
           cd /srv/apps/axi-project-dashboard
           
@@ -421,17 +422,45 @@ jobs:
               exit 1
           fi
           
+          # 修复依赖问题
+          echo "🔧 Fixing dependencies..."
+          cd backend
+          npm install side-channel --save || echo "side-channel already installed"
+          cd ..
+          npm install --force || echo "Dependencies installation completed"
+          
+          # 构建项目
+          echo "🔨 Building project..."
+          npm run build || {
+              echo "ERROR: Build failed"
+              exit 1
+          }
+          
           echo "Found ecosystem.config.js, starting service..."
           
           # 停止现有服务
-          $PM2_CMD stop dashboard-backend || true
-          $PM2_CMD delete dashboard-backend || true
+          $PM2_CMD stop dashboard-backend 2>/dev/null || true
+          $PM2_CMD delete dashboard-backend 2>/dev/null || true
           
           # 启动新服务
           $PM2_CMD start ecosystem.config.js --update-env
           
-          # 检查状态
-          sleep 2
+          # 等待服务启动并验证端口
+          echo "⏳ Waiting for service to start..."
+          for i in {1..30}; do
+              if netstat -tlnp 2>/dev/null | grep -q ":8080"; then
+                  echo "✅ Service is listening on port 8080"
+                  break
+              fi
+              if [ $i -eq 30 ]; then
+                  echo "❌ Service failed to start on port 8080 after 60 seconds"
+                  $PM2_CMD logs dashboard-backend --lines 10
+                  exit 1
+              fi
+              sleep 2
+          done
+          
+          # 检查PM2状态
           $PM2_CMD list
           $PM2_CMD logs dashboard-backend --lines 5
           
