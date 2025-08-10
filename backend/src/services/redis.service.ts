@@ -27,7 +27,7 @@ export class RedisService {
       logger.info('✅ Redis connected successfully');
     });
 
-    this.client.on('error', (error) => {
+    this.client.on('error', (error: Error) => {
       this.isConnected = false;
       logger.error('❌ Redis connection error:', error);
     });

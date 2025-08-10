@@ -139,9 +139,6 @@ exports.config = {
     nodeEnv: configData.nodeEnv,
     port: configData.port,
     websocketPort: configData.websocketPort,
-    corsOrigin: configData.corsOrigin,
-    rateLimitWindow: configData.rateLimitWindow,
-    rateLimitMaxRequests: configData.rateLimitMaxRequests,
     database: {
         mysql: {
             host: configData.mysqlHost,
@@ -163,16 +160,16 @@ exports.config = {
         webhookSecret: configData.githubWebhookSecret,
         apiUrl: configData.githubApiUrl
     },
-    logging: {
-        level: configData.logLevel,
-        filePath: configData.logFilePath
-    },
     cors: {
         origin: configData.corsOrigin
     },
     rateLimit: {
         window: configData.rateLimitWindow,
         maxRequests: configData.rateLimitMaxRequests
+    },
+    logging: {
+        level: configData.logLevel,
+        filePath: configData.logFilePath
     },
     cache: {
         ttl: configData.cacheTtl,

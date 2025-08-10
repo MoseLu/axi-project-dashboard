@@ -106,7 +106,7 @@ export class MetricsService {
       
       const deploymentCount = deploymentTimes.length;
       const averageTime = deploymentCount > 0 
-        ? deploymentTimes.reduce((sum, time) => sum + parseInt(time, 10), 0) / deploymentCount 
+        ? deploymentTimes.reduce((sum: number, time: string) => sum + parseInt(time, 10), 0) / deploymentCount 
         : 0;
 
       return {

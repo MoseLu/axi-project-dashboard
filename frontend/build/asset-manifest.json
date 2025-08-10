@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/your-org/axi-deploy/static/css/main.677b9cd9.css",
-    "main.js": "/your-org/axi-deploy/static/js/main.6b326d13.js",
-    "index.html": "/your-org/axi-deploy/index.html",
-    "main.677b9cd9.css.map": "/your-org/axi-deploy/static/css/main.677b9cd9.css.map",
-    "main.6b326d13.js.map": "/your-org/axi-deploy/static/js/main.6b326d13.js.map"
+    "main.css": "./static/css/main.677b9cd9.css",
+    "main.js": "./static/js/main.6b326d13.js",
+    "index.html": "./index.html",
+    "main.677b9cd9.css.map": "./static/css/main.677b9cd9.css.map",
+    "main.6b326d13.js.map": "./static/js/main.6b326d13.js.map"
   },
   "entrypoints": [
     "static/css/main.677b9cd9.css",

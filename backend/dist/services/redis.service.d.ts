@@ -1,4 +1,3 @@
-import Redis from 'redis';
 export declare class RedisService {
     private client;
     private isConnected;
@@ -10,7 +9,7 @@ export declare class RedisService {
     get(key: string): Promise<string | null>;
     del(key: string): Promise<void>;
     exists(key: string): Promise<boolean>;
-    getClient(): Redis.RedisClientType;
+    getClient(): any;
     isHealthy(): boolean;
 }
 declare const redisService: RedisService;

@@ -14,6 +14,7 @@ declare class Application {
     private initializeErrorHandling;
     private initializeGracefulShutdown;
     start(): Promise<void>;
+    private initializeServices;
 }
 declare const app: Application;
 export default app;

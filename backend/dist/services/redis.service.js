@@ -1,16 +1,13 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.redisService = exports.disconnectRedis = exports.connectRedis = exports.RedisService = void 0;
-const redis_1 = __importDefault(require("redis"));
+const redis_1 = require("redis");
 const config_1 = require("@/config/config");
 const logger_1 = require("@/utils/logger");
 class RedisService {
     constructor() {
         this.isConnected = false;
-        this.client = redis_1.default.createClient({
+        this.client = (0, redis_1.createClient)({
             url: config_1.config.database.redis.uri,
             socket: {
                 connectTimeout: 5000,

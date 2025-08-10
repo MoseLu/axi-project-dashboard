@@ -4,9 +4,6 @@ export declare const config: {
     nodeEnv: string;
     port: number;
     websocketPort: number;
-    corsOrigin: string | string[];
-    rateLimitWindow: number;
-    rateLimitMaxRequests: number;
     database: {
         mysql: {
             host: string;
@@ -28,16 +25,16 @@ export declare const config: {
         webhookSecret: string;
         apiUrl: string;
     };
-    logging: {
-        level: string;
-        filePath: string;
-    };
     cors: {
         origin: string | string[];
     };
     rateLimit: {
         window: number;
         maxRequests: number;
+    };
+    logging: {
+        level: string;
+        filePath: string;
     };
     cache: {
         ttl: number;
