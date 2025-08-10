@@ -179,6 +179,7 @@ jobs:
           cp -r backend/dist dist/backend
           cp -r temp_backend_deps/node_modules dist/
           cp backend/package.json dist/
+          cp backend/build.js dist/backend/
           
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."
