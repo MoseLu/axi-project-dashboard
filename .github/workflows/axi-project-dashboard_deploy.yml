@@ -431,10 +431,12 @@ jobs:
           
           # 构建项目
           echo "🔨 Building project..."
+          cd backend
           npm run build || {
               echo "ERROR: Build failed"
               exit 1
           }
+          cd ..
           
           echo "Found ecosystem.config.js, starting service..."
           
