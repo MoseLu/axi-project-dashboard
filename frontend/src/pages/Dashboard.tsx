@@ -66,10 +66,6 @@ const Dashboard: React.FC = () => {
     return new Date(timestamp).toLocaleString('zh-CN');
   };
 
-  const getStatusColor = (status: string) => {
-    return status === 'success' ? '#10b981' : '#ef4444';
-  };
-
   const getStatusText = (status: string) => {
     return status === 'success' ? '成功' : '失败';
   };
