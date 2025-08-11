@@ -7,6 +7,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { config } from '@/config/config';
 import { connectDatabase } from '@/database/connection';
+import { testConnection, syncDatabase } from '@/database/sequelize';
 import { connectRedis } from '@/services/redis.service';
 import { logger } from '@/utils/logger';
 import { errorHandler } from '@/middleware/error.middleware';
@@ -15,6 +16,7 @@ import { routes } from '@/routes';
 import { SocketService } from '@/services/socket.service';
 import { MetricsService } from '@/services/metrics.service';
 import { HealthCheckService } from '@/services/health.service';
+import { DeploymentService } from '@/services/deployment.service';
 import { GracefulShutdown } from '@/utils/graceful-shutdown';
 
 class Application {
@@ -24,6 +26,7 @@ class Application {
   private socketService: SocketService;
   private metricsService: MetricsService;
   private healthService: HealthCheckService;
+  private deploymentService: DeploymentService;
   private gracefulShutdown: GracefulShutdown;
 
   constructor() {
@@ -41,6 +44,7 @@ class Application {
     this.socketService = new SocketService(this.io);
     this.metricsService = new MetricsService();
     this.healthService = new HealthCheckService();
+    this.deploymentService = new DeploymentService(this.socketService);
     this.gracefulShutdown = new GracefulShutdown();
 
     this.initializeMiddlewares();
@@ -105,8 +109,11 @@ class Application {
   }
 
   private initializeRoutes(): void {
-    // API 路由
-    this.app.use('/api', routes);
+    // 将 DeploymentService 注入到请求对象中
+    this.app.use('/api', (req, res, next) => {
+      (req as any).deploymentService = this.deploymentService;
+      next();
+    }, routes);
 
     // 健康检查端点 - 简化版本，确保总是可用
     this.app.get('/health', async (req, res) => {
@@ -212,8 +219,14 @@ class Application {
       // 连接数据库
       if (!skipDbInit) {
         try {
+          // 连接 MySQL（用于兼容性）
           const dbConnection = await connectDatabase();
-          logger.info('✅ Database connected successfully');
+          logger.info('✅ MySQL connected successfully');
+          
+          // 初始化 Sequelize
+          await testConnection();
+          await syncDatabase();
+          logger.info('✅ Sequelize database initialized successfully');
         } catch (error) {
           logger.warn('⚠️ Database connection failed, continuing without database:', error);
         }

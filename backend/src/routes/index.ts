@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { logger } from '@/utils/logger';
 import { ApiResponse } from '@/types';
+import { DeploymentService } from '@/services/deployment.service';
 
 const router = Router();
 
@@ -32,13 +33,31 @@ router.get('/info', (req, res) => {
   });
 });
 
-// Dashboard routes placeholder
-router.get('/deployments', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Deployments endpoint - Coming soon!',
-    data: []
-  });
+// Dashboard routes with real data
+router.get('/deployments', async (req, res) => {
+  try {
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
+    }
+
+    const deployments = await deploymentService.getRecentDeployments(20);
+    res.json({
+      success: true,
+      message: 'Deployments data retrieved successfully',
+      data: deployments
+    });
+  } catch (error) {
+    logger.error('Failed to get deployments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get deployments',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 router.get('/projects', (req, res) => {
@@ -49,17 +68,30 @@ router.get('/projects', (req, res) => {
   });
 });
 
-router.get('/metrics', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Metrics endpoint - Coming soon!',
-    data: {
-      totalDeployments: 0,
-      successfulDeployments: 0,
-      failedDeployments: 0,
-      averageDeploymentTime: 0
+router.get('/metrics', async (req, res) => {
+  try {
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
     }
-  });
+
+    const metrics = await deploymentService.getDeploymentMetrics();
+    res.json({
+      success: true,
+      message: 'Metrics data retrieved successfully',
+      data: metrics
+    });
+  } catch (error) {
+    logger.error('Failed to get metrics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get metrics',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Webhooks
@@ -73,6 +105,38 @@ router.post('/webhooks/github', (req, res) => {
     success: true,
     message: 'Webhook received successfully'
   });
+});
+
+// Deployment notification webhook
+router.post('/webhooks/deployment', async (req, res) => {
+  try {
+    logger.info('Deployment webhook received:', {
+      headers: req.headers,
+      body: req.body
+    });
+
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
+    }
+
+    await deploymentService.handleDeploymentWebhook(req.body);
+    
+    res.json({
+      success: true,
+      message: 'Deployment webhook processed successfully'
+    });
+  } catch (error) {
+    logger.error('Failed to process deployment webhook:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to process deployment webhook',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // 404 handler for unknown API routes
