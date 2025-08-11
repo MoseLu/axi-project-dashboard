@@ -68,17 +68,17 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import { config } from '@/config/config';
-import { connectDatabase } from '@/database/connection';
-import { connectRedis } from '@/services/redis.service';
-import { logger } from '@/utils/logger';
-import { errorHandler } from '@/middleware/error.middleware';
-import { authMiddleware } from '@/middleware/auth.middleware';
-import { routes } from '@/routes';
-import { SocketService } from '@/services/socket.service';
-import { MetricsService } from '@/services/metrics.service';
-import { HealthCheckService } from '@/services/health.service';
-import { GracefulShutdown } from '@/utils/graceful-shutdown';
+import { config } from './config/config';
+import { connectDatabase } from './database/connection';
+import { connectRedis } from './services/redis.service';
+import { logger } from './utils/logger';
+import { errorHandler } from './middleware/error.middleware';
+import { authMiddleware } from './middleware/auth.middleware';
+import { routes } from './routes';
+import { SocketService } from './services/socket.service';
+import { MetricsService } from './services/metrics.service';
+import { HealthCheckService } from './services/health.service';
+import { GracefulShutdown } from './utils/graceful-shutdown';
 
 class Application {
   public app: express.Application;
