@@ -251,6 +251,7 @@ jobs:
           echo '$PM2_CMD stop dashboard-backend 2>/dev/null || true' >> dist/start.sh
           echo '$PM2_CMD delete dashboard-backend 2>/dev/null || true' >> dist/start.sh
           echo '$PM2_CMD start ecosystem.config.js --update-env' >> dist/start.sh
+          echo 'echo "✅ PM2启动命令执行完成"' >> dist/start.sh
           echo 'echo "⏳ Waiting for service to start..."' >> dist/start.sh
           echo 'SERVICE_PORT=$(grep "PORT:" ecosystem.config.js | head -1 | sed "s/.*PORT: \\([0-9]*\\).*/\\1/")' >> dist/start.sh
           echo 'if [ -z "$SERVICE_PORT" ]; then' >> dist/start.sh
@@ -294,6 +295,7 @@ jobs:
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
+          echo '    cp backend/start-server.js $TARGET_DIR/backend/' >> dist/deploy.sh
           echo '    chmod -R 755 $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
           echo 'else' >> dist/deploy.sh
@@ -312,15 +314,16 @@ jobs:
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
+          echo '    cp backend/start-server.js $TARGET_DIR/backend/' >> dist/deploy.sh
           echo '    sudo chown -R $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
           echo 'cd $TARGET_DIR' >> dist/deploy.sh
           echo 'echo "🔍 验证部署文件结构..."' >> dist/deploy.sh
           echo 'ls -la backend/ || echo "❌ backend目录不存在"' >> dist/deploy.sh
-          echo 'ls -la backend/index.js || echo "❌ backend/index.js不存在"' >> dist/deploy.sh
+          echo 'ls -la backend/start-server.js || echo "❌ backend/start-server.js不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/depd/ || echo "❌ depd依赖不存在"' >> dist/deploy.sh
-          echo 'if [ ! -f "backend/index.js" ]; then' >> dist/deploy.sh
+          echo 'if [ ! -f "backend/start-server.js" ]; then' >> dist/deploy.sh
           echo '    echo "❌ 后端主入口文件不存在，部署失败"' >> dist/deploy.sh
           echo '    exit 1' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
@@ -332,7 +335,7 @@ jobs:
           echo '    sudo chown $(whoami):$(whoami) /var/log/axi-deploy-dashboard' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
           echo 'echo "📋 验证部署文件..."' >> dist/deploy.sh
-          echo 'ls -la backend/index.js || echo "❌ backend/index.js 不存在"' >> dist/deploy.sh
+          echo 'ls -la backend/start-server.js || echo "❌ backend/start-server.js 不存在"' >> dist/deploy.sh
           echo 'ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/express/ || echo "❌ express模块不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/merge-descriptors/ || echo "❌ merge-descriptors模块不存在"' >> dist/deploy.sh
