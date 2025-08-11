@@ -497,16 +497,21 @@ export class SocketService {
     this.io.to(`deployment:${deploymentId}`).emit('event', event);
   }
 
-  public emitLogEntry(log: any, deploymentId: string, projectId: string): void {
+  public emitLogEntry(log: any, deploymentId?: string, projectId?: string): void {
     const event: SocketEvent = {
       type: SocketEventType.LOG_ENTRY,
       payload: log,
       timestamp: new Date(),
-      projectId,
-      deploymentId
+      projectId: projectId || log.projectId,
+      deploymentId: deploymentId || log.deploymentId
     };
 
-    this.io.to(`deployment:${deploymentId}`).emit('event', event);
+    if (deploymentId || log.deploymentId) {
+      this.io.to(`deployment:${deploymentId || log.deploymentId}`).emit('event', event);
+    }
+    if (projectId || log.projectId) {
+      this.io.to(`project:${projectId || log.projectId}`).emit('event', event);
+    }
   }
 
   public emitSystemAlert(alert: any): void {
@@ -523,10 +528,17 @@ export class SocketService {
     const event: SocketEvent = {
       type: SocketEventType.METRICS_UPDATE,
       payload: metrics,
-      timestamp: new Date()
+      timestamp: new Date(),
+      projectId: metrics.projectId,
+      deploymentId: metrics.deploymentId
     };
 
-    this.io.emit('event', event);
+    if (metrics.deploymentId) {
+      this.io.to(`deployment:${metrics.deploymentId}`).emit('event', event);
+    }
+    if (metrics.projectId) {
+      this.io.to(`project:${metrics.projectId}`).emit('event', event);
+    }
   }
 
   // 新增的WebSocket通知方法
@@ -541,32 +553,6 @@ export class SocketService {
 
     this.io.to(`deployment:${stepData.deploymentId}`).emit('event', event);
     this.io.to(`project:${stepData.projectId}`).emit('event', event);
-  }
-
-  public emitLogEntry(logData: any): void {
-    const event: SocketEvent = {
-      type: SocketEventType.LOG_ENTRY,
-      payload: logData,
-      timestamp: new Date(),
-      projectId: logData.projectId,
-      deploymentId: logData.deploymentId
-    };
-
-    this.io.to(`deployment:${logData.deploymentId}`).emit('event', event);
-    this.io.to(`project:${logData.projectId}`).emit('event', event);
-  }
-
-  public emitMetricsUpdate(metricsData: any): void {
-    const event: SocketEvent = {
-      type: SocketEventType.METRICS_UPDATE,
-      payload: metricsData,
-      timestamp: new Date(),
-      projectId: metricsData.projectId,
-      deploymentId: metricsData.deploymentId
-    };
-
-    this.io.to(`deployment:${metricsData.deploymentId}`).emit('event', event);
-    this.io.to(`project:${metricsData.projectId}`).emit('event', event);
   }
 
   // ===================================

@@ -10,7 +10,6 @@ export const sequelize = new Sequelize({
   username: config.database.mysql.user,
   password: config.database.mysql.password,
   database: config.database.mysql.database,
-  charset: 'utf8mb4',
   timezone: '+08:00',
   logging: (msg) => logger.debug(msg),
   pool: {

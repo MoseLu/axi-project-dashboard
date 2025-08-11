@@ -61,7 +61,7 @@ router.get('/deployments', async (req, res) => {
       status
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Deployments data retrieved successfully',
       data: deployments.data,
@@ -69,7 +69,7 @@ router.get('/deployments', async (req, res) => {
     });
   } catch (error) {
     logger.error('Failed to get deployments:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to get deployments',
       error: error instanceof Error ? error.message : 'Unknown error'
@@ -96,14 +96,14 @@ router.get('/metrics', async (req, res) => {
     }
 
     const metrics = await deploymentService.getDeploymentMetrics();
-    res.json({
+    return res.json({
       success: true,
       message: 'Metrics data retrieved successfully',
       data: metrics
     });
   } catch (error) {
     logger.error('Failed to get metrics:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to get metrics',
       error: error instanceof Error ? error.message : 'Unknown error'
@@ -142,13 +142,13 @@ router.post('/webhooks/deployment', async (req, res) => {
 
     await deploymentService.handleDeploymentWebhook(req.body);
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Deployment webhook processed successfully'
     });
   } catch (error) {
     logger.error('Failed to process deployment webhook:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to process deployment webhook',
       error: error instanceof Error ? error.message : 'Unknown error'

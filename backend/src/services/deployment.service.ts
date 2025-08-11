@@ -56,18 +56,22 @@ export class DeploymentService {
    */
   public async createDeployment(data: DeploymentData): Promise<Deployment> {
     try {
-      const deployment = await Deployment.create({
+      const deploymentData: any = {
         project: data.project,
         status: data.status,
         duration: data.duration,
         timestamp: data.timestamp,
-        sourceRepo: data.sourceRepo,
-        runId: data.runId,
-        deployType: data.deployType,
-        serverHost: data.serverHost,
-        logs: data.logs,
-        errorMessage: data.errorMessage,
-      });
+      };
+
+      // 只添加非 undefined 的可选字段
+      if (data.sourceRepo !== undefined) deploymentData.sourceRepo = data.sourceRepo;
+      if (data.runId !== undefined) deploymentData.runId = data.runId;
+      if (data.deployType !== undefined) deploymentData.deployType = data.deployType;
+      if (data.serverHost !== undefined) deploymentData.serverHost = data.serverHost;
+      if (data.logs !== undefined) deploymentData.logs = data.logs;
+      if (data.errorMessage !== undefined) deploymentData.errorMessage = data.errorMessage;
+
+      const deployment = await Deployment.create(deploymentData);
 
       logger.info(`Created deployment record: ${deployment.id} for project: ${data.project}`);
 
@@ -75,7 +79,6 @@ export class DeploymentService {
       this.socketService.emitDeploymentStarted({
         id: deployment.id.toString(),
         projectId: data.project,
-        status: data.status,
         ...data,
       });
 
