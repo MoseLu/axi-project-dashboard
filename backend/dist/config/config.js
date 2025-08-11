@@ -32,7 +32,7 @@ const parseCorsOrigin = (value) => {
 const configData = {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: parseNumber(process.env.PORT, 8080),
-    websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8081),
+    websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8091),
     mysqlHost: process.env.MYSQL_HOST || '127.0.0.1',
     mysqlPort: parseNumber(process.env.MYSQL_PORT, 3306),
     mysqlUser: process.env.MYSQL_USER || 'root',

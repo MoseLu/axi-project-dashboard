@@ -2,23 +2,23 @@
 
 ## 📋 问题描述
 
-在通过 axi-deploy 部署 axi-project-dashboard 时，后端服务启动失败，端口8081未被监听。
+在通过 axi-deploy 部署 axi-project-dashboard 时，后端服务启动失败，端口8090未被监听。
 
 ### 🔍 错误现象
 ```
 🔍 验证尝试 1/6...
-❌ 端口 8081 未监听
+❌ 端口 8090 未监听
 ⏳ 等待 5 秒后重试验证...
 🔍 验证尝试 2/6...
-❌ 端口 8081 未监听
+❌ 端口 8090 未监听
 ```
 
 ## 🔍 问题分析
 
 ### 1. 端口配置冲突
-- **port-config.yml**: axi-project-dashboard 配置端口 8081
-- **config.ts**: 默认端口配置为 8080，WebSocket 端口为 8081
-- **ecosystem.config.js**: 正确配置端口 8081
+- **port-config.yml**: axi-project-dashboard 配置端口 8090
+- **config.ts**: 默认端口配置为 8090，WebSocket 端口为 8091
+- **ecosystem.config.js**: 正确配置端口 8090
 
 ### 2. TypeScript 构建问题
 - 复杂的 TypeScript 构建过程可能导致编译失败
@@ -38,8 +38,8 @@ port: parseNumber(process.env.PORT, 8080),
 websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8081),
 
 // 修复后
-port: parseNumber(process.env.PORT, 8081),
-websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8082),
+port: parseNumber(process.env.PORT, 8090),
+websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8091),
 ```
 
 ### 2. 创建简化启动脚本
@@ -77,7 +77,7 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 8081
+    port: process.env.PORT || 8090
   });
 });
 
@@ -93,13 +93,13 @@ app.get('/api/info', (req, res) => {
       nodeVersion: process.version,
       platform: process.platform,
       uptime: process.uptime(),
-      port: process.env.PORT || 8081
+      port: process.env.PORT || 8090
     }
   });
 });
 
 // 启动服务器
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8090;
 server.listen(port, () => {
   console.log(`🚀 Server is running on port ${port}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -127,7 +127,7 @@ server.listen(port, () => {
 ## ✅ 修复效果
 
 ### 1. 端口配置统一
-- 所有配置文件使用一致的端口 8081
+- 所有配置文件使用一致的端口 8090
 - 避免端口冲突问题
 
 ### 2. 启动脚本简化
@@ -167,12 +167,12 @@ node start-server.js
 
 ### 2. 健康检查
 ```bash
-curl http://localhost:8081/health
+curl http://localhost:8090/health
 ```
 
 ### 3. API 测试
 ```bash
-curl http://localhost:8081/api/info
+curl http://localhost:8090/api/info
 ```
 
 ## 🎯 总结

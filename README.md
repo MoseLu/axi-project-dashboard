@@ -144,14 +144,14 @@ axi-project-dashboard/
 ## 🏛️ 系统架构
 
 ```
-GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8080/8081) → MySQL + Redis
+GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8090/8091) → MySQL + Redis
                    ↓
      https://redamancy.com.cn/project-dashboard
 ```
 
 **技术栈**:
 - **前端**: React 18 + TypeScript + Ant Design + Socket.io Client
-- **后端**: Node.js + Express + Socket.io + MySQL + Redis (端口: 8080/8081)
+- **后端**: Node.js + Express + Socket.io + MySQL + Redis (端口: 8090/8091)
 - **包管理**: pnpm (统一包管理器)
 - **部署**: PM2 + Nginx + Linux 服务器 + GitHub Actions
 
@@ -165,7 +165,7 @@ GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8080/8081) →
 
 ### 📋 核心配置项
 
-- **端口配置**: 8080 (API), 8081 (WebSocket) - 避免与其他项目冲突
+- **端口配置**: 8090 (API), 8091 (WebSocket) - 避免与其他项目冲突
 - **数据库**: MySQL + Redis (服务器本地实例)
 - **GitHub 集成**: 通过 API 监控部署状态，接收 Webhook 事件
 - **前端连接**: 通过 Nginx 代理访问后端服务
@@ -227,7 +227,7 @@ GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8080/8081) →
 - [ ] GitHub Secrets 配置完成
 - [ ] 服务器环境准备就绪 (Node.js 18+, pnpm 8+, PM2, MySQL, Redis)
 - [ ] Nginx 配置正确
-- [ ] 防火墙端口开放 (80, 443, 8080, 8081)
+- [ ] 防火墙端口开放 (80, 443, 8090, 8091)
 - [ ] 域名解析正确
 
 详细部署指南请参考 [部署文档](./documentation/DEPLOYMENT.md)
@@ -240,7 +240,7 @@ GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8080/8081) →
 |--------|------|----------------|
 | `NODE_ENV` | 运行环境 | production |
 | `PORT` | API 服务端口 | 8080 |
-| `WEBSOCKET_PORT` | WebSocket 端口 | 8081 |
+| `WEBSOCKET_PORT` | WebSocket 端口 | 8091 |
 | `MYSQL_HOST` | MySQL 主机地址 | 127.0.0.1 |
 | `MYSQL_DATABASE` | MySQL 数据库名 | project_dashboard |
 | `REDIS_URI` | Redis 连接字符串 | redis://localhost:6379 |
@@ -406,5 +406,3 @@ GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8080/8081) →
 **版本**: v1.0.0  
 **最后更新**: 2024年12月  
 **维护者**: 运维团队  
-#   :_6R��S�r  -   0 8 / 1 1 / 2 0 2 5   1 8 : 3 1 : 2 3  
- 

@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     version: process.env.npm_package_version || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 8081,
+    port: process.env.PORT || 8090,
     services: {
       http: 'up',
       database: 'unknown',
@@ -60,7 +60,7 @@ app.get('/api/info', (req, res) => {
       nodeVersion: process.version,
       platform: process.platform,
       uptime: process.uptime(),
-      port: process.env.PORT || 8081
+      port: process.env.PORT || 8090
     }
   });
 });
@@ -138,7 +138,7 @@ app.use((error, req, res, next) => {
 });
 
 // 启动服务器
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8090;
 server.listen(port, () => {
   console.log(`🚀 Server is running on port ${port}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);

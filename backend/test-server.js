@@ -9,12 +9,12 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     message: 'Test server is running',
     timestamp: new Date().toISOString(),
-    port: process.env.PORT || 8081
+    port: process.env.PORT || 8090
   });
 });
 
 // 启动服务器
-const port = process.env.PORT || 8081;
+const port = process.env.PORT || 8090;
 app.listen(port, () => {
   console.log(`🚀 Test server is running on port ${port}`);
   console.log(`💚 Health Check: http://localhost:${port}/health`);

@@ -186,7 +186,7 @@ class Application {
         logger.info(\`🚀 Server is running on port \${port}\`);
         logger.info(\`📊 Environment: \${process.env.NODE_ENV || 'development'}\`);
         logger.info(\`🔗 API URL: http://localhost:\${port}/api\`);
-        logger.info(\`💻 WebSocket URL: ws://localhost:\${process.env.WEBSOCKET_PORT || 8081}\`);
+        logger.info(\`💻 WebSocket URL: ws://localhost:\${process.env.WEBSOCKET_PORT || 8091}\`);
         logger.info(\`📚 API Docs: http://localhost:\${port}/api-docs\`);
       });
     } catch (error) {
