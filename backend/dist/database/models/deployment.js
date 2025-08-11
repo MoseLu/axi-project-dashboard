@@ -12,16 +12,48 @@ Deployment.init({
         autoIncrement: true,
         primaryKey: true,
     },
-    project: {
+    uuid: {
+        type: sequelize_1.DataTypes.UUID,
+        allowNull: false,
+        defaultValue: sequelize_1.DataTypes.UUIDV4,
+        unique: true,
+        comment: '唯一标识符',
+    },
+    project_name: {
         type: sequelize_1.DataTypes.STRING(100),
         allowNull: false,
         comment: '项目名称',
     },
-    status: {
-        type: sequelize_1.DataTypes.ENUM('success', 'failed', 'running'),
+    repository: {
+        type: sequelize_1.DataTypes.STRING(255),
         allowNull: false,
-        defaultValue: 'running',
+        comment: '仓库地址',
+    },
+    branch: {
+        type: sequelize_1.DataTypes.STRING(100),
+        allowNull: false,
+        comment: '分支名称',
+    },
+    commit_hash: {
+        type: sequelize_1.DataTypes.STRING(40),
+        allowNull: false,
+        comment: '提交哈希',
+    },
+    status: {
+        type: sequelize_1.DataTypes.ENUM('pending', 'running', 'success', 'failed', 'cancelled'),
+        allowNull: false,
+        defaultValue: 'pending',
         comment: '部署状态',
+    },
+    start_time: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: true,
+        comment: '开始时间',
+    },
+    end_time: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: true,
+        comment: '结束时间',
     },
     duration: {
         type: sequelize_1.DataTypes.INTEGER,
@@ -29,47 +61,33 @@ Deployment.init({
         defaultValue: 0,
         comment: '部署耗时（秒）',
     },
-    timestamp: {
-        type: sequelize_1.DataTypes.DATE,
-        allowNull: false,
-        comment: '部署时间戳',
-    },
-    sourceRepo: {
-        type: sequelize_1.DataTypes.STRING(200),
-        allowNull: true,
-        comment: '源仓库地址',
-    },
-    runId: {
+    triggered_by: {
         type: sequelize_1.DataTypes.STRING(50),
         allowNull: true,
-        comment: 'GitHub Actions 运行ID',
+        comment: '触发者',
     },
-    deployType: {
-        type: sequelize_1.DataTypes.ENUM('backend', 'static'),
-        allowNull: true,
-        comment: '部署类型',
-    },
-    serverHost: {
-        type: sequelize_1.DataTypes.STRING(100),
-        allowNull: true,
-        comment: '服务器地址',
+    trigger_type: {
+        type: sequelize_1.DataTypes.ENUM('push', 'manual', 'schedule'),
+        allowNull: false,
+        defaultValue: 'manual',
+        comment: '触发类型',
     },
     logs: {
         type: sequelize_1.DataTypes.TEXT,
         allowNull: true,
         comment: '部署日志',
     },
-    errorMessage: {
-        type: sequelize_1.DataTypes.TEXT,
+    metadata: {
+        type: sequelize_1.DataTypes.JSON,
         allowNull: true,
-        comment: '错误信息',
+        comment: '元数据',
     },
-    createdAt: {
+    created_at: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,
         defaultValue: sequelize_1.DataTypes.NOW,
     },
-    updatedAt: {
+    updated_at: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,
         defaultValue: sequelize_1.DataTypes.NOW,
@@ -80,16 +98,16 @@ Deployment.init({
     timestamps: true,
     indexes: [
         {
-            fields: ['project'],
+            fields: ['uuid'],
+        },
+        {
+            fields: ['project_name'],
         },
         {
             fields: ['status'],
         },
         {
-            fields: ['timestamp'],
-        },
-        {
-            fields: ['createdAt'],
+            fields: ['created_at'],
         },
     ],
 });

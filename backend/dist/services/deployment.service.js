@@ -11,28 +11,29 @@ class DeploymentService {
     async createDeployment(data) {
         try {
             const deploymentData = {
-                project: data.project,
+                project_name: data.project_name,
+                repository: data.repository,
+                branch: data.branch,
+                commit_hash: data.commit_hash,
                 status: data.status,
                 duration: data.duration,
-                timestamp: data.timestamp,
+                trigger_type: data.trigger_type,
             };
-            if (data.sourceRepo !== undefined)
-                deploymentData.sourceRepo = data.sourceRepo;
-            if (data.runId !== undefined)
-                deploymentData.runId = data.runId;
-            if (data.deployType !== undefined)
-                deploymentData.deployType = data.deployType;
-            if (data.serverHost !== undefined)
-                deploymentData.serverHost = data.serverHost;
+            if (data.start_time !== undefined)
+                deploymentData.start_time = data.start_time;
+            if (data.end_time !== undefined)
+                deploymentData.end_time = data.end_time;
+            if (data.triggered_by !== undefined)
+                deploymentData.triggered_by = data.triggered_by;
             if (data.logs !== undefined)
                 deploymentData.logs = data.logs;
-            if (data.errorMessage !== undefined)
-                deploymentData.errorMessage = data.errorMessage;
+            if (data.metadata !== undefined)
+                deploymentData.metadata = data.metadata;
             const deployment = await deployment_1.Deployment.create(deploymentData);
-            logger_1.logger.info(`Created deployment record: ${deployment.id} for project: ${data.project}`);
+            logger_1.logger.info(`Created deployment record: ${deployment.id} for project: ${data.project_name}`);
             this.socketService.emitDeploymentStarted({
                 id: deployment.id.toString(),
-                projectId: data.project,
+                projectId: data.project_name,
                 ...data,
             });
             return deployment;
@@ -61,29 +62,29 @@ class DeploymentService {
             if (status === 'success') {
                 this.socketService.emitDeploymentCompleted({
                     id: deployment.id.toString(),
-                    projectId: deployment.project,
+                    projectId: deployment.project_name,
                     status: deployment.status,
                     duration: deployment.duration,
-                    timestamp: deployment.timestamp,
+                    timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
                 });
             }
             else if (status === 'failed') {
                 this.socketService.emitDeploymentFailed({
                     id: deployment.id.toString(),
-                    projectId: deployment.project,
+                    projectId: deployment.project_name,
                     status: deployment.status,
                     duration: deployment.duration,
-                    timestamp: deployment.timestamp,
-                    errorMessage: deployment.errorMessage,
+                    timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
+                    errorMessage: deployment.metadata?.errorMessage || '',
                 });
             }
             else {
                 this.socketService.emitDeploymentUpdated({
                     id: deployment.id.toString(),
-                    projectId: deployment.project,
+                    projectId: deployment.project_name,
                     status: deployment.status,
                     duration: deployment.duration,
-                    timestamp: deployment.timestamp,
+                    timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
                 });
             }
             return deployment;
@@ -96,7 +97,7 @@ class DeploymentService {
     async getRecentDeployments(limit = 10) {
         try {
             const deployments = await deployment_1.Deployment.findAll({
-                order: [['timestamp', 'DESC']],
+                order: [['created_at', 'DESC']],
                 limit,
             });
             return deployments;
@@ -112,13 +113,13 @@ class DeploymentService {
             const offset = (page - 1) * limit;
             const whereClause = {};
             if (project) {
-                whereClause.project = project;
+                whereClause.project_name = project;
             }
             if (status) {
                 whereClause.status = status;
             }
-            const allowedSortFields = ['timestamp', 'project', 'status', 'duration', 'createdAt'];
-            const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'timestamp';
+            const allowedSortFields = ['created_at', 'project_name', 'status', 'duration', 'start_time', 'end_time'];
+            const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
             const validSortOrder = sortOrder === 'ASC' ? 'ASC' : 'DESC';
             const total = await deployment_1.Deployment.count({ where: whereClause });
             const deployments = await deployment_1.Deployment.findAll({
@@ -175,8 +176,8 @@ class DeploymentService {
     async getProjectDeployments(project, limit = 20) {
         try {
             const deployments = await deployment_1.Deployment.findAll({
-                where: { project },
-                order: [['timestamp', 'DESC']],
+                where: { project_name: project },
+                order: [['created_at', 'DESC']],
                 limit,
             });
             return deployments;
@@ -192,7 +193,7 @@ class DeploymentService {
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             const result = await deployment_1.Deployment.destroy({
                 where: {
-                    createdAt: {
+                    created_at: {
                         [sequelize_1.Op.lt]: thirtyDaysAgo,
                     },
                 },
@@ -224,21 +225,25 @@ class DeploymentService {
                     await this.handleMetricsUpdate(data);
                     break;
                 default:
-                    if (!project || !status || !timestamp) {
+                    if (!project || !status) {
                         logger_1.logger.warn('Invalid deployment webhook data:', data);
                         return;
                     }
                     const deploymentData = {
-                        project,
-                        status,
+                        project_name: project,
+                        repository: sourceRepo || project,
+                        branch: 'main',
+                        commit_hash: runId || 'unknown',
+                        status: status === 'success' ? 'success' : status === 'failed' ? 'failed' : 'running',
                         duration: duration || 0,
-                        timestamp,
-                        sourceRepo,
-                        runId,
-                        deployType,
-                        serverHost,
+                        trigger_type: 'push',
                         logs,
-                        errorMessage,
+                        metadata: {
+                            deployType,
+                            serverHost,
+                            errorMessage,
+                            originalTimestamp: timestamp
+                        }
                     };
                     await this.createDeployment(deploymentData);
                     logger_1.logger.info(`Processed deployment webhook for project: ${project}`);

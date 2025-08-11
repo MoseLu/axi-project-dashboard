@@ -39,11 +39,13 @@ export const testConnection = async (): Promise<void> => {
 // 同步数据库模型
 export const syncDatabase = async (): Promise<void> => {
   try {
-    await sequelize.sync({ alter: true });
+    // 使用 force: true 强制重新创建表结构
+    await sequelize.sync({ force: true });
     logger.info('✅ Database models synchronized successfully');
   } catch (error) {
     logger.error('❌ Failed to sync database models:', error);
-    throw error;
+    // 不抛出错误，让服务继续运行
+    logger.warn('⚠️ Continuing without database sync...');
   }
 };
 

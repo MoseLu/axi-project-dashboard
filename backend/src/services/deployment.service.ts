@@ -4,16 +4,18 @@ import { logger } from '@/utils/logger';
 import { Op } from 'sequelize';
 
 export interface DeploymentData {
-  project: string;
-  status: 'success' | 'failed' | 'running';
+  project_name: string;
+  repository: string;
+  branch: string;
+  commit_hash: string;
+  status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+  start_time?: string;
+  end_time?: string;
   duration: number;
-  timestamp: string;
-  sourceRepo?: string;
-  runId?: string;
-  deployType?: 'backend' | 'static';
-  serverHost?: string;
+  triggered_by?: string;
+  trigger_type: 'push' | 'manual' | 'schedule';
   logs?: string;
-  errorMessage?: string;
+  metadata?: any;
 }
 
 export interface DeploymentMetrics {
@@ -57,28 +59,30 @@ export class DeploymentService {
   public async createDeployment(data: DeploymentData): Promise<Deployment> {
     try {
       const deploymentData: any = {
-        project: data.project,
+        project_name: data.project_name,
+        repository: data.repository,
+        branch: data.branch,
+        commit_hash: data.commit_hash,
         status: data.status,
         duration: data.duration,
-        timestamp: data.timestamp,
+        trigger_type: data.trigger_type,
       };
 
       // 只添加非 undefined 的可选字段
-      if (data.sourceRepo !== undefined) deploymentData.sourceRepo = data.sourceRepo;
-      if (data.runId !== undefined) deploymentData.runId = data.runId;
-      if (data.deployType !== undefined) deploymentData.deployType = data.deployType;
-      if (data.serverHost !== undefined) deploymentData.serverHost = data.serverHost;
+      if (data.start_time !== undefined) deploymentData.start_time = data.start_time;
+      if (data.end_time !== undefined) deploymentData.end_time = data.end_time;
+      if (data.triggered_by !== undefined) deploymentData.triggered_by = data.triggered_by;
       if (data.logs !== undefined) deploymentData.logs = data.logs;
-      if (data.errorMessage !== undefined) deploymentData.errorMessage = data.errorMessage;
+      if (data.metadata !== undefined) deploymentData.metadata = data.metadata;
 
       const deployment = await Deployment.create(deploymentData);
 
-      logger.info(`Created deployment record: ${deployment.id} for project: ${data.project}`);
+      logger.info(`Created deployment record: ${deployment.id} for project: ${data.project_name}`);
 
       // 通过 WebSocket 广播部署事件
       this.socketService.emitDeploymentStarted({
         id: deployment.id.toString(),
-        projectId: data.project,
+        projectId: data.project_name,
         ...data,
       });
 
@@ -121,27 +125,27 @@ export class DeploymentService {
       if (status === 'success') {
         this.socketService.emitDeploymentCompleted({
           id: deployment.id.toString(),
-          projectId: deployment.project,
+          projectId: deployment.project_name,
           status: deployment.status,
           duration: deployment.duration,
-          timestamp: deployment.timestamp,
+          timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
         });
       } else if (status === 'failed') {
         this.socketService.emitDeploymentFailed({
           id: deployment.id.toString(),
-          projectId: deployment.project,
+          projectId: deployment.project_name,
           status: deployment.status,
           duration: deployment.duration,
-          timestamp: deployment.timestamp,
-          errorMessage: deployment.errorMessage,
+          timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
+          errorMessage: deployment.metadata?.errorMessage || '',
         });
       } else {
         this.socketService.emitDeploymentUpdated({
           id: deployment.id.toString(),
-          projectId: deployment.project,
+          projectId: deployment.project_name,
           status: deployment.status,
           duration: deployment.duration,
-          timestamp: deployment.timestamp,
+          timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
         });
       }
 
@@ -158,7 +162,7 @@ export class DeploymentService {
   public async getRecentDeployments(limit: number = 10): Promise<Deployment[]> {
     try {
       const deployments = await Deployment.findAll({
-        order: [['timestamp', 'DESC']],
+        order: [['created_at', 'DESC']],
         limit,
       });
 
@@ -180,15 +184,15 @@ export class DeploymentService {
       // 构建查询条件
       const whereClause: any = {};
       if (project) {
-        whereClause.project = project;
+        whereClause.project_name = project;
       }
       if (status) {
         whereClause.status = status;
       }
 
       // 验证排序字段
-      const allowedSortFields = ['timestamp', 'project', 'status', 'duration', 'createdAt'];
-      const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'timestamp';
+      const allowedSortFields = ['created_at', 'project_name', 'status', 'duration', 'start_time', 'end_time'];
+      const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
       const validSortOrder = sortOrder === 'ASC' ? 'ASC' : 'DESC';
 
       // 获取总数
@@ -265,8 +269,8 @@ export class DeploymentService {
   public async getProjectDeployments(project: string, limit: number = 20): Promise<Deployment[]> {
     try {
       const deployments = await Deployment.findAll({
-        where: { project },
-        order: [['timestamp', 'DESC']],
+        where: { project_name: project },
+        order: [['created_at', 'DESC']],
         limit,
       });
 
@@ -287,7 +291,7 @@ export class DeploymentService {
 
       const result = await Deployment.destroy({
         where: {
-          createdAt: {
+          created_at: {
             [Op.lt]: thirtyDaysAgo,
           },
         },
@@ -351,23 +355,27 @@ export class DeploymentService {
           
         default:
           // 兼容旧的部署通知格式
-          if (!project || !status || !timestamp) {
+          if (!project || !status) {
             logger.warn('Invalid deployment webhook data:', data);
             return;
           }
 
           // 创建或更新部署记录
           const deploymentData: DeploymentData = {
-            project,
-            status,
+            project_name: project,
+            repository: sourceRepo || project,
+            branch: 'main',
+            commit_hash: runId || 'unknown',
+            status: status === 'success' ? 'success' : status === 'failed' ? 'failed' : 'running',
             duration: duration || 0,
-            timestamp,
-            sourceRepo,
-            runId,
-            deployType,
-            serverHost,
+            trigger_type: 'push',
             logs,
-            errorMessage,
+            metadata: {
+              deployType,
+              serverHost,
+              errorMessage,
+              originalTimestamp: timestamp
+            }
           };
 
           await this.createDeployment(deploymentData);

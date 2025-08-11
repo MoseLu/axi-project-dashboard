@@ -11,6 +11,13 @@ class RedisService {
             url: config_1.config.database.redis.uri,
             socket: {
                 connectTimeout: 5000,
+                reconnectStrategy: (retries) => {
+                    if (retries > 3) {
+                        logger_1.logger.warn('⚠️ Redis connection failed after 3 retries, giving up');
+                        return false;
+                    }
+                    return Math.min(retries * 1000, 3000);
+                }
             },
         });
         this.setupEventHandlers();

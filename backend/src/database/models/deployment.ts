@@ -3,36 +3,42 @@ import { sequelize } from '../sequelize';
 
 export interface DeploymentAttributes {
   id: number;
-  project: string;
-  status: 'success' | 'failed' | 'running';
+  uuid: string;
+  project_name: string;
+  repository: string;
+  branch: string;
+  commit_hash: string;
+  status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+  start_time?: string;
+  end_time?: string;
   duration: number;
-  timestamp: string;
-  createdAt: string;
-  updatedAt: string;
-  sourceRepo?: string;
-  runId?: string;
-  deployType?: 'backend' | 'static';
-  serverHost?: string;
+  triggered_by?: string;
+  trigger_type: 'push' | 'manual' | 'schedule';
   logs?: string;
-  errorMessage?: string;
+  metadata?: any;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface DeploymentCreationAttributes extends Optional<DeploymentAttributes, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface DeploymentCreationAttributes extends Optional<DeploymentAttributes, 'id' | 'created_at' | 'updated_at'> {}
 
 export class Deployment extends Model<DeploymentAttributes, DeploymentCreationAttributes> implements DeploymentAttributes {
   public id!: number;
-  public project!: string;
-  public status!: 'success' | 'failed' | 'running';
+  public uuid!: string;
+  public project_name!: string;
+  public repository!: string;
+  public branch!: string;
+  public commit_hash!: string;
+  public status!: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+  public start_time?: string;
+  public end_time?: string;
   public duration!: number;
-  public timestamp!: string;
-  public createdAt!: string;
-  public updatedAt!: string;
-  public sourceRepo?: string;
-  public runId?: string;
-  public deployType?: 'backend' | 'static';
-  public serverHost?: string;
+  public triggered_by?: string;
+  public trigger_type!: 'push' | 'manual' | 'schedule';
   public logs?: string;
-  public errorMessage?: string;
+  public metadata?: any;
+  public created_at!: string;
+  public updated_at!: string;
 }
 
 Deployment.init(
@@ -42,16 +48,48 @@ Deployment.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    project: {
+    uuid: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      defaultValue: DataTypes.UUIDV4,
+      unique: true,
+      comment: '唯一标识符',
+    },
+    project_name: {
       type: DataTypes.STRING(100),
       allowNull: false,
       comment: '项目名称',
     },
-    status: {
-      type: DataTypes.ENUM('success', 'failed', 'running'),
+    repository: {
+      type: DataTypes.STRING(255),
       allowNull: false,
-      defaultValue: 'running',
+      comment: '仓库地址',
+    },
+    branch: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      comment: '分支名称',
+    },
+    commit_hash: {
+      type: DataTypes.STRING(40),
+      allowNull: false,
+      comment: '提交哈希',
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'running', 'success', 'failed', 'cancelled'),
+      allowNull: false,
+      defaultValue: 'pending',
       comment: '部署状态',
+    },
+    start_time: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: '开始时间',
+    },
+    end_time: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: '结束时间',
     },
     duration: {
       type: DataTypes.INTEGER,
@@ -59,47 +97,33 @@ Deployment.init(
       defaultValue: 0,
       comment: '部署耗时（秒）',
     },
-    timestamp: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      comment: '部署时间戳',
-    },
-    sourceRepo: {
-      type: DataTypes.STRING(200),
-      allowNull: true,
-      comment: '源仓库地址',
-    },
-    runId: {
+    triggered_by: {
       type: DataTypes.STRING(50),
       allowNull: true,
-      comment: 'GitHub Actions 运行ID',
+      comment: '触发者',
     },
-    deployType: {
-      type: DataTypes.ENUM('backend', 'static'),
-      allowNull: true,
-      comment: '部署类型',
-    },
-    serverHost: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      comment: '服务器地址',
+    trigger_type: {
+      type: DataTypes.ENUM('push', 'manual', 'schedule'),
+      allowNull: false,
+      defaultValue: 'manual',
+      comment: '触发类型',
     },
     logs: {
       type: DataTypes.TEXT,
       allowNull: true,
       comment: '部署日志',
     },
-    errorMessage: {
-      type: DataTypes.TEXT,
+    metadata: {
+      type: DataTypes.JSON,
       allowNull: true,
-      comment: '错误信息',
+      comment: '元数据',
     },
-    createdAt: {
+    created_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    updatedAt: {
+    updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
@@ -111,16 +135,16 @@ Deployment.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['project'],
+        fields: ['uuid'],
+      },
+      {
+        fields: ['project_name'],
       },
       {
         fields: ['status'],
       },
       {
-        fields: ['timestamp'],
-      },
-      {
-        fields: ['createdAt'],
+        fields: ['created_at'],
       },
     ],
   }

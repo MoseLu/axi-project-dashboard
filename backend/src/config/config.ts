@@ -151,7 +151,7 @@ const configData: Config = {
   mysqlUser: process.env.MYSQL_USER || 'root',
   mysqlPassword: process.env.MYSQL_PASSWORD || '123456',
   mysqlDatabase: process.env.MYSQL_DATABASE || 'project_dashboard',
-  redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
+  redisUri: process.env.REDIS_URI || 'redis://redamancy.com.cn:6379',
   
   // GitHub 配置
   githubToken: process.env.GITHUB_TOKEN || '',

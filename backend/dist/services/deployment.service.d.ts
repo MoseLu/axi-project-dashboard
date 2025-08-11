@@ -1,16 +1,18 @@
 import { Deployment } from '../database/models/deployment';
 import { SocketService } from './socket.service';
 export interface DeploymentData {
-    project: string;
-    status: 'success' | 'failed' | 'running';
+    project_name: string;
+    repository: string;
+    branch: string;
+    commit_hash: string;
+    status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+    start_time?: string;
+    end_time?: string;
     duration: number;
-    timestamp: string;
-    sourceRepo?: string;
-    runId?: string;
-    deployType?: 'backend' | 'static';
-    serverHost?: string;
+    triggered_by?: string;
+    trigger_type: 'push' | 'manual' | 'schedule';
     logs?: string;
-    errorMessage?: string;
+    metadata?: any;
 }
 export interface DeploymentMetrics {
     totalDeployments: number;

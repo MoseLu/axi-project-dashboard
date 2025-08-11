@@ -2,11 +2,21 @@ import React, { useState, useEffect } from 'react';
 
 interface Deployment {
   id: number;
-  project: string;
-  status: 'success' | 'failed';
+  uuid: string;
+  project_name: string;
+  repository: string;
+  branch: string;
+  commit_hash: string;
+  status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
+  start_time?: string;
+  end_time?: string;
   duration: number;
-  timestamp: string;
-  createdAt: string;
+  triggered_by?: string;
+  trigger_type: 'push' | 'manual' | 'schedule';
+  logs?: string;
+  metadata?: any;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Metrics {
@@ -88,12 +98,30 @@ const Dashboard: React.FC = () => {
     return new Date(timestamp).toLocaleString('zh-CN');
   };
 
+  const getDeploymentTime = (deployment: Deployment) => {
+    return deployment.end_time || deployment.start_time || deployment.created_at;
+  };
+
   const getStatusText = (status: string) => {
-    return status === 'success' ? '成功' : '失败';
+    switch (status) {
+      case 'success': return '成功';
+      case 'failed': return '失败';
+      case 'running': return '进行中';
+      case 'pending': return '等待中';
+      case 'cancelled': return '已取消';
+      default: return '未知';
+    }
   };
 
   const getStatusIcon = (status: string) => {
-    return status === 'success' ? '✅' : '❌';
+    switch (status) {
+      case 'success': return '✅';
+      case 'failed': return '❌';
+      case 'running': return '🔄';
+      case 'pending': return '⏳';
+      case 'cancelled': return '🚫';
+      default: return '❓';
+    }
   };
 
   const successRate = metrics.totalDeployments > 0 
@@ -592,7 +620,7 @@ const Dashboard: React.FC = () => {
                       padding: '12px',
                       fontWeight: '500'
                     }}>
-                      {deployment.project}
+                      {deployment.project_name}
                     </td>
                     <td style={{ padding: '12px' }}>
                       <span className={`status-${deployment.status}`} style={{ 
@@ -619,7 +647,7 @@ const Dashboard: React.FC = () => {
                       opacity: 0.8,
                       fontSize: '13px'
                     }}>
-                      {formatTime(deployment.timestamp)}
+                      {formatTime(getDeploymentTime(deployment))}
                     </td>
                   </tr>
                 ))}

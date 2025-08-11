@@ -38,12 +38,12 @@ const testConnection = async () => {
 exports.testConnection = testConnection;
 const syncDatabase = async () => {
     try {
-        await exports.sequelize.sync({ alter: true });
+        await exports.sequelize.sync({ force: true });
         logger_1.logger.info('✅ Database models synchronized successfully');
     }
     catch (error) {
         logger_1.logger.error('❌ Failed to sync database models:', error);
-        throw error;
+        logger_1.logger.warn('⚠️ Continuing without database sync...');
     }
 };
 exports.syncDatabase = syncDatabase;
