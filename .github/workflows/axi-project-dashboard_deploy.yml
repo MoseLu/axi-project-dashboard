@@ -460,13 +460,20 @@ jobs:
           
           # 等待服务启动并验证端口
           echo "⏳ Waiting for service to start..."
+          # 从ecosystem.config.js中获取端口
+          SERVICE_PORT=$(grep "PORT:" ecosystem.config.js | head -1 | sed 's/.*PORT: \([0-9]*\).*/\1/')
+          if [ -z "$SERVICE_PORT" ]; then
+              SERVICE_PORT=8081  # 默认端口
+          fi
+          echo "🔍 检查端口 $SERVICE_PORT..."
+          
           for i in {1..30}; do
-              if netstat -tlnp 2>/dev/null | grep -q ":8080"; then
-                  echo "✅ Service is listening on port 8080"
+              if netstat -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT"; then
+                  echo "✅ Service is listening on port $SERVICE_PORT"
                   break
               fi
               if [ $i -eq 30 ]; then
-                  echo "❌ Service failed to start on port 8080 after 60 seconds"
+                  echo "❌ Service failed to start on port $SERVICE_PORT after 60 seconds"
                   $PM2_CMD logs dashboard-backend --lines 10
                   exit 1
               fi
