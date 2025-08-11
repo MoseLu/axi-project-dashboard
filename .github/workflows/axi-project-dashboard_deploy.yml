@@ -395,6 +395,9 @@ jobs:
           #!/bin/bash
           set -e
           echo "🚀 Starting axi-project-dashboard backend..."
+          
+          # 注意：这个脚本将在服务器上执行，不是在GitHub Actions runner上
+          # 所以可以直接访问 /srv/apps/axi-project-dashboard 目录
           cd /srv/apps/axi-project-dashboard
           
           # 检查环境
