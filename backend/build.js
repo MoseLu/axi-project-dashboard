@@ -58,6 +58,42 @@ try {
       fs.renameSync(file, `src/${file}`);
     });
     
+    // 创建必要的子目录并复制文件
+    const subdirs = ['config', 'services', 'middleware', 'utils', 'types', 'database', 'routes'];
+    subdirs.forEach(dir => {
+      const srcDir = `src/${dir}`;
+      if (!fs.existsSync(srcDir)) {
+        fs.mkdirSync(srcDir, { recursive: true });
+      }
+      
+      // 复制现有目录到 src
+      if (fs.existsSync(dir)) {
+        console.log(`📁 Copying ${dir} directory to src/`);
+        try {
+          const files = fs.readdirSync(dir);
+          files.forEach(file => {
+            const sourcePath = path.join(dir, file);
+            const targetPath = path.join(srcDir, file);
+            if (fs.statSync(sourcePath).isFile()) {
+              // 只复制 TypeScript 源文件，跳过编译后的文件
+              if (file.endsWith('.ts') && !file.endsWith('.d.ts')) {
+                fs.copyFileSync(sourcePath, targetPath);
+                console.log(`  📄 Copied ${file} to src/${dir}/`);
+              } else if (!file.endsWith('.js') && !file.endsWith('.d.ts') && !file.endsWith('.map')) {
+                // 复制其他非编译文件
+                fs.copyFileSync(sourcePath, targetPath);
+                console.log(`  📄 Copied ${file} to src/${dir}/`);
+              }
+            }
+          });
+        } catch (error) {
+          console.log(`⚠️ Could not copy ${dir} directory:`, error.message);
+        }
+      } else {
+        console.log(`⚠️ Directory ${dir} not found, creating empty directory`);
+      }
+    });
+    
     // 检查是否有编译后的文件，如果有则创建基础的 src/index.ts
     if (fs.existsSync('index.js') && !fs.existsSync('src/index.ts')) {
       console.log('📄 Found compiled index.js, creating src/index.ts...');
@@ -176,42 +212,6 @@ app.start();`;
       
       fs.writeFileSync('src/index.ts', indexTsContent);
     }
-    
-    // 创建必要的子目录
-    const subdirs = ['config', 'services', 'middleware', 'utils', 'types', 'database', 'routes'];
-    subdirs.forEach(dir => {
-      const srcDir = `src/${dir}`;
-      if (!fs.existsSync(srcDir)) {
-        fs.mkdirSync(srcDir, { recursive: true });
-      }
-      
-      // 复制现有目录到 src
-      if (fs.existsSync(dir)) {
-        console.log(`📁 Copying ${dir} directory to src/`);
-        try {
-          const files = fs.readdirSync(dir);
-          files.forEach(file => {
-            const sourcePath = path.join(dir, file);
-            const targetPath = path.join(srcDir, file);
-            if (fs.statSync(sourcePath).isFile()) {
-              // 只复制 TypeScript 源文件，跳过编译后的文件
-              if (file.endsWith('.ts') && !file.endsWith('.d.ts')) {
-                fs.copyFileSync(sourcePath, targetPath);
-                console.log(`  📄 Copied ${file} to src/${dir}/`);
-              } else if (!file.endsWith('.js') && !file.endsWith('.d.ts') && !file.endsWith('.map')) {
-                // 复制其他非编译文件
-                fs.copyFileSync(sourcePath, targetPath);
-                console.log(`  📄 Copied ${file} to src/${dir}/`);
-              }
-            }
-          });
-        } catch (error) {
-          console.log(`⚠️ Could not copy ${dir} directory:`, error.message);
-        }
-      } else {
-        console.log(`⚠️ Directory ${dir} not found, creating empty directory`);
-      }
-    });
     
     console.log('✅ Src directory structure created successfully');
   }
