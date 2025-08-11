@@ -369,14 +369,14 @@ jobs:
           pm2 logs dashboard-backend --lines 20 --nostream || echo "❌ 无法获取日志"
           
           # 检查端口占用
-          echo "🔍 检查端口8090占用情况..."
-          netstat -tlnp | grep :8090 || echo "❌ 端口8090未被占用"
+          echo "🔍 检查端口8080占用情况..."
+          netstat -tlnp | grep :8080 || echo "❌ 端口8080未被占用"
           
           # 测试本地端口（多次尝试）
-          echo "🔍 测试本地端口8090..."
+          echo "🔍 测试本地端口8080..."
           for i in {1..3}; do
             echo "尝试 $i/3:"
-            if curl -f http://localhost:8090/health; then
+            if curl -f http://localhost:8080/health; then
               echo "✅ 本地健康检查成功"
               break
             else
@@ -635,7 +635,7 @@ jobs:
               
               location /project-dashboard/api/ {
                   rewrite ^/project-dashboard/api/(.*) /api/$1 break;
-                  proxy_pass http://127.0.0.1:8090;
+                  proxy_pass http://127.0.0.1:8080;
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -657,7 +657,7 @@ jobs:
               
               location /project-dashboard/webhook/github {
                   rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break;
-                  proxy_pass http://127.0.0.1:8090;
+                  proxy_pass http://127.0.0.1:8080;
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
