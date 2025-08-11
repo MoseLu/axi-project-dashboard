@@ -182,11 +182,12 @@ jobs:
           cp backend/package.json dist/backend/
           cp backend/build.js dist/backend/
           cp backend/tsconfig.json dist/backend/
+          cp backend/test-simple.js dist/backend/
           
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."
           ls -la dist/backend/ || echo "❌ backend构建产物不存在"
-          ls -la dist/backend/index.js || echo "❌ 主入口文件不存在"
+          ls -la dist/backend/test-simple.js || echo "❌ 测试服务器文件不存在"
           
           # 验证Express核心依赖
           echo "🔍 验证Express依赖链..."
