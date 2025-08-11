@@ -44,11 +44,28 @@ router.get('/deployments', async (req, res) => {
       });
     }
 
-    const deployments = await deploymentService.getRecentDeployments(20);
+    // 获取查询参数
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const sortBy = req.query.sortBy as string || 'timestamp';
+    const sortOrder = req.query.sortOrder as string || 'DESC';
+    const project = req.query.project as string;
+    const status = req.query.status as string;
+
+    const deployments = await deploymentService.getDeploymentsWithPagination({
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      project,
+      status
+    });
+
     res.json({
       success: true,
       message: 'Deployments data retrieved successfully',
-      data: deployments
+      data: deployments.data,
+      pagination: deployments.pagination
     });
   } catch (error) {
     logger.error('Failed to get deployments:', error);

@@ -529,6 +529,46 @@ export class SocketService {
     this.io.emit('event', event);
   }
 
+  // 新增的WebSocket通知方法
+  public emitStepUpdate(stepData: any): void {
+    const event: SocketEvent = {
+      type: SocketEventType.STEP_UPDATED,
+      payload: stepData,
+      timestamp: new Date(),
+      projectId: stepData.projectId,
+      deploymentId: stepData.deploymentId
+    };
+
+    this.io.to(`deployment:${stepData.deploymentId}`).emit('event', event);
+    this.io.to(`project:${stepData.projectId}`).emit('event', event);
+  }
+
+  public emitLogEntry(logData: any): void {
+    const event: SocketEvent = {
+      type: SocketEventType.LOG_ENTRY,
+      payload: logData,
+      timestamp: new Date(),
+      projectId: logData.projectId,
+      deploymentId: logData.deploymentId
+    };
+
+    this.io.to(`deployment:${logData.deploymentId}`).emit('event', event);
+    this.io.to(`project:${logData.projectId}`).emit('event', event);
+  }
+
+  public emitMetricsUpdate(metricsData: any): void {
+    const event: SocketEvent = {
+      type: SocketEventType.METRICS_UPDATE,
+      payload: metricsData,
+      timestamp: new Date(),
+      projectId: metricsData.projectId,
+      deploymentId: metricsData.deploymentId
+    };
+
+    this.io.to(`deployment:${metricsData.deploymentId}`).emit('event', event);
+    this.io.to(`project:${metricsData.projectId}`).emit('event', event);
+  }
+
   // ===================================
   // 实用方法
   // ===================================

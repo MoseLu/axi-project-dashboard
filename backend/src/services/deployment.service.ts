@@ -23,6 +23,27 @@ export interface DeploymentMetrics {
   averageDeploymentTime: number;
 }
 
+export interface DeploymentQueryParams {
+  page: number;
+  limit: number;
+  sortBy: string;
+  sortOrder: 'ASC' | 'DESC';
+  project?: string;
+  status?: string;
+}
+
+export interface PaginatedDeployments {
+  data: Deployment[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 export class DeploymentService {
   private socketService: SocketService;
 
@@ -146,6 +167,58 @@ export class DeploymentService {
   }
 
   /**
+   * 获取分页部署记录，支持排序和筛选
+   */
+  public async getDeploymentsWithPagination(params: DeploymentQueryParams): Promise<PaginatedDeployments> {
+    try {
+      const { page, limit, sortBy, sortOrder, project, status } = params;
+      const offset = (page - 1) * limit;
+
+      // 构建查询条件
+      const whereClause: any = {};
+      if (project) {
+        whereClause.project = project;
+      }
+      if (status) {
+        whereClause.status = status;
+      }
+
+      // 验证排序字段
+      const allowedSortFields = ['timestamp', 'project', 'status', 'duration', 'createdAt'];
+      const validSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'timestamp';
+      const validSortOrder = sortOrder === 'ASC' ? 'ASC' : 'DESC';
+
+      // 获取总数
+      const total = await Deployment.count({ where: whereClause });
+
+      // 获取分页数据
+      const deployments = await Deployment.findAll({
+        where: whereClause,
+        order: [[validSortBy, validSortOrder]],
+        limit,
+        offset,
+      });
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data: deployments,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    } catch (error) {
+      logger.error('Failed to get deployments with pagination:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 获取部署指标
    */
   public async getDeploymentMetrics(): Promise<DeploymentMetrics> {
@@ -231,6 +304,7 @@ export class DeploymentService {
   public async handleDeploymentWebhook(data: any): Promise<void> {
     try {
       const {
+        type,
         project,
         status,
         duration,
@@ -241,33 +315,184 @@ export class DeploymentService {
         serverHost,
         logs,
         errorMessage,
+        deployment_id,
+        step_name,
+        step_status,
+        workflow_name,
+        workflow_id,
+        log_stream_id,
+        level,
+        message,
+        metrics,
       } = data;
 
-      if (!project || !status || !timestamp) {
-        logger.warn('Invalid deployment webhook data:', data);
-        return;
+      // 根据通知类型处理不同的数据
+      switch (type) {
+        case 'step_started':
+        case 'step_completed':
+        case 'step_manual':
+          await this.handleStepNotification(data);
+          break;
+          
+        case 'deployment_completed':
+          await this.handleDeploymentCompletion(data);
+          break;
+          
+        case 'log_entry':
+          await this.handleLogEntry(data);
+          break;
+          
+        case 'metrics_update':
+          await this.handleMetricsUpdate(data);
+          break;
+          
+        default:
+          // 兼容旧的部署通知格式
+          if (!project || !status || !timestamp) {
+            logger.warn('Invalid deployment webhook data:', data);
+            return;
+          }
+
+          // 创建或更新部署记录
+          const deploymentData: DeploymentData = {
+            project,
+            status,
+            duration: duration || 0,
+            timestamp,
+            sourceRepo,
+            runId,
+            deployType,
+            serverHost,
+            logs,
+            errorMessage,
+          };
+
+          await this.createDeployment(deploymentData);
+          logger.info(`Processed deployment webhook for project: ${project}`);
       }
-
-      // 创建或更新部署记录
-      const deploymentData: DeploymentData = {
-        project,
-        status,
-        duration: duration || 0,
-        timestamp,
-        sourceRepo,
-        runId,
-        deployType,
-        serverHost,
-        logs,
-        errorMessage,
-      };
-
-      await this.createDeployment(deploymentData);
-
-      logger.info(`Processed deployment webhook for project: ${project}`);
     } catch (error) {
       logger.error('Failed to handle deployment webhook:', error);
       throw error;
     }
+  }
+
+  /**
+   * 处理步骤通知
+   */
+  private async handleStepNotification(data: any): Promise<void> {
+    const {
+      project,
+      deployment_id,
+      step_name,
+      step_status,
+      timestamp,
+      workflow_name,
+      workflow_id,
+      logs,
+      duration,
+      started_at,
+      completed_at,
+    } = data;
+
+    logger.info(`Processing step notification: ${step_name} (${step_status}) for project: ${project}`);
+
+    // 通过 WebSocket 广播步骤事件
+    this.socketService.emitStepUpdate({
+      projectId: project,
+      deploymentId: deployment_id,
+      stepName: step_name,
+      status: step_status,
+      timestamp,
+      workflowName: workflow_name,
+      workflowId: workflow_id,
+      logs,
+      duration,
+      startedAt: started_at,
+      completedAt: completed_at,
+    });
+  }
+
+  /**
+   * 处理部署完成通知
+   */
+  private async handleDeploymentCompletion(data: any): Promise<void> {
+    const {
+      project,
+      deployment_id,
+      status,
+      timestamp,
+      workflow_name,
+      workflow_id,
+      logs,
+      duration,
+      started_at,
+      completed_at,
+    } = data;
+
+    logger.info(`Processing deployment completion: ${deployment_id} (${status}) for project: ${project}`);
+
+    // 通过 WebSocket 广播部署完成事件
+    this.socketService.emitDeploymentCompleted({
+      id: deployment_id,
+      projectId: project,
+      status,
+      duration,
+      timestamp,
+      workflowName: workflow_name,
+      workflowId: workflow_id,
+      logs,
+      startedAt: started_at,
+      completedAt: completed_at,
+    });
+  }
+
+  /**
+   * 处理日志条目
+   */
+  private async handleLogEntry(data: any): Promise<void> {
+    const {
+      project,
+      deployment_id,
+      log_stream_id,
+      timestamp,
+      level,
+      message,
+      source,
+    } = data;
+
+    logger.debug(`Processing log entry: ${level} for deployment: ${deployment_id}`);
+
+    // 通过 WebSocket 广播日志事件
+    this.socketService.emitLogEntry({
+      projectId: project,
+      deploymentId: deployment_id,
+      logStreamId: log_stream_id,
+      level,
+      message,
+      timestamp,
+      source,
+    });
+  }
+
+  /**
+   * 处理指标更新
+   */
+  private async handleMetricsUpdate(data: any): Promise<void> {
+    const {
+      project,
+      deployment_id,
+      timestamp,
+      metrics,
+    } = data;
+
+    logger.info(`Processing metrics update for deployment: ${deployment_id}`);
+
+    // 通过 WebSocket 广播指标更新事件
+    this.socketService.emitMetricsUpdate({
+      projectId: project,
+      deploymentId: deployment_id,
+      metrics,
+      timestamp,
+    });
   }
 }
