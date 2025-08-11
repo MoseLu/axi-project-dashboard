@@ -333,7 +333,7 @@ jobs:
           # 检查Node.js和PM2版本
           echo "🔍 检查Node.js和PM2环境..."
           node --version || echo "❌ Node.js未安装"
-          npm --version || echo "❌ npm未安装"
+          pnpm --version || echo "❌ pnpm未安装"
           pm2 --version || echo "❌ PM2未安装"
           
           # 停止可能存在的旧进程
@@ -404,7 +404,7 @@ jobs:
           
           # 检查Node.js环境
           which node && echo "Node.js: $(node --version)" || echo "Node.js not found"
-          which npm && echo "npm: $(npm --version)" || echo "npm not found"  
+          which pnpm && echo "pnpm: $(pnpm --version)" || echo "pnpm not found"  
           which npx && echo "npx available" || echo "npx not found"
           
           # 检查PM2
@@ -428,9 +428,9 @@ jobs:
           # 修复依赖问题
           echo "🔧 Fixing dependencies..."
           cd backend
-          npm install side-channel --save || echo "side-channel already installed"
+          pnpm add side-channel --save || echo "side-channel already installed"
           cd ..
-          npm install --force || echo "Dependencies installation completed"
+          pnpm install --force || echo "Dependencies installation completed"
           
           # 构建项目
           echo "🔨 Building project..."
@@ -439,7 +439,7 @@ jobs:
           echo "Current directory after cd backend: $(pwd)"
           echo "Files in backend directory:"
           ls -la
-          npm run build || {
+          pnpm run build || {
               echo "ERROR: Build failed"
               exit 1
           }

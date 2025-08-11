@@ -4,11 +4,12 @@
 
 这是一个独立的部署进度可视化仪表板，为所有通过 axi-deploy 进行的项目部署提供实时监控和状态跟踪。
 
-## ⚠️ 重要：独立项目说明
+## ⚠️ 重要：生产环境专用项目
 
-**axi-project-dashboard 是完全独立的项目**：
+**axi-project-dashboard 是生产环境专用项目**：
 - 与 axi-deploy 核心业务完全分离，独立仓库管理
-- 拥有独立的部署流程、配置管理和版本控制
+- 专为 Linux 生产环境设计，不支持本地开发
+- 通过 GitHub Actions 实现自动化部署
 - 使用 axi-deploy 的基础设施进行部署，但运行时完全独立
 
 ## 🚀 快速开始
@@ -98,111 +99,153 @@
 ```
 axi-project-dashboard/
 ├── README.md                    # 项目说明
-├── env.example                  # 本地开发环境配置模板
-├── ecosystem.config.js          # PM2 生产部署配置
-├── .github/workflows/           # GitHub Actions 自动部署
-│   ├── deploy.yml              # 主部署工作流
-│   └── manual-deploy.yml       # 手动部署工作流
-├── backend/                     # 后端服务 (Node.js + Express)
-│   ├── src/                    # 源码目录
+├── package.json                 # 根包配置
+├── pnpm-workspace.yaml          # 工作区配置
+├── ecosystem.config.js          # PM2 配置
+├── .github/                     # GitHub Actions
+├── config/                      # 配置文件
+│   └── nginx.conf              # Nginx 配置
+├── documentation/               # 项目文档
+│   ├── ARCHITECTURE.md         # 架构文档
+│   ├── DEPLOYMENT.md           # 部署指南
+│   ├── QUICK_START.md          # 快速开始
+│   └── ...
+├── backend/                     # 后端服务
 │   ├── package.json            # 后端依赖
-│   └── tsconfig.json           # TypeScript 配置
-├── frontend/                    # 前端应用 (React + TypeScript)
-│   ├── src/                    # 源码目录
-│   ├── package.json            # 前端依赖
-│   └── tsconfig.json           # TypeScript 配置
-└── documentation/              # 详细文档
-    ├── DOCS_INDEX.md          # 文档索引
-    ├── QUICK_START.md         # 快速开始
-    ├── ARCHITECTURE.md        # 系统架构
-    ├── DEPLOYMENT.md          # 部署指南
-    └── PORT_PLANNING.md       # 端口规划
+│   ├── tsconfig.json           # TypeScript 配置
+│   ├── build.js                # 构建脚本
+│   ├── start-server.js         # 服务启动
+│   └── src/                    # 源代码
+│       ├── index.ts            # 应用入口
+│       ├── config/             # 配置模块
+│       ├── database/           # 数据库模块
+│       ├── middleware/         # 中间件
+│       ├── routes/             # 路由定义
+│       ├── services/           # 业务服务
+│       │   ├── health.service.ts      # 健康检查
+│       │   ├── metrics.service.ts     # 指标收集
+│       │   ├── redis.service.ts       # Redis 服务
+│       │   └── socket.service.ts      # WebSocket 服务
+│       ├── types/              # 类型定义
+│       └── utils/              # 工具函数
+└── frontend/                    # 前端应用
+    ├── package.json            # 前端依赖
+    ├── tsconfig.json           # TypeScript 配置
+    ├── public/                 # 静态资源
+    └── src/                    # 源代码
+        ├── index.tsx           # 应用入口
+        ├── App.tsx             # 主应用组件
+        ├── components/         # 通用组件
+        │   └── RealTimeDeploymentMonitor.tsx
+        └── pages/              # 页面组件
+            └── Dashboard.tsx
 ```
 
 ## 🏛️ 系统架构
 
 ```
-GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8090/8091) → MongoDB + Redis
+GitHub Webhook → Nginx (443) → React 前端 + Node.js 后端 (8080/8081) → MySQL + Redis
                    ↓
      https://redamancy.com.cn/project-dashboard
 ```
 
 **技术栈**:
 - **前端**: React 18 + TypeScript + Ant Design + Socket.io Client
-- **后端**: Node.js + Express + Socket.io + MongoDB + Redis (端口: 8090/8091)
-- **部署**: PM2 + Nginx + 云服务器 + GitHub Actions
+- **后端**: Node.js + Express + Socket.io + MySQL + Redis (端口: 8080/8081)
+- **包管理**: pnpm (统一包管理器)
+- **部署**: PM2 + Nginx + Linux 服务器 + GitHub Actions
 
-## ⚙️ 配置说明
+## ⚙️ 生产环境配置
 
-### `env.example` 文件用途
+### 🔧 配置管理
 
-`env.example` 是**环境配置参考文件**：
-
-- **主要用途**: 提供生产环境配置的参考模板
-- **实际配置**: 生产环境使用 `ecosystem.config.js` 中的配置
+- **环境配置**: 通过 `ecosystem.config.js` 统一管理
 - **敏感信息**: 通过 GitHub Secrets 安全传递
+- **动态配置**: 支持环境变量覆盖
 
-### 核心配置项
+### 📋 核心配置项
 
-- **端口配置**: 8090 (API), 8091 (WebSocket) - 避免与其他项目冲突
-- **数据库**: MongoDB + Redis (云服务器本地实例)
+- **端口配置**: 8080 (API), 8081 (WebSocket) - 避免与其他项目冲突
+- **数据库**: MySQL + Redis (服务器本地实例)
 - **GitHub 集成**: 通过 API 监控部署状态，接收 Webhook 事件
 - **前端连接**: 通过 Nginx 代理访问后端服务
+- **日志管理**: PM2 日志轮转和归档
 
 ## 🛠️ 技术特色
 
-### 云端部署优势
+### 🚀 生产环境优化
 
-- **零本地依赖**: 完全云端运行，无需本地环境搭建
 - **自动化部署**: Git 推送即触发部署，无需手动操作
 - **高可用架构**: PM2 进程管理 + Nginx 负载均衡
 - **实时监控**: WebSocket 长连接，实时推送部署状态
+- **容器化部署**: 支持 Docker 容器化部署
 
-### 性能优化
+### ⚡ 性能优化
 
 - **端口隔离**: 专用端口段避免冲突
 - **缓存策略**: Redis 缓存提升响应速度  
 - **CDN 加速**: 静态资源缓存优化
 - **压缩传输**: Gzip 压缩减少带宽占用
+- **负载均衡**: Nginx 反向代理和负载均衡
 
-## 🚀 快速开始
+## 🚀 生产环境部署
 
-详细部署指南请参考 [快速开始文档](./documentation/QUICK_START.md)
+本项目专为生产环境设计，通过 GitHub Actions 实现自动化部署。
 
-### 简化部署步骤
+### 📦 自动化部署流程
 
-1. **服务器初始化**
-   ```bash
-   # 在云服务器上运行
-   curl -fsSL https://raw.githubusercontent.com/your-org/axi-deploy/main/dashboard/scripts/setup.sh | bash
+1. **配置 GitHub Secrets**
+   在仓库设置中添加必要的部署密钥：
+   ```
+   SERVER_HOST=redamancy.com.cn
+   SERVER_USER=deploy
+   SERVER_KEY=<SSH 私钥>
+   SERVER_PORT=22
+   DEPLOY_CENTER_PAT=<GitHub Token>
    ```
 
-2. **配置 GitHub Secrets**
-   在 axi-deploy 仓库设置中添加服务器相关的 Secrets
-
-3. **推送代码触发部署**
+2. **推送代码触发部署**
    ```bash
-   git add dashboard/
-   git commit -m "feat: add axi-deploy dashboard"
-   git push origin main
+   git push origin main  # 推送代码自动触发部署
    ```
 
-4. **访问仪表板**
+3. **访问仪表板**
+   ```
    https://redamancy.com.cn/project-dashboard
+   ```
+
+### 🔧 部署架构
+
+- **构建环境**: GitHub Actions (Ubuntu)
+- **运行环境**: Linux 服务器 + PM2
+- **反向代理**: Nginx
+- **数据库**: MySQL + Redis (服务器本地)
+- **监控**: PM2 进程管理
+
+### 📋 部署检查清单
+
+- [ ] GitHub Secrets 配置完成
+- [ ] 服务器环境准备就绪 (Node.js 18+, pnpm 8+, PM2, MySQL, Redis)
+- [ ] Nginx 配置正确
+- [ ] 防火墙端口开放 (80, 443, 8080, 8081)
+- [ ] 域名解析正确
+
+详细部署指南请参考 [部署文档](./documentation/DEPLOYMENT.md)
 
 ## 🔧 配置说明
 
 ### 核心配置项
 
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| `NODE_ENV` | 运行环境 | development |
-| `PORT` | 服务端口 | 8080 |
-| `MONGODB_URI` | MongoDB 连接字符串 | mongodb://localhost:27017/axi-deploy |
-| `REDIS_URI` | Redis 连接字符串 | redis://localhost:6379 |
-| `GITHUB_TOKEN` | GitHub API Token | - |
-| `JWT_SECRET` | JWT 密钥 | - |
+| 配置项 | 说明 | 生产环境默认值 |
+|--------|------|----------------|
+| `NODE_ENV` | 运行环境 | production |
+| `PORT` | API 服务端口 | 8080 |
 | `WEBSOCKET_PORT` | WebSocket 端口 | 8081 |
+| `MYSQL_HOST` | MySQL 主机地址 | 127.0.0.1 |
+| `MYSQL_DATABASE` | MySQL 数据库名 | project_dashboard |
+| `REDIS_URI` | Redis 连接字符串 | redis://localhost:6379 |
+| `GITHUB_TOKEN` | GitHub API Token | 通过 Secrets 配置 |
+| `JWT_SECRET` | JWT 密钥 | 通过 Secrets 配置 |
 
 ### GitHub Webhooks 配置
 

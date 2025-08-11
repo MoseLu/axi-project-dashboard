@@ -50,7 +50,7 @@
     "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
     "format": "prettier --write src/**/*.{ts,tsx,css,scss,json}",
     "typecheck": "tsc --noEmit",
-    "analyze": "npm run build && npx serve -s build"
+    "analyze": "pnpm run build && npx serve -s build"
   },
   "browserslist": {
     "production": [
@@ -67,7 +67,7 @@
   "proxy": "http://localhost:8080",
   "engines": {
     "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "pnpm": ">=8.0.0"
   },
   "keywords": [
     "react",
