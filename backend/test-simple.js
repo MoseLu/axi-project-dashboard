@@ -13,6 +13,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+// API 健康检查端点
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    message: 'axi-project-dashboard API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0'
+  });
+});
+
 // 根端点
 app.get('/', (req, res) => {
   res.json({
