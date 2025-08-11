@@ -214,9 +214,8 @@ jobs:
           cp ecosystem.config.js dist/
           
           # 创建部署脚本
-          cat > dist/deploy.sh << 'EOF'
-          #!/bin/bash
-          echo "🚀 开始部署 axi-project-dashboard..."
+          echo '#!/bin/bash' > dist/deploy.sh
+          echo 'echo "🚀 开始部署 axi-project-dashboard..."' >> dist/deploy.sh
           
           # 设置目标目录
           TARGET_DIR="/srv/apps/axi-project-dashboard"
@@ -234,77 +233,72 @@ jobs:
             # 停止现有服务
             pm2 stop dashboard-backend || true
             
-                        # 备份现有部署（如果存在）
+                                    # 备份现有部署（如果存在）
             if [ -d "$TARGET_DIR/backend" ]; then
               echo "📦 备份现有部署..."
               cp -r $TARGET_DIR /srv/backups/axi-project-dashboard-$(date +%Y%m%d_%H%M%S) || true
             fi
             
-            # 创建PM2启动脚本
+            # 创建简化的启动脚本
             echo "📝 创建启动脚本..."
-            cat > start.sh << 'EOF'
-#!/bin/bash
-set -e
-echo "🚀 Starting axi-project-dashboard backend..."
-cd /srv/apps/axi-project-dashboard
-echo "Current directory: $(pwd)"
-echo "Files in directory:"
-ls -la
-which node && echo "Node.js: $(node --version)" || echo "Node.js not found"
-which pnpm && echo "pnpm: $(pnpm --version)" || echo "pnpm not found"  
-which npx && echo "npx available" || echo "npx not found"
-if command -v pm2 &> /dev/null; then
-    echo "PM2 found: $(pm2 --version)"
-    PM2_CMD="pm2"
-elif command -v npx &> /dev/null; then
-    echo "Using npx pm2"
-    PM2_CMD="npx pm2"
-else
-    echo "ERROR: PM2 not available"
-    exit 1
-fi
-if [ ! -f ecosystem.config.js ]; then
-    echo "ERROR: ecosystem.config.js not found"
-    exit 1
-fi
-echo "🔧 Fixing dependencies..."
-cd backend
-pnpm add side-channel --save || echo "side-channel already installed"
-cd ..
-pnpm install --force || echo "Dependencies installation completed"
-echo "🔨 Building project..."
-cd backend
-pnpm run build || {
-    echo "ERROR: Build failed"
-    exit 1
-}
-cd ..
-echo "Found ecosystem.config.js, starting service..."
-$PM2_CMD stop dashboard-backend 2>/dev/null || true
-$PM2_CMD delete dashboard-backend 2>/dev/null || true
-$PM2_CMD start ecosystem.config.js --update-env
-echo "⏳ Waiting for service to start..."
-SERVICE_PORT=$(grep "PORT:" ecosystem.config.js | head -1 | sed 's/.*PORT: \([0-9]*\).*/\1/')
-if [ -z "$SERVICE_PORT" ]; then
-    SERVICE_PORT=8081
-fi
-echo "🔍 检查端口 $SERVICE_PORT..."
-for i in {1..30}; do
-    if netstat -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT"; then
-        echo "✅ Service is listening on port $SERVICE_PORT"
-        break
-    fi
-    if [ $i -eq 30 ]; then
-        echo "❌ Service failed to start on port $SERVICE_PORT after 60 seconds"
-        $PM2_CMD logs dashboard-backend --lines 10
-        exit 1
-    fi
-    sleep 2
-done
-$PM2_CMD list
-$PM2_CMD logs dashboard-backend --lines 5
-echo "✅ Start script completed"
-EOF
+            echo '#!/bin/bash' > start.sh
+            echo 'set -e' >> start.sh
+            echo 'echo "🚀 Starting axi-project-dashboard backend..."' >> start.sh
+            echo 'cd /srv/apps/axi-project-dashboard' >> start.sh
+            echo 'echo "Current directory: $(pwd)"' >> start.sh
+            echo 'echo "Files in directory:"' >> start.sh
+            echo 'ls -la' >> start.sh
+            echo 'which node && echo "Node.js: $(node --version)" || echo "Node.js not found"' >> start.sh
+            echo 'which pnpm && echo "pnpm: $(pnpm --version)" || echo "pnpm not found"' >> start.sh
+            echo 'which npx && echo "npx available" || echo "npx not found"' >> start.sh
+            echo 'if command -v pm2 &> /dev/null; then' >> start.sh
+            echo '    echo "PM2 found: $(pm2 --version)"' >> start.sh
+            echo '    PM2_CMD="pm2"' >> start.sh
+            echo 'elif command -v npx &> /dev/null; then' >> start.sh
+            echo '    echo "Using npx pm2"' >> start.sh
+            echo '    PM2_CMD="npx pm2"' >> start.sh
+            echo 'else' >> start.sh
+            echo '    echo "ERROR: PM2 not available"' >> start.sh
+            echo '    exit 1' >> start.sh
+            echo 'fi' >> start.sh
+            echo 'if [ ! -f ecosystem.config.js ]; then' >> start.sh
+            echo '    echo "ERROR: ecosystem.config.js not found"' >> start.sh
+            echo '    exit 1' >> start.sh
+            echo 'fi' >> start.sh
+            echo 'echo "🔧 Fixing dependencies..."' >> start.sh
+            echo 'cd backend' >> start.sh
+            echo 'pnpm add side-channel --save || echo "side-channel already installed"' >> start.sh
+            echo 'cd ..' >> start.sh
+            echo 'pnpm install --force || echo "Dependencies installation completed"' >> start.sh
+            echo 'echo "🔨 Building project..."' >> start.sh
+            echo 'cd backend' >> start.sh
+            echo 'pnpm run build || { echo "ERROR: Build failed"; exit 1; }' >> start.sh
+            echo 'cd ..' >> start.sh
+            echo 'echo "Found ecosystem.config.js, starting service..."' >> start.sh
+            echo '$PM2_CMD stop dashboard-backend 2>/dev/null || true' >> start.sh
+            echo '$PM2_CMD delete dashboard-backend 2>/dev/null || true' >> start.sh
+            echo '$PM2_CMD start ecosystem.config.js --update-env' >> start.sh
+            echo 'echo "⏳ Waiting for service to start..."' >> start.sh
+            echo 'SERVICE_PORT=$(grep "PORT:" ecosystem.config.js | head -1 | sed "s/.*PORT: \\([0-9]*\\).*/\\1/")' >> start.sh
+            echo 'if [ -z "$SERVICE_PORT" ]; then' >> start.sh
+            echo '    SERVICE_PORT=8081' >> start.sh
+            echo 'fi' >> start.sh
+            echo 'echo "🔍 检查端口 $SERVICE_PORT..."' >> start.sh
+            echo 'for i in {1..30}; do' >> start.sh
+            echo '    if netstat -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT"; then' >> start.sh
+            echo '        echo "✅ Service is listening on port $SERVICE_PORT"' >> start.sh
+            echo '        break' >> start.sh
+            echo '    fi' >> start.sh
+            echo '    if [ $i -eq 30 ]; then' >> start.sh
+            echo '        echo "❌ Service failed to start on port $SERVICE_PORT after 60 seconds"' >> start.sh
+            echo '        $PM2_CMD logs dashboard-backend --lines 10' >> start.sh
+            echo '        exit 1' >> start.sh
+            echo '    fi' >> start.sh
+            echo '    sleep 2' >> start.sh
+            echo 'done' >> start.sh
+            echo '$PM2_CMD list' >> start.sh
+            echo '$PM2_CMD logs dashboard-backend --lines 5' >> start.sh
+            echo 'echo "✅ Start script completed"' >> start.sh
             
             # 部署新版本
             echo "📂 部署文件到服务器..."
@@ -452,106 +446,10 @@ EOF
           done
           
           echo "✅ axi-project-dashboard 部署完成！"
-          EOF
           
           chmod +x dist/deploy.sh
           
-          # 创建PM2启动脚本
-          cat > dist/start.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          echo "🚀 Starting axi-project-dashboard backend..."
-          
-          # 注意：这个脚本将在服务器上执行，不是在GitHub Actions runner上
-          # 所以可以直接访问 /srv/apps/axi-project-dashboard 目录
-          cd /srv/apps/axi-project-dashboard
-          
-          # 检查环境
-          echo "Current directory: $(pwd)"
-          echo "Files in directory:"
-          ls -la
-          
-          # 检查Node.js环境
-          which node && echo "Node.js: $(node --version)" || echo "Node.js not found"
-          which pnpm && echo "pnpm: $(pnpm --version)" || echo "pnpm not found"  
-          which npx && echo "npx available" || echo "npx not found"
-          
-          # 检查PM2
-          if command -v pm2 &> /dev/null; then
-              echo "PM2 found: $(pm2 --version)"
-              PM2_CMD="pm2"
-          elif command -v npx &> /dev/null; then
-              echo "Using npx pm2"
-              PM2_CMD="npx pm2"
-          else
-              echo "ERROR: PM2 not available"
-              exit 1
-          fi
-          
-          # 检查配置文件
-          if [ ! -f ecosystem.config.js ]; then
-              echo "ERROR: ecosystem.config.js not found"
-              exit 1
-          fi
-          
-          # 修复依赖问题
-          echo "🔧 Fixing dependencies..."
-          cd backend
-          pnpm add side-channel --save || echo "side-channel already installed"
-          cd ..
-          pnpm install --force || echo "Dependencies installation completed"
-          
-          # 构建项目
-          echo "🔨 Building project..."
-          echo "Current directory before cd backend: $(pwd)"
-          cd backend
-          echo "Current directory after cd backend: $(pwd)"
-          echo "Files in backend directory:"
-          ls -la
-          pnpm run build || {
-              echo "ERROR: Build failed"
-              exit 1
-          }
-          cd ..
-          echo "Current directory after cd ..: $(pwd)"
-          
-          echo "Found ecosystem.config.js, starting service..."
-          
-          # 停止现有服务
-          $PM2_CMD stop dashboard-backend 2>/dev/null || true
-          $PM2_CMD delete dashboard-backend 2>/dev/null || true
-          
-          # 启动新服务
-          $PM2_CMD start ecosystem.config.js --update-env
-          
-          # 等待服务启动并验证端口
-          echo "⏳ Waiting for service to start..."
-          # 从ecosystem.config.js中获取端口
-          SERVICE_PORT=$(grep "PORT:" ecosystem.config.js | head -1 | sed 's/.*PORT: \([0-9]*\).*/\1/')
-          if [ -z "$SERVICE_PORT" ]; then
-              SERVICE_PORT=8081  # 默认端口
-          fi
-          echo "🔍 检查端口 $SERVICE_PORT..."
-          
-          for i in {1..30}; do
-              if netstat -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT"; then
-                  echo "✅ Service is listening on port $SERVICE_PORT"
-                  break
-              fi
-              if [ $i -eq 30 ]; then
-                  echo "❌ Service failed to start on port $SERVICE_PORT after 60 seconds"
-                  $PM2_CMD logs dashboard-backend --lines 10
-                  exit 1
-              fi
-              sleep 2
-          done
-          
-          # 检查PM2状态
-          $PM2_CMD list
-          $PM2_CMD logs dashboard-backend --lines 5
-          
-          echo "✅ Start script completed"
-          EOF
+
           
           chmod +x dist/start.sh
           
