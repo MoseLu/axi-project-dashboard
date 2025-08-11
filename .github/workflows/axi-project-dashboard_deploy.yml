@@ -295,7 +295,7 @@ jobs:
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp backend/test-server.js $TARGET_DIR/backend/' >> dist/deploy.sh
+          echo '    cp backend/dist/index.js $TARGET_DIR/backend/' >> dist/deploy.sh
           echo '    chmod -R 755 $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
           echo 'else' >> dist/deploy.sh
@@ -314,16 +314,16 @@ jobs:
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp backend/test-server.js $TARGET_DIR/backend/' >> dist/deploy.sh
+          echo '    cp backend/dist/index.js $TARGET_DIR/backend/' >> dist/deploy.sh
           echo '    sudo chown -R $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
           echo 'cd $TARGET_DIR' >> dist/deploy.sh
           echo 'echo "🔍 验证部署文件结构..."' >> dist/deploy.sh
           echo 'ls -la backend/ || echo "❌ backend目录不存在"' >> dist/deploy.sh
-          echo 'ls -la backend/test-server.js || echo "❌ backend/test-server.js不存在"' >> dist/deploy.sh
+          echo 'ls -la backend/dist/index.js || echo "❌ backend/dist/index.js不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/depd/ || echo "❌ depd依赖不存在"' >> dist/deploy.sh
-          echo 'if [ ! -f "backend/test-server.js" ]; then' >> dist/deploy.sh
+          echo 'if [ ! -f "backend/dist/index.js" ]; then' >> dist/deploy.sh
           echo '    echo "❌ 后端主入口文件不存在，部署失败"' >> dist/deploy.sh
           echo '    exit 1' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
@@ -335,7 +335,7 @@ jobs:
           echo '    sudo chown $(whoami):$(whoami) /var/log/axi-deploy-dashboard' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
           echo 'echo "📋 验证部署文件..."' >> dist/deploy.sh
-          echo 'ls -la backend/test-server.js || echo "❌ backend/test-server.js 不存在"' >> dist/deploy.sh
+          echo 'ls -la backend/dist/index.js || echo "❌ backend/dist/index.js 不存在"' >> dist/deploy.sh
           echo 'ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/express/ || echo "❌ express模块不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/merge-descriptors/ || echo "❌ merge-descriptors模块不存在"' >> dist/deploy.sh
