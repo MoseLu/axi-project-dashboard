@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'dashboard-backend',
-      script: './backend/index.js',
+      script: './backend/test-simple.js',
       cwd: '/srv/apps/axi-project-dashboard',
       instances: 1,
       exec_mode: 'fork',
