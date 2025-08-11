@@ -60,8 +60,8 @@ const Dashboard: React.FC = () => {
   const fetchData = async () => {
     try {
       const [deploymentsRes, metricsRes] = await Promise.all([
-        fetch(`/api/deployments?page=${pagination.page}&limit=${pagination.limit}&sortBy=${sortBy}&sortOrder=${sortOrder}${filterProject ? `&project=${filterProject}` : ''}${filterStatus ? `&status=${filterStatus}` : ''}`),
-        fetch('/api/metrics')
+        fetch(`/project-dashboard/api/deployments?page=${pagination.page}&limit=${pagination.limit}&sortBy=${sortBy}&sortOrder=${sortOrder}${filterProject ? `&project=${filterProject}` : ''}${filterStatus ? `&status=${filterStatus}` : ''}`),
+        fetch('/project-dashboard/api/metrics')
       ]);
       
       if (deploymentsRes.ok) {
