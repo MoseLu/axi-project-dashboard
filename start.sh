@@ -415,7 +415,11 @@ EOF
     # 强制重新构建
     echo "🔨 Force rebuilding project..."
     rm -rf dist
-    npm run build
+    if ! npm run build; then
+        echo "❌ Build failed"
+        cd ..
+        return 1
+    fi
     
     # 验证构建结果并自动修复
     if [ -f "dist/index.js" ]; then
@@ -443,11 +447,13 @@ EOF
         echo "❌ Build failed - dist/index.js not found"
         echo "📋 Checking build errors..."
         npm run build 2>&1 || true
-        exit 1
+        cd ..
+        return 1
     fi
     
     cd ..
     echo "✅ All fixes applied successfully"
+    return 0
 }
 
 # 启动服务函数
@@ -462,24 +468,60 @@ start_service() {
         pm2 delete dashboard-backend 2>/dev/null || true
         
         # 启动服务
-        pm2 start ecosystem.config.js --update-env
+        if ! pm2 start ecosystem.config.js --update-env; then
+            echo "❌ Failed to start service with PM2"
+            pm2 logs dashboard-backend --lines 20 2>/dev/null || echo "No logs available"
+            exit 1
+        fi
         
         # 等待服务启动并验证端口
         echo "⏳ Waiting for service to start..."
+        local service_started=false
         for i in {1..30}; do
+            # 检查端口是否监听
             if netstat -tlnp 2>/dev/null | grep -q ":8080"; then
                 echo "✅ Service is listening on port 8080"
-                break
+                
+                # 检查 PM2 状态
+                local pm2_status=$(pm2 jlist 2>/dev/null | jq -r '.[] | select(.name=="dashboard-backend") | .pm2_env.status' 2>/dev/null || echo "unknown")
+                if [ "$pm2_status" = "online" ]; then
+                    echo "✅ PM2 service is online"
+                    
+                    # 尝试健康检查
+                    if curl -f -s http://localhost:8080/health >/dev/null 2>&1; then
+                        echo "✅ Health check passed"
+                        service_started=true
+                        break
+                    else
+                        echo "⚠️ Health check failed, retrying... (attempt $i/30)"
+                    fi
+                else
+                    echo "⚠️ PM2 service status: $pm2_status (attempt $i/30)"
+                fi
+            else
+                echo "⏳ Waiting for port 8080... (attempt $i/30)"
             fi
+            
             if [ $i -eq 30 ]; then
-                echo "❌ Service failed to start on port 8080 after 60 seconds"
-                pm2 logs dashboard-backend --lines 10
+                echo "❌ Service failed to start after 60 seconds"
+                echo "📋 PM2 status:"
+                pm2 status
+                echo "📋 PM2 logs (last 20 lines):"
+                pm2 logs dashboard-backend --lines 20 2>/dev/null || echo "No logs available"
+                echo "📋 Port status:"
+                netstat -tlnp 2>/dev/null | grep ":8080" || echo "Port 8080 not found"
                 exit 1
             fi
             sleep 2
         done
         
+        if [ "$service_started" = false ]; then
+            echo "❌ Service failed to start properly"
+            exit 1
+        fi
+        
         # 显示服务状态
+        echo "📊 Service status:"
         pm2 status
         
         echo "✅ Service started successfully"
@@ -517,16 +559,30 @@ main() {
     echo "🔧 Starting auto-fix startup process..."
     
     # 1. 修复依赖
-    fix_dependencies
+    if ! fix_dependencies; then
+        echo "❌ Dependency fix failed"
+        exit 1
+    fi
     
     # 2. 启动服务
-    start_service
+    if ! start_service; then
+        echo "❌ Service startup failed"
+        exit 1
+    fi
     
-    # 3. 健康检查
-    check_health
+    # 3. 最终健康检查
+    echo "🔍 Performing final health check..."
+    if ! curl -f -s http://localhost:8080/health >/dev/null 2>&1; then
+        echo "❌ Final health check failed"
+        echo "📋 PM2 status:"
+        pm2 status
+        echo "📋 PM2 logs (last 10 lines):"
+        pm2 logs dashboard-backend --lines 10 2>/dev/null || echo "No logs available"
+        exit 1
+    fi
     
     echo "🎉 Startup process completed successfully!"
-    echo "✅ Service should be running now"
+    echo "✅ Service is running and healthy"
     
     # 显示最终状态
     echo "📊 Final service status:"
