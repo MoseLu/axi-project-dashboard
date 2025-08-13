@@ -176,7 +176,7 @@ jobs:
           mkdir -p dist
           
           # 复制后端构建产物
-          cp -r backend/dist dist/backend
+          cp -r backend/dist/* dist/backend/
           cp -r temp_backend_deps/node_modules dist/
           cp backend/package.json dist/
           cp backend/package.json dist/backend/
@@ -296,7 +296,6 @@ jobs:
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp backend/index.js $TARGET_DIR/backend/' >> dist/deploy.sh
           echo '    chmod -R 755 $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
           echo 'else' >> dist/deploy.sh
@@ -315,7 +314,6 @@ jobs:
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp backend/index.js $TARGET_DIR/backend/' >> dist/deploy.sh
           echo '    sudo chown -R $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
