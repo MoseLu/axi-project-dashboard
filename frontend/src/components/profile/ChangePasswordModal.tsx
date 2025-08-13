@@ -8,11 +8,11 @@ interface ChangePasswordModalProps {
   onClose: () => void;
 }
 
-interface ChangePasswordFormData {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
+// interface ChangePasswordFormData {
+//   currentPassword: string;
+//   newPassword: string;
+//   confirmPassword: string;
+// }
 
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visible, onClose }) => {
   const [form] = Form.useForm();

@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { Card, Typography, Form, Input, Select, Switch, Button, Space, Table, Tag, Modal, message, Progress, Row, Col } from 'antd';
 import { 
-  SettingOutlined, 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined,
-  SaveOutlined,
-  EnvironmentOutlined
+  SaveOutlined
 } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 

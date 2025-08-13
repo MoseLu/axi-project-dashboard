@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export interface ThemeSettings {
   primaryColor: string;
   borderRadius: number;
-  menuLayout: 'side' | 'top';
+  menuLayout: 'side' | 'top' | 'double';
   theme: 'light' | 'dark' | 'auto';
   compactMode: boolean;
   showBreadcrumb: boolean;

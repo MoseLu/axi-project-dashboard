@@ -27,9 +27,9 @@ const routeMap: Record<string, string> = {
 
 // 动态路由映射
 const dynamicRouteMap: Record<string, (params: any) => string> = {
-  '/projects/:id': (params) => `项目详情`,
-  '/projects/:id/edit': (params) => `编辑项目`,
-  '/deployments/history/:id': (params) => `部署详情`,
+  '/projects/:id': () => `项目详情`,
+  '/projects/:id/edit': () => `编辑项目`,
+  '/deployments/history/:id': () => `部署详情`,
 };
 
 const Breadcrumb: React.FC = () => {

@@ -21,7 +21,7 @@ import {
 import { useAuth, LoginCredentials, RegisterCredentials } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ThreeJSBackground from '../components/3d/ThreeJSBackground';
-import FloatingGeometry from '../components/3d/FloatingGeometry';
+// import FloatingGeometry from '../components/3d/FloatingGeometry';
 import '../styles/login-page.css';
 
 const { Title, Text } = Typography;

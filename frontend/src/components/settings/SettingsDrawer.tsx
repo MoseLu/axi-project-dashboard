@@ -3,8 +3,6 @@ import {
   Drawer, 
   Form, 
   Switch, 
-  Select, 
-  Slider, 
   Typography, 
   Space, 
   Button,
@@ -13,8 +11,7 @@ import {
   ConfigProvider,
   theme,
   Row,
-  Col,
-  Divider
+  Col
 } from 'antd';
 import {
   SettingOutlined,
@@ -26,23 +23,17 @@ import {
   MoonOutlined,
   MenuOutlined,
   AppstoreOutlined,
-  RadiusUprightOutlined,
-  RadiusBottomleftOutlined,
-  RadiusBottomrightOutlined,
-  RadiusUpleftOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
   EyeOutlined,
   EyeInvisibleOutlined,
   FileTextOutlined,
-  HomeOutlined,
   BulbOutlined,
   BulbFilled
 } from '@ant-design/icons';
 import { useSettings } from '../../contexts/SettingsContext';
 
-const { Text, Title } = Typography;
-const { Option } = Select;
+const { Text } = Typography;
 
 interface SettingsDrawerProps {
   visible: boolean;
@@ -194,7 +185,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ visible, onClose }) => 
                          color: settings.theme === option.value ? 'white' : 'inherit'
                        }}
                        onClick={() => {
-                         updateSettings({ theme: option.value });
+                                                   updateSettings({ theme: option.value as 'light' | 'dark' | 'auto' });
                          form.setFieldValue('theme', option.value);
                        }}
                      >
@@ -375,7 +366,7 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({ visible, onClose }) => 
                          color: settings.menuLayout === option.value ? 'white' : 'inherit'
                        }}
                        onClick={() => {
-                         updateSettings({ menuLayout: option.value });
+                                                   updateSettings({ menuLayout: option.value as 'side' | 'top' | 'double' });
                          form.setFieldValue('menuLayout', option.value);
                        }}
                      >

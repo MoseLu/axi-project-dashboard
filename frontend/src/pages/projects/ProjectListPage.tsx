@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Avatar, Button, Space, Typography, Upload, message, App } from 'antd';
+import { Card, Avatar, Button, Space, Typography, Upload, App } from 'antd';
 import { UserOutlined, UploadOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
@@ -98,9 +98,10 @@ const AvatarTestPage: React.FC = () => {
                size={64}
                src={user?.avatar_url ? buildStaticUrl(user.avatar_url) : undefined}
                icon={<UserOutlined />}
-              onError={(e) => {
+              onError={() => {
                 console.error('头像加载失败:', user?.avatar_url);
                 antMessage.error('头像加载失败');
+                return false;
               }}
             />
           </div>

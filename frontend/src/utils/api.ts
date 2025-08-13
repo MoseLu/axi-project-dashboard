@@ -109,10 +109,10 @@ class ApiClient {
       requestOptions.body = data;
       // 移除 Content-Type，让浏览器自动设置 multipart boundary
       if (requestOptions.headers) {
-        delete requestOptions.headers['Content-Type'];
+        delete (requestOptions.headers as any)['Content-Type'];
       }
     } else {
-      requestOptions.body = data ? JSON.stringify(data) : undefined;
+      requestOptions.body = data ? JSON.stringify(data) : null;
     }
 
     return this.request<T>(endpoint, requestOptions);
@@ -123,7 +123,7 @@ class ApiClient {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
+      body: data ? JSON.stringify(data) : null,
     });
   }
 
@@ -137,7 +137,7 @@ class ApiClient {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
+      body: data ? JSON.stringify(data) : null,
     });
   }
 }

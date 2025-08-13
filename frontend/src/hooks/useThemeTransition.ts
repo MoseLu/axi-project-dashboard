@@ -20,7 +20,7 @@ export const useThemeTransition = () => {
   const triggerTransition = useCallback((
     oldTheme: 'light' | 'dark',
     newTheme: 'light' | 'dark',
-    options: ThemeTransitionOptions = {}
+    _options: ThemeTransitionOptions = {}
   ) => {
     // 检查是否支持动画
     if (typeof window === 'undefined') return;

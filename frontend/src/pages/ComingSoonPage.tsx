@@ -137,7 +137,7 @@ const ComingSoonPage: React.FC<ComingSoonPageProps> = ({
                     '0%': '#667eea',
                     '100%': '#764ba2',
                   }}
-                  size={[undefined, 12]}
+                  size={[12, 12]}
                   trailColor="rgba(255,255,255,0.2)"
                   className="content-progress"
                   style={{ width: '100%' }}

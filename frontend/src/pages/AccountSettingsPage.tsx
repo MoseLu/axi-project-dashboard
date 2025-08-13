@@ -5,59 +5,52 @@ import {
   Form, 
   Switch, 
   Button, 
-  Space, 
-  Divider, 
   Row, 
   Col, 
   Select, 
   InputNumber,
   App,
-  Alert,
-  List,
-  Tag
+  List
 } from 'antd';
 import { 
   BellOutlined, 
   SafetyOutlined, 
   EyeOutlined, 
-  SaveOutlined,
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined
+  SaveOutlined
 } from '@ant-design/icons';
 import { api } from '../utils/api';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
-interface NotificationSettings {
-  email_notifications: boolean;
-  push_notifications: boolean;
-  deployment_alerts: boolean;
-  system_updates: boolean;
-  marketing_emails: boolean;
-}
+// interface NotificationSettings {
+//   email_notifications: boolean;
+//   push_notifications: boolean;
+//   deployment_alerts: boolean;
+//   system_updates: boolean;
+//   marketing_emails: boolean;
+// }
 
-interface PrivacySettings {
-  profile_visibility: 'public' | 'private' | 'friends';
-  show_online_status: boolean;
-  allow_friend_requests: boolean;
-  data_collection: boolean;
-}
+// interface PrivacySettings {
+//   profile_visibility: 'public' | 'private' | 'friends';
+//   show_online_status: boolean;
+//   allow_friend_requests: boolean;
+//   data_collection: boolean;
+// }
 
-interface SecuritySettings {
-  two_factor_auth: boolean;
-  login_notifications: boolean;
-  session_timeout: number;
-  max_login_attempts: number;
-}
+// interface SecuritySettings {
+//   two_factor_auth: boolean;
+//   login_notifications: boolean;
+//   session_timeout: number;
+//   max_login_attempts: number;
+// }
 
 const AccountSettingsPage: React.FC = () => {
   const { message } = App.useApp();
   const [notificationForm] = Form.useForm();
   const [privacyForm] = Form.useForm();
   const [securityForm] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // 初始化设置

@@ -7,7 +7,6 @@ import {
   Button, 
   Avatar, 
   Space, 
-  Divider, 
   Row, 
   Col, 
   Upload, 
@@ -25,28 +24,24 @@ import {
   SaveOutlined, 
   CloseOutlined,
   UploadOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  SafetyCertificateOutlined,
-  GlobalOutlined,
   LockOutlined,
   SettingOutlined
 } from '@ant-design/icons';
-import { useAuth, User } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { buildStaticUrl } from '../config/env';
 import ChangePasswordModal from '../components/profile/ChangePasswordModal';
 import { useNavigate } from 'react-router-dom';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-interface ProfileFormData {
-  username: string;
-  email: string;
-  bio: string;
-  avatar_url?: string;
-}
+// interface ProfileFormData {
+//   username: string;
+//   email: string;
+//   bio: string;
+//   avatar_url?: string;
+// }
 
 const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -54,7 +49,7 @@ const ProfilePage: React.FC = () => {
   const { message } = App.useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [, setUploading] = useState(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   // 初始化表单数据
@@ -196,10 +191,11 @@ const ProfilePage: React.FC = () => {
                        size={120}
                        src={user?.avatar_url ? buildStaticUrl(user.avatar_url) : undefined}
                        icon={<UserOutlined />}
-                                             onError={(e) => {
-                         console.error('头像加载失败:', user?.avatar_url);
-                         console.error('完整URL:', user?.avatar_url ? buildStaticUrl(user.avatar_url) : '无');
-                       }}
+                                                                                                                                         onError={() => {
+                                                console.error('头像加载失败:', user?.avatar_url);
+                                                console.error('完整URL:', user?.avatar_url ? buildStaticUrl(user.avatar_url) : '无');
+                                                return false;
+                                              }}
                       style={{
                         background: 'var(--gradient-primary)',
                         border: '4px solid rgba(255,255,255,0.2)',
@@ -350,19 +346,19 @@ const ProfilePage: React.FC = () => {
                      }
                    }}
                  >
-                  <Descriptions.Item label="用户名" icon={<UserOutlined />}>
+                  <Descriptions.Item label="用户名">
                     {user?.username}
                   </Descriptions.Item>
-                  <Descriptions.Item label="邮箱" icon={<MailOutlined />}>
+                  <Descriptions.Item label="邮箱">
                     {user?.email}
                   </Descriptions.Item>
-                  <Descriptions.Item label="个人简介" icon={<GlobalOutlined />}>
+                  <Descriptions.Item label="个人简介">
                     {user?.bio || '暂无简介'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="最后登录" icon={<ClockCircleOutlined />}>
+                  <Descriptions.Item label="最后登录">
                     {user?.last_login_at ? formatDate(user.last_login_at) : '从未登录'}
                   </Descriptions.Item>
-                  <Descriptions.Item label="账户ID" icon={<SafetyCertificateOutlined />}>
+                  <Descriptions.Item label="账户ID">
                     {user?.uuid}
                   </Descriptions.Item>
                 </Descriptions>
@@ -477,10 +473,10 @@ const ProfilePage: React.FC = () => {
                     {user?.is_active ? '活跃' : '禁用'}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="注册时间" icon={<CalendarOutlined />}>
+                <Descriptions.Item label="注册时间">
                   {user?.created_at ? formatDate(user.created_at) : '未知'}
                 </Descriptions.Item>
-                <Descriptions.Item label="最后登录" icon={<ClockCircleOutlined />}>
+                <Descriptions.Item label="最后登录">
                   {user?.last_login_at ? formatDate(user.last_login_at) : '从未登录'}
                 </Descriptions.Item>
               </Descriptions>

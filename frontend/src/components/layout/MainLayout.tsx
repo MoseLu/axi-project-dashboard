@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Badge, Dropdown, Avatar, Space, theme, message } from 'antd';
+import { Layout, Menu, Button, Badge, Dropdown, Avatar, Space, theme } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -29,7 +29,7 @@ const { Header, Sider, Content } = Layout;
 
 // 功能图标组件 - 避免重复渲染
 const HeaderFunctionButtons: React.FC = () => {
-  const { settings, updateSettings, getCurrentDisplayTheme } = useSettings();
+  const { updateSettings, getCurrentDisplayTheme } = useSettings();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -203,8 +203,9 @@ const HeaderFunctionButtons: React.FC = () => {
               size={32}
               src={user?.avatar_url ? buildStaticUrl(user.avatar_url) : undefined}
               icon={<UserOutlined />}
-              onError={(e) => {
+              onError={() => {
                 console.error('导航栏头像加载失败:', user?.avatar_url);
+                return false;
               }}
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -239,7 +240,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [secondSiderCollapsed, setSecondSiderCollapsed] = useState(false);
+  const [secondSiderCollapsed] = useState(false);
   const [selectedMainMenu, setSelectedMainMenu] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -408,26 +409,26 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     },
   ];
 
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: '个人资料',
-    },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: '账户设置',
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
-    },
-  ];
+  // const userMenuItems = [
+  //   {
+  //     key: 'profile',
+  //     icon: <UserOutlined />,
+  //     label: '个人资料',
+  //   },
+  //   {
+  //     key: 'settings',
+  //     icon: <SettingOutlined />,
+  //     label: '账户设置',
+  //   },
+  //   {
+  //     type: 'divider' as const,
+  //   },
+  //   {
+  //     key: 'logout',
+  //     icon: <LogoutOutlined />,
+  //     label: '退出登录',
+  //   },
+  // ];
 
   const handleMenuClick = ({ key }: { key: string }) => {
     // 只处理实际的路由路径，忽略父级菜单的key

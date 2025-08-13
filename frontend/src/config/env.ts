@@ -8,7 +8,7 @@ interface EnvConfig {
 
 const getEnvConfig = (): EnvConfig => {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  // const isDevelopment = process.env.NODE_ENV === 'development';
   
   // 生产环境配置
   if (isProduction) {

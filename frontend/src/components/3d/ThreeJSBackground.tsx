@@ -327,7 +327,7 @@ const ThreeJSBackground: React.FC<ThreeJSBackgroundProps> = ({ children }) => {
       planetGroup.add(planet);
       
       // 创建卫星
-      planetData.satellites.forEach((satellite, index) => {
+      planetData.satellites.forEach((satellite) => {
         const satelliteGeometry = new THREE.SphereGeometry(satellite.size, 32, 32);
         const satelliteMaterial = new THREE.MeshPhongMaterial({
           color: satellite.color,
@@ -958,19 +958,19 @@ const ThreeJSBackground: React.FC<ThreeJSBackgroundProps> = ({ children }) => {
       const time = Date.now() * 0.001;
       
       // 更新太阳着色器
-      if (sun.material.uniforms) {
-        sun.material.uniforms.time.value = time;
+      if ((sun as any).material?.uniforms) {
+        (sun as any).material.uniforms.time.value = time;
       }
-      if (sun.children[0] && sun.children[0].material.uniforms) {
-        sun.children[0].material.uniforms.time.value = time;
+      if (sun.children[0] && (sun.children[0] as any).material?.uniforms) {
+        (sun.children[0] as any).material.uniforms.time.value = time;
       }
       
       // 更新黑洞着色器
-      if (blackHole.children[0] && blackHole.children[0].material.uniforms) {
-        blackHole.children[0].material.uniforms.time.value = time;
+      if (blackHole.children[0] && (blackHole.children[0] as any).material?.uniforms) {
+        (blackHole.children[0] as any).material.uniforms.time.value = time;
       }
-      if (blackHole.children[1] && blackHole.children[1].material.uniforms) {
-        blackHole.children[1].material.uniforms.time.value = time;
+      if (blackHole.children[1] && (blackHole.children[1] as any).material?.uniforms) {
+        (blackHole.children[1] as any).material.uniforms.time.value = time;
       }
       
       // 更新行星轨道

@@ -14,7 +14,7 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { getStatusText, formatTime, getDeploymentTime } from '../utils/dashboardUtils';
 import { DeploymentDetail } from '../types/dashboard';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const DeploymentsPage: React.FC = () => {
   const {

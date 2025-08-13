@@ -1,14 +1,13 @@
 import React from 'react';
 import { Card, Typography, Table, Tag, Space, Button, DatePicker, Select, Progress, Row, Col } from 'antd';
 import { 
-  HistoryOutlined, 
   ReloadOutlined, 
   DownloadOutlined,
   FilterOutlined 
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const DeploymentHistoryPage: React.FC = () => {
