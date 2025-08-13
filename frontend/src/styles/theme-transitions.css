@@ -1,0 +1,282 @@
+/* 主题切换过渡效果 */
+
+/* 全局过渡设置 */
+* {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* 特定元素的过渡效果 */
+html {
+  transition: none; /* HTML元素本身不需要过渡 */
+}
+
+body {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 防止过渡闪烁的关键元素 */
+#root {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Ant Design 组件过渡优化 */
+.ant-layout {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-layout-header {
+  transition: 
+    background-color 0.3s ease,
+    border-bottom-color 0.3s ease;
+}
+
+.ant-layout-sider {
+  transition: 
+    background-color 0.3s ease,
+    border-right-color 0.3s ease;
+}
+
+.ant-layout-content {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 卡片和容器过渡 */
+.ant-card {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.ant-card-head {
+  transition: 
+    background-color 0.3s ease,
+    border-bottom-color 0.3s ease;
+}
+
+.ant-card-body {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 按钮过渡 */
+.ant-btn {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* 输入框过渡 */
+.ant-input,
+.ant-input-affix-wrapper {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* 表格过渡 */
+.ant-table {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-table-thead > tr > th {
+  transition: 
+    background-color 0.3s ease,
+    border-bottom-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-table-tbody > tr > td {
+  transition: 
+    background-color 0.3s ease,
+    border-bottom-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 菜单过渡 */
+.ant-menu {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-menu-item {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-right-color 0.3s ease;
+}
+
+.ant-menu-submenu-title {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 抽屉和模态框过渡 */
+.ant-drawer-content {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-drawer-header {
+  transition: 
+    background-color 0.3s ease,
+    border-bottom-color 0.3s ease;
+}
+
+.ant-drawer-body {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-modal-content {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-modal-header {
+  transition: 
+    background-color 0.3s ease,
+    border-bottom-color 0.3s ease;
+}
+
+.ant-modal-body {
+  transition: 
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 面包屑过渡 */
+.ant-breadcrumb {
+  transition: 
+    color 0.3s ease;
+}
+
+.ant-breadcrumb-link {
+  transition: 
+    color 0.3s ease;
+}
+
+/* 标签过渡 */
+.ant-tag {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 进度条过渡 */
+.ant-progress-bg {
+  transition: 
+    background-color 0.3s ease;
+}
+
+/* 开关过渡 */
+.ant-switch {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* 滑块过渡 */
+.ant-slider-track {
+  transition: 
+    background-color 0.3s ease;
+}
+
+.ant-slider-handle {
+  transition: 
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+
+/* 选择器过渡 */
+.ant-select-selector {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 日期选择器过渡 */
+.ant-picker {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 分页器过渡 */
+.ant-pagination-item {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.ant-pagination-prev,
+.ant-pagination-next {
+  transition: 
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 自定义组件过渡 */
+.glass-effect {
+  transition: 
+    backdrop-filter 0.3s ease,
+    background-color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* 禁用动画时的样式 */
+.no-animation * {
+  transition: none !important;
+}
+
+/* 紧凑模式下的过渡调整 */
+.compact-mode * {
+  transition-duration: 0.2s;
+}
+
+/* 关键渲染路径优化 */
+/* 确保主题切换时不会影响布局 */
+.layout-container {
+  contain: layout style;
+}
+
+/* 防止主题切换时的闪烁 */
+.theme-transition {
+  will-change: background-color, color, border-color;
+}
+
+/* 优化性能的GPU加速 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

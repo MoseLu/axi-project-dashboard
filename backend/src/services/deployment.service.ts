@@ -23,6 +23,19 @@ export interface DeploymentMetrics {
   successfulDeployments: number;
   failedDeployments: number;
   averageDeploymentTime: number;
+  projectStats?: {
+    project: string;
+    total: number;
+    success: number;
+    failed: number;
+    successRate: number;
+  }[];
+  dailyStats?: {
+    date: string;
+    total: number;
+    success: number;
+    failed: number;
+  }[];
 }
 
 export interface DeploymentQueryParams {
@@ -235,6 +248,8 @@ export class DeploymentService {
         successfulDeployments,
         failedDeployments,
         averageTimeResult,
+        projectStatsResult,
+        dailyStatsResult,
       ] = await Promise.all([
         Deployment.count(),
         Deployment.count({ where: { status: 'success' } }),
@@ -243,17 +258,69 @@ export class DeploymentService {
           attributes: [[Deployment.sequelize!.fn('AVG', Deployment.sequelize!.col('duration')), 'averageTime']],
           where: { status: { [Op.in]: ['success', 'failed'] } },
         }),
+        // 获取项目统计
+        Deployment.findAll({
+          attributes: [
+            'project_name',
+            [Deployment.sequelize!.fn('COUNT', Deployment.sequelize!.col('id')), 'total'],
+            [Deployment.sequelize!.fn('SUM', Deployment.sequelize!.literal("CASE WHEN status = 'success' THEN 1 ELSE 0 END")), 'success'],
+            [Deployment.sequelize!.fn('SUM', Deployment.sequelize!.literal("CASE WHEN status = 'failed' THEN 1 ELSE 0 END")), 'failed'],
+          ],
+          group: ['project_name'],
+          order: [[Deployment.sequelize!.fn('COUNT', Deployment.sequelize!.col('id')), 'DESC']],
+          limit: 10,
+        }),
+        // 获取每日统计（最近30天）
+        Deployment.findAll({
+          attributes: [
+            [Deployment.sequelize!.fn('DATE', Deployment.sequelize!.col('created_at')), 'date'],
+            [Deployment.sequelize!.fn('COUNT', Deployment.sequelize!.col('id')), 'total'],
+            [Deployment.sequelize!.fn('SUM', Deployment.sequelize!.literal("CASE WHEN status = 'success' THEN 1 ELSE 0 END")), 'success'],
+            [Deployment.sequelize!.fn('SUM', Deployment.sequelize!.literal("CASE WHEN status = 'failed' THEN 1 ELSE 0 END")), 'failed'],
+          ],
+          where: {
+            created_at: {
+              [Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30天前
+            },
+          },
+          group: [Deployment.sequelize!.fn('DATE', Deployment.sequelize!.col('created_at'))],
+          order: [[Deployment.sequelize!.fn('DATE', Deployment.sequelize!.col('created_at')), 'ASC']],
+        }),
       ]);
 
       const averageDeploymentTime = averageTimeResult
         ? Math.round(parseFloat(averageTimeResult.get('averageTime') as string) || 0)
         : 0;
 
+      // 处理项目统计数据
+      const projectStats = projectStatsResult.map((item: any) => {
+        const total = parseInt(item.get('total') as string);
+        const success = parseInt(item.get('success') as string);
+        const failed = parseInt(item.get('failed') as string);
+        return {
+          project: item.get('project_name'),
+          total,
+          success,
+          failed,
+          successRate: total > 0 ? Math.round((success / total) * 100) : 0,
+        };
+      });
+
+      // 处理每日统计数据
+      const dailyStats = dailyStatsResult.map((item: any) => ({
+        date: item.get('date'),
+        total: parseInt(item.get('total') as string),
+        success: parseInt(item.get('success') as string),
+        failed: parseInt(item.get('failed') as string),
+      }));
+
       const metrics: DeploymentMetrics = {
         totalDeployments,
         successfulDeployments,
         failedDeployments,
         averageDeploymentTime,
+        projectStats,
+        dailyStats,
       };
 
       return metrics;

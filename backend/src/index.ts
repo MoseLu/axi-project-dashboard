@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import { config } from '@/config/config';
 import { connectDatabase } from '@/database/connection';
 import { testConnection, syncDatabase } from '@/database/sequelize';
@@ -18,6 +19,7 @@ import { MetricsService } from '@/services/metrics.service';
 import { HealthCheckService } from '@/services/health.service';
 import { DeploymentService } from '@/services/deployment.service';
 import { GracefulShutdown } from '@/utils/graceful-shutdown';
+import initializeDatabase from '@/scripts/init-database';
 
 class Application {
   public app: express.Application;
@@ -110,7 +112,7 @@ class Application {
 
   private initializeRoutes(): void {
     // 将 DeploymentService 注入到请求对象中
-    this.app.use('/api', (req, res, next) => {
+    this.app.use('/project-dashboard/api', (req, res, next) => {
       (req as any).deploymentService = this.deploymentService;
       next();
     }, routes);
@@ -173,6 +175,7 @@ class Application {
 
     // 静态文件服务
     this.app.use('/static', express.static('public'));
+    this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
     // 404 处理
     this.app.use('*', (req, res) => {
@@ -222,6 +225,10 @@ class Application {
           // 连接 MySQL（用于兼容性）
           const dbConnection = await connectDatabase();
           logger.info('✅ MySQL connected successfully');
+          
+          // 初始化数据库表结构
+          await initializeDatabase();
+          logger.info('✅ Database tables initialized successfully');
           
           // 初始化 Sequelize
           await testConnection();

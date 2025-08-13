@@ -1,0 +1,1963 @@
+@use './variables.scss' as *;
+
+// 全局主题样式
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+// 内容区域专用样式
+.content-area {
+  background: var(--content-bg) !important;
+  color: var(--content-text) !important;
+  min-height: 100vh;
+  padding: 24px;
+  position: relative;
+  overflow-x: visible;
+  overflow-y: auto;
+}
+
+// 内容卡片样式
+.content-card {
+  background: var(--content-card-bg) !important;
+  border: 1px solid var(--content-card-border) !important;
+  box-shadow: var(--content-card-shadow) !important;
+  border-radius: var(--border-radius-lg) !important;
+  backdrop-filter: blur(20px) !important;
+  
+  &:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.3s ease !important;
+  }
+}
+
+// 毛玻璃卡片样式
+.glass-card {
+  background: var(--content-glass-bg) !important;
+  border: 1px solid var(--content-glass-border) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: var(--border-radius-lg) !important;
+  box-shadow: var(--decoration-shadow) !important;
+  overflow: hidden !important;
+}
+
+// 装饰元素样式
+.decoration-element {
+  background: var(--decoration-bg) !important;
+  border: 1px solid var(--decoration-border) !important;
+  border-radius: 50% !important;
+  animation: float 20s linear infinite !important;
+}
+
+// 内容文字样式
+.content-title {
+  color: var(--content-text) !important;
+  text-shadow: none !important;
+}
+
+.content-text {
+  color: var(--content-text) !important;
+}
+
+.content-text-secondary {
+  color: var(--content-text-secondary) !important;
+}
+
+// 统计卡片样式
+.stats-card {
+  background: var(--content-glass-bg) !important;
+  border: 1px solid var(--content-glass-border) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: var(--border-radius-lg) !important;
+  box-shadow: var(--decoration-shadow) !important;
+  overflow: hidden !important;
+  
+  &:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  .stats-title {
+    color: var(--content-text) !important;
+    opacity: 0.9 !important;
+  }
+  
+  .stats-value {
+    color: var(--content-text) !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+// 仪表板统计卡片特殊样式
+.glass-card .ant-statistic {
+  overflow: hidden !important;
+}
+
+.glass-card .ant-statistic-title {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.glass-card .ant-statistic-content {
+  overflow: hidden !important;
+}
+
+// 表格样式
+.content-table {
+  background: var(--content-glass-bg) !important;
+  border-radius: var(--border-radius) !important;
+  overflow: hidden !important;
+  
+  .ant-table-thead > tr > th {
+    background: var(--content-card-bg) !important;
+    color: var(--content-text) !important;
+    border-bottom: 1px solid var(--content-card-border) !important;
+  }
+  
+  .ant-table-tbody > tr > td {
+    background: var(--content-card-bg) !important;
+    color: var(--content-text) !important;
+    border-bottom: 1px solid var(--content-card-border) !important;
+  }
+  
+  .ant-table-tbody > tr:hover > td {
+    background: var(--component-bg-hover) !important;
+  }
+}
+
+// 进度条样式 - 已合并到全局进度条样式中
+
+// 全局进度条样式修复
+.ant-progress {
+  // 进度条容器
+  .ant-progress-outer {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+  }
+  
+  // 进度条背景
+  .ant-progress-bg {
+    background: var(--gradient-primary) !important;
+    transition: all 0.3s ease !important;
+    background-size: 200% 200% !important;
+    border-radius: 6px !important;
+    height: 100% !important;
+  }
+  
+  // 进度条文字
+  .ant-progress-text {
+    color: var(--content-text) !important;
+    font-weight: 500 !important;
+  }
+  
+  // 进度条轨道
+  .ant-progress-trail {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+  }
+  
+  // 成功状态
+  &.ant-progress-status-success {
+    .ant-progress-bg {
+      background: #52c41a !important;
+      background-size: 100% 100% !important;
+    }
+  }
+  
+  // 异常状态
+  &.ant-progress-status-exception {
+    .ant-progress-bg {
+      background: #ff4d4f !important;
+      background-size: 100% 100% !important;
+    }
+  }
+  
+  // 活跃状态
+  &.ant-progress-status-active {
+    .ant-progress-bg {
+      background: var(--gradient-primary) !important;
+      background-size: 200% 200% !important;
+      animation: progress-animation 2s ease-in-out infinite !important;
+    }
+  }
+  
+  // 确保进度条在玻璃卡片中正确显示
+  &.content-progress {
+    .ant-progress-bg {
+      background: var(--gradient-primary) !important;
+      background-size: 200% 200% !important;
+    }
+    
+    .ant-progress-text {
+      color: var(--content-text) !important;
+      font-weight: 600 !important;
+    }
+    
+    .ant-progress-trail {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+  }
+}
+
+// 进度条动画
+@keyframes progress-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// 确保进度条在404页面和Coming Soon页面中正确显示
+.glass-card .ant-progress {
+  // 进度条容器
+  .ant-progress-outer {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+  }
+  
+  .ant-progress-bg {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 200% !important;
+    border-radius: 6px !important;
+    height: 100% !important;
+  }
+  
+  .ant-progress-text {
+    color: var(--content-text) !important;
+    font-weight: 600 !important;
+  }
+  
+  .ant-progress-trail {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px !important;
+  }
+  
+  &.ant-progress-status-active {
+    .ant-progress-bg {
+      animation: progress-animation 2s ease-in-out infinite !important;
+    }
+  }
+}
+
+// 强制修复进度条显示问题
+.ant-progress-line {
+  .ant-progress-outer {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    height: 12px !important;
+    width: 100% !important; // 确保宽度为100%
+    min-width: 120px !important; // 设置最小宽度
+  }
+  
+  .ant-progress-inner {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    height: 100% !important;
+  }
+  
+  .ant-progress-bg {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 200% !important;
+    border-radius: 6px !important;
+    height: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  .ant-progress-text {
+    color: var(--content-text) !important;
+    font-weight: 500 !important;
+  }
+  
+  // 修复进度条宽度问题
+  &.ant-progress-line-align-end {
+    .ant-progress-outer {
+      width: 100% !important;
+      min-width: 120px !important;
+    }
+  }
+  
+  &.ant-progress-line-position-outer {
+    .ant-progress-outer {
+      width: 100% !important;
+      min-width: 120px !important;
+    }
+  }
+  
+  // 确保进度条在容器中正确显示
+  &.content-progress {
+    width: 100% !important;
+    
+    .ant-progress-outer {
+      width: 100% !important;
+      min-width: 120px !important;
+    }
+  }
+}
+
+// 修复所有进度条的显示问题
+.ant-progress {
+  width: 100% !important;
+  
+  .ant-progress-outer {
+    width: 100% !important;
+    min-width: 120px !important;
+  }
+  
+  // 确保进度条背景正确显示
+  .ant-progress-bg {
+    display: block !important;
+    height: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  // 确保进度条内层容器正确显示
+  .ant-progress-inner {
+    display: block !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+  
+  // 确保进度条文字正确显示
+  .ant-progress-text {
+    display: inline-block !important;
+    white-space: nowrap !important;
+  }
+}
+
+// 确保进度条在表格中正确显示
+.ant-table .ant-progress {
+  .ant-progress-outer {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+  }
+  
+  .ant-progress-bg {
+    background: var(--gradient-primary) !important;
+    background-size: 200% 200% !important;
+    border-radius: 6px !important;
+    height: 100% !important;
+  }
+  
+  .ant-progress-text {
+    color: var(--content-text) !important;
+    font-weight: 500 !important;
+  }
+  
+  .ant-progress-trail {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 6px !important;
+  }
+}
+
+// 按钮样式
+.content-button {
+  background: var(--gradient-primary) !important;
+  border: none !important;
+  border-radius: var(--border-radius) !important;
+  box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3) !important;
+  color: white !important;
+  
+  &:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+  }
+}
+
+// 顶栏专用样式
+.ant-layout-header {
+  background: var(--header-bg) !important;
+  border-bottom: 1px solid var(--header-border) !important;
+  box-shadow: var(--header-shadow) !important;
+  backdrop-filter: blur(20px) !important;
+  
+  // 顶栏文字颜色
+  .header-text {
+    color: var(--header-text) !important;
+    font-weight: 500;
+    text-shadow: none !important;
+  }
+  
+  // 顶栏图标颜色
+  .header-icon {
+    color: var(--header-icon) !important;
+    transition: all 0.3s ease !important;
+    
+    &:hover {
+      color: var(--header-icon-hover) !important;
+    }
+  }
+  
+  // 侧边栏折叠按钮
+  .sider-toggle {
+    position: relative !important;
+    overflow: hidden !important;
+    
+    &::before {
+      content: '' !important;
+      position: absolute !important;
+      top: 50% !important;
+      left: 50% !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: rgba(24, 144, 255, 0.1) !important;
+      border-radius: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      z-index: -1 !important;
+    }
+    
+    &:hover::before {
+      width: 40px !important;
+      height: 40px !important;
+    }
+    
+    &:active {
+      transform: scale(0.95) !important;
+    }
+  }
+  
+  // 顶栏按钮样式
+  .header-button {
+    color: var(--header-icon) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid var(--header-border) !important;
+    
+    &:hover {
+      color: var(--header-icon-hover) !important;
+      background: var(--header-bg-hover) !important;
+      border-color: var(--header-icon-hover) !important;
+    }
+  }
+  
+  // 用户菜单按钮样式
+  .user-menu-button {
+    color: var(--header-text) !important;
+    background: transparent !important;
+    border: none !important;
+    
+    &:hover {
+      background: var(--header-bg-hover) !important;
+    }
+  }
+  
+  // 用户菜单样式
+  .user-menu {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid var(--header-border) !important;
+    
+    &:hover {
+      background: var(--header-bg-hover) !important;
+    }
+    
+    .user-text {
+      color: var(--header-text) !important;
+    }
+  }
+}
+
+// 侧边栏专用样式
+.ant-layout-sider {
+  background: var(--sider-bg) !important;
+  border-right: 1px solid var(--sider-border) !important;
+  backdrop-filter: blur(20px) !important;
+  transition: width var(--sider-transition-duration) var(--sider-transition-timing) !important;
+  overflow: hidden !important;
+  
+  // 侧边栏标题容器
+  .sider-header {
+    height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-bottom: 1px solid var(--sider-border) !important;
+    background: rgba(255,255,255,0.05) !important;
+    transition: all var(--sider-transition-duration) var(--sider-transition-timing) !important;
+    overflow: hidden !important;
+  }
+  
+  // 侧边栏标题
+  .sider-title {
+    color: var(--sider-text) !important;
+    text-shadow: none !important;
+    margin: 0 !important;
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    font-weight: bold !important;
+    white-space: nowrap !important;
+    transition: all var(--sider-title-transition) !important;
+    transform-origin: center !important;
+    
+    // 展开状态
+    &.sider-title-expanded {
+      font-size: 22px !important;
+      opacity: 1 !important;
+      transform: scale(1) !important;
+    }
+    
+    // 收起状态
+    &.sider-title-collapsed {
+      font-size: 18px !important;
+      opacity: 0.9 !important;
+      transform: scale(0.9) !important;
+    }
+  }
+  
+  // 侧边栏菜单
+  .ant-menu {
+    background: transparent !important;
+    color: var(--sider-text) !important;
+    border-right: 0 !important;
+    transition: all var(--sider-menu-transition) !important;
+    
+    .ant-menu-item {
+      color: var(--sider-text) !important;
+      transition: all 0.2s var(--sider-transition-timing) !important;
+      margin: 4px 8px !important;
+      border-radius: var(--border-radius) !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 0 16px !important; // 确保统一的padding
+      
+      &:hover {
+        background-color: var(--sider-bg-hover) !important;
+        color: var(--sider-text-hover) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+      }
+      
+      &.ant-menu-item-selected {
+        background-color: var(--component-bg-active) !important;
+        color: var(--primary-color) !important;
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2) !important;
+        transform: translateX(2px) !important;
+      }
+      
+      // 菜单项图标
+      .ant-menu-item-icon {
+        transition: all 0.2s var(--sider-transition-timing) !important;
+        transform-origin: center !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 16px !important;
+        height: 16px !important;
+        margin-right: 10px !important;
+        flex-shrink: 0 !important;
+      }
+      
+      // 菜单项文字
+      .ant-menu-title-content {
+        transition: all var(--sider-menu-transition) !important;
+        overflow: hidden !important;
+        transform-origin: left center !important;
+        display: flex !important;
+        align-items: center !important;
+        flex: 1 !important;
+      }
+      
+      // 悬停时图标效果 - 移除scale效果，使用旋转动画
+      &:hover .ant-menu-item-icon {
+        transform: rotate(15deg) !important;
+      }
+    }
+    
+    // 子菜单标题样式（确保与普通菜单项对齐）
+    .ant-menu-submenu-title {
+      color: var(--sider-text) !important;
+      transition: all 0.2s var(--sider-transition-timing) !important;
+      margin: 4px 8px !important;
+      border-radius: var(--border-radius) !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 0 16px !important; // 确保与普通菜单项相同的padding
+      
+      &:hover {
+        background-color: var(--sider-bg-hover) !important;
+        color: var(--sider-text-hover) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+      }
+      
+      // 子菜单标题图标
+      .ant-menu-item-icon {
+        transition: all 0.2s var(--sider-transition-timing) !important;
+        transform-origin: center !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 16px !important;
+        height: 16px !important;
+        margin-right: 10px !important;
+        flex-shrink: 0 !important;
+      }
+      
+      // 子菜单标题文字
+      .ant-menu-title-content {
+        transition: all var(--sider-menu-transition) !important;
+        overflow: hidden !important;
+        transform-origin: left center !important;
+        display: flex !important;
+        align-items: center !important;
+        flex: 1 !important;
+      }
+      
+      // 子菜单箭头
+      .ant-menu-submenu-arrow {
+        display: flex !important;
+        align-items: center !important;
+        margin-left: auto !important;
+      }
+      
+      // 悬停时图标效果 - 移除scale效果，使用旋转动画
+      &:hover .ant-menu-item-icon {
+        transform: rotate(15deg) !important;
+      }
+    }
+    
+    // 收起状态下的菜单项
+    &.ant-menu-inline-collapsed {
+      .ant-menu-item {
+        margin: 4px 12px !important;
+        padding: 0 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        .ant-menu-title-content {
+          opacity: 0 !important;
+          transform: translateX(-10px) !important;
+          transition: all 0.2s var(--sider-transition-timing) !important;
+        }
+        
+        .ant-menu-item-icon {
+          transform: scale(1.1) !important;
+          transition: all 0.2s var(--sider-transition-timing) !important;
+          position: absolute !important;
+          left: 50% !important;
+          top: 50% !important;
+          transform: translate(-50%, -50%) scale(1.1) !important;
+          margin-right: 0 !important;
+        }
+        
+        &:hover {
+          // 收起状态下不添加位移动画
+        }
+      }
+      
+      // 收起状态下的子菜单标题
+      .ant-menu-submenu-title {
+        margin: 4px 12px !important;
+        padding: 0 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        .ant-menu-title-content {
+          opacity: 0 !important;
+          transform: translateX(-10px) !important;
+          transition: all 0.2s var(--sider-transition-timing) !important;
+        }
+        
+        .ant-menu-item-icon {
+          transform: scale(1.1) !important;
+          transition: all 0.2s var(--sider-transition-timing) !important;
+          position: absolute !important;
+          left: 50% !important;
+          top: 50% !important;
+          transform: translate(-50%, -50%) scale(1.1) !important;
+          margin-right: 0 !important;
+        }
+        
+        .ant-menu-submenu-arrow {
+          display: none !important; // 收起时隐藏箭头
+        }
+        
+        &:hover {
+          // 收起状态下不添加位移动画
+        }
+      }
+    }
+  }
+  
+  // 收起状态
+  &.ant-layout-sider-collapsed {
+    .sider-header {
+      padding: 0 8px !important;
+    }
+    
+    .ant-menu {
+      .ant-menu-item {
+        padding: 0 16px !important;
+      }
+      
+      .ant-menu-submenu-title {
+        padding: 0 16px !important;
+      }
+    }
+  }
+  
+  // 展开状态
+  &:not(.ant-layout-sider-collapsed) {
+    .sider-header {
+      padding: 0 16px !important;
+    }
+    
+    .ant-menu {
+      .ant-menu-item {
+        padding: 0 16px !important;
+      }
+      
+      .ant-menu-submenu-title {
+        padding: 0 16px !important;
+      }
+    }
+  }
+}
+
+// Ant Design 主题覆盖
+.ant-layout {
+  background: var(--bg-color) !important;
+}
+
+.ant-layout-content {
+  background: var(--bg-color) !important;
+}
+
+.ant-menu {
+  background: var(--component-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.ant-menu-item {
+  color: var(--text-color) !important;
+  
+  &:hover {
+    background-color: var(--component-bg-hover) !important;
+  }
+  
+  &.ant-menu-item-selected {
+    background-color: var(--component-bg-active) !important;
+    color: var(--primary-color) !important;
+  }
+}
+
+.ant-menu-submenu-title {
+  color: var(--text-color) !important;
+  
+  &:hover {
+    background-color: var(--component-bg-hover) !important;
+  }
+  
+  &.ant-menu-submenu-selected {
+    background-color: var(--component-bg-active) !important;
+    color: var(--primary-color) !important;
+  }
+}
+
+.ant-card {
+  background: var(--component-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+  box-shadow: var(--box-shadow-secondary) !important;
+}
+
+// 设置面板卡片样式覆盖 - 直接强制覆盖
+.ant-drawer .ant-card {
+  border: 1px solid var(--border-color) !important;
+}
+
+// 强制覆盖所有设置面板中的卡片边框
+.ant-drawer .ant-form .ant-card {
+  border: 1px solid var(--border-color) !important;
+}
+
+// 当卡片有内联边框样式时，强制使用内联样式
+.ant-drawer .ant-card[style*="border"] {
+  border: inherit !important;
+}
+
+.ant-card-head {
+  background: var(--component-bg) !important;
+  border-bottom-color: var(--border-color-split) !important;
+  color: var(--text-color) !important;
+}
+
+.ant-card-head-title {
+  color: var(--text-color) !important;
+}
+
+.ant-card-body {
+  color: var(--text-color) !important;
+}
+
+.ant-form-item-label > label {
+  color: var(--text-color) !important;
+}
+
+.ant-input {
+  background: var(--component-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+  
+  &:hover {
+    border-color: var(--primary-color) !important;
+  }
+  
+  &:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+  }
+}
+
+.ant-select {
+  .ant-select-selector {
+    background: var(--component-bg) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-color) !important;
+  }
+  
+  &:hover .ant-select-selector {
+    border-color: var(--primary-color) !important;
+  }
+  
+  &.ant-select-focused .ant-select-selector {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+  }
+}
+
+.ant-select-dropdown {
+  background: var(--component-bg) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: var(--box-shadow) !important;
+}
+
+.ant-select-item {
+  color: var(--text-color) !important;
+  
+  &:hover {
+    background-color: var(--component-bg-hover) !important;
+  }
+  
+  &.ant-select-item-option-selected {
+    background-color: var(--component-bg-active) !important;
+    color: var(--primary-color) !important;
+  }
+}
+
+.ant-slider {
+  .ant-slider-track {
+    background-color: var(--primary-color) !important;
+  }
+  
+  .ant-slider-handle {
+    border-color: var(--primary-color) !important;
+    background-color: var(--component-bg) !important;
+  }
+  
+  .ant-slider-mark-text {
+    color: var(--text-color-secondary) !important;
+  }
+}
+
+.ant-switch {
+  background-color: var(--border-color) !important;
+  
+  &.ant-switch-checked {
+    background-color: var(--primary-color) !important;
+  }
+}
+
+.ant-drawer {
+  .ant-drawer-content {
+    background: var(--component-bg) !important;
+    color: var(--text-color) !important;
+  }
+  
+  .ant-drawer-header {
+    background: var(--component-bg) !important;
+    border-bottom-color: var(--border-color-split) !important;
+  }
+  
+  .ant-drawer-title {
+    color: var(--text-color) !important;
+  }
+  
+  .ant-drawer-body {
+    background: var(--component-bg) !important;
+    color: var(--text-color) !important;
+  }
+  
+  .ant-drawer-footer {
+    background: var(--component-bg) !important;
+    border-top-color: var(--border-color-split) !important;
+  }
+}
+
+.ant-button {
+  border-color: var(--border-color) !important;
+  
+  &.ant-btn-default {
+    background: var(--component-bg) !important;
+    color: var(--text-color) !important;
+    
+    &:hover {
+      background: var(--component-bg-hover) !important;
+      border-color: var(--primary-color) !important;
+      color: var(--primary-color) !important;
+    }
+  }
+  
+  &.ant-btn-primary {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #ffffff !important;
+    
+    &:hover {
+      opacity: 0.8 !important;
+    }
+  }
+}
+
+.ant-breadcrumb {
+  color: var(--text-color-secondary) !important;
+  
+  .ant-breadcrumb-link {
+    color: var(--text-color-secondary) !important;
+    
+    &:hover {
+      color: var(--primary-color) !important;
+    }
+  }
+  
+  .ant-breadcrumb-separator {
+    color: var(--text-color-disabled) !important;
+  }
+}
+
+// 背景装饰动画（保留，因为它们是静态的，不影响页面刷新性能）
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+// 紧凑模式样式
+.compact-mode {
+  .ant-layout-header {
+    height: 48px !important;
+    padding: 0 16px !important;
+  }
+  
+  .ant-layout-sider {
+    .sider-header {
+      height: 48px !important;
+    }
+  }
+  
+  .content-area {
+    padding: 16px !important;
+  }
+  
+  .stats-card {
+    padding: 16px !important;
+    min-height: 100px !important;
+  }
+  
+  .ant-card {
+    .ant-card-body {
+      padding: 16px !important;
+    }
+  }
+}
+
+// 禁用动画样式
+.no-animation {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  
+  .ant-layout-sider {
+    transition: none !important;
+    
+    .sider-title {
+      transition: none !important;
+    }
+    
+    .ant-menu {
+      transition: none !important;
+      
+      .ant-menu-item {
+        transition: none !important;
+        
+        .ant-menu-item-icon {
+          transition: none !important;
+        }
+        
+        .ant-menu-title-content {
+          transition: none !important;
+        }
+      }
+    }
+  }
+  
+  .header-button {
+    transition: none !important;
+  }
+  
+  .content-card {
+    transition: none !important;
+  }
+  
+  .stats-card {
+    transition: none !important;
+  }
+}
+
+// 隐藏元素样式
+.hidden {
+  display: none !important;
+}
+
+// 顶部菜单样式
+.ant-layout-header {
+  .ant-menu-horizontal {
+    background: transparent !important;
+    border: none !important;
+    line-height: 64px !important;
+    
+    .ant-menu-item {
+      color: var(--header-text) !important;
+      border-bottom: 2px solid transparent !important;
+      margin: 0 4px !important;
+      padding: 0 16px !important;
+      transition: all 0.3s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      
+      &:hover {
+        color: var(--primary-color) !important;
+        border-bottom-color: var(--primary-color) !important;
+        background: transparent !important;
+      }
+      
+      &.ant-menu-item-selected {
+        color: var(--primary-color) !important;
+        border-bottom-color: var(--primary-color) !important;
+        background: transparent !important;
+      }
+      
+      // 移除 Ant Design 默认的下划线
+      &::after {
+        display: none !important;
+      }
+      
+      // 顶部菜单图标样式
+      .ant-menu-item-icon {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-right: 8px !important;
+        font-size: 14px !important;
+      }
+      
+      // 顶部菜单文字样式
+      .ant-menu-title-content {
+        display: flex !important;
+        align-items: center !important;
+        font-size: 14px !important;
+      }
+    }
+    
+    .ant-menu-submenu {
+      color: var(--header-text) !important;
+      border-bottom: 2px solid transparent !important;
+      display: flex !important;
+      align-items: center !important;
+      
+      &:hover {
+        color: var(--primary-color) !important;
+        border-bottom-color: var(--primary-color) !important;
+      }
+      
+      &.ant-menu-submenu-selected {
+        color: var(--primary-color) !important;
+        border-bottom-color: var(--primary-color) !important;
+      }
+      
+      // 移除 Ant Design 默认的下划线
+      &::after {
+        display: none !important;
+      }
+      
+      // 顶部子菜单标题样式
+      .ant-menu-submenu-title {
+        display: flex !important;
+        align-items: center !important;
+        
+        .ant-menu-item-icon {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin-right: 8px !important;
+          font-size: 14px !important;
+        }
+        
+        .ant-menu-title-content {
+          display: flex !important;
+          align-items: center !important;
+          font-size: 14px !important;
+        }
+      }
+    }
+  }
+}
+
+// 设置面板卡片强制边框样式 - 使用CSS变量
+.ant-drawer .ant-form .ant-card.settings-card {
+  border: 1px solid var(--border-color) !important;
+}
+
+// 选中状态的边框覆盖 - 使用主题色
+.ant-drawer .ant-form .ant-card.settings-card.selected {
+  border: 3px solid var(--primary-color) !important;
+}
+
+// 当卡片有内联边框样式时，强制使用内联样式
+.ant-drawer .ant-card[style*="border"] {
+  border: inherit !important;
+}
+
+// 备用选择器 - 确保所有设置面板卡片都有边框
+.ant-drawer .ant-form .ant-card {
+  border: 1px solid var(--border-color) !important;
+}
+
+// 强制覆盖Ant Design的默认边框样式
+.ant-drawer .ant-card {
+  border-color: var(--border-color) !important;
+}
+
+// 选中状态强制使用主题色
+.ant-drawer .ant-card.settings-card.selected {
+  border-color: var(--primary-color) !important;
+}
+
+// 防止双列菜单布局出现水平滚动条
+.ant-layout {
+  overflow-x: hidden !important;
+}
+
+// 双列菜单布局优化
+.ant-layout-sider {
+  flex-shrink: 0 !important;
+}
+
+// 确保内容区域不会溢出
+.ant-layout-content {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// 双列菜单时的特殊处理
+.ant-layout-has-sider {
+  overflow-x: hidden !important;
+}
+
+// 双列菜单响应式处理
+@media (max-width: 1200px) {
+  .ant-layout-sider {
+    width: 64px !important;
+  }
+  
+  .ant-layout-sider:last-child {
+    width: 180px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ant-layout-sider {
+    width: 56px !important;
+  }
+  
+  .ant-layout-sider:last-child {
+    width: 160px !important;
+  }
+}
+
+// 确保双列菜单不会导致水平滚动
+.ant-layout-has-sider > .ant-layout {
+  overflow-x: hidden !important;
+}
+
+// 双列菜单时的特殊处理
+.ant-layout-sider + .ant-layout-sider {
+  border-left: 1px solid var(--sider-border);
+}
+
+// 双列菜单布局特殊处理
+.ant-layout-has-sider {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+// 确保双列菜单的Sider不会超出容器
+.ant-layout-has-sider .ant-layout-sider {
+  position: relative !important;
+  max-width: none !important;
+}
+
+// 防止内容区域被挤压
+.ant-layout-has-sider .ant-layout {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+// 防止菜单内容溢出
+.ant-menu {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+
+.ant-menu-inline {
+  width: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+
+// 菜单容器滚动优化
+.ant-layout-sider .ant-menu {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+// 菜单项容器
+.ant-menu-inline .ant-menu-item,
+.ant-menu-inline .ant-menu-submenu {
+  overflow: hidden !important;
+}
+
+// 子菜单容器
+.ant-menu-inline .ant-menu-submenu .ant-menu-sub {
+  overflow: hidden !important;
+}
+
+// Sider组件滚动条优化
+.ant-layout-sider {
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+
+// Sider内容区域
+.ant-layout-sider .ant-layout-sider-children {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+// 菜单展开动画优化
+.ant-menu-inline .ant-menu-submenu-title {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-menu-inline .ant-menu-sub {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  overflow: hidden !important;
+}
+
+// 防止菜单展开时的布局跳动
+.ant-menu-inline .ant-menu-submenu {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+// 菜单滚动条优化
+.ant-menu::-webkit-scrollbar {
+  width: 0 !important;
+  display: none !important;
+}
+
+.ant-menu-inline::-webkit-scrollbar {
+  width: 0 !important;
+  display: none !important;
+}
+
+.ant-menu-sub::-webkit-scrollbar {
+  width: 0 !important;
+  display: none !important;
+}
+
+// 确保菜单容器不会产生滚动条
+.ant-menu,
+.ant-menu-inline,
+.ant-menu-sub {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+// 菜单展开时的平滑动画
+.ant-menu-inline .ant-menu-submenu-inline > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.ant-menu-inline .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  transform: rotate(90deg) !important;
+}
+
+// 确保菜单项图标对齐 - 统一图标样式
+.ant-menu-item .ant-menu-item-icon,
+.ant-menu-submenu-title .ant-menu-item-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 10px !important;
+  flex-shrink: 0 !important;
+  font-size: 14px !important;
+}
+
+// 修复子菜单标题图标偏移问题 - 确保图标和文字垂直对齐
+.ant-menu-submenu-title {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  
+  .ant-menu-item-icon {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-right: 10px !important;
+    transition: transform 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .ant-menu-title-content {
+    padding-left: 0 !important; // 移除额外的左边距
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  .ant-menu-submenu-arrow {
+    position: static !important;
+    right: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-left: auto !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  // 悬浮时图标旋转动画
+  &:hover .ant-menu-item-icon {
+    transform: rotate(15deg) !important;
+  }
+}
+
+// 确保二级子菜单标题有正确的缩进
+.ant-menu-inline .ant-menu-sub .ant-menu-submenu-title {
+  padding-left: 48px !important; // 确保二级子菜单标题有正确的左边距
+  margin: 4px 8px !important; // 保持统一的margin
+}
+
+// 强制覆盖Ant Design的菜单缩进机制
+.ant-menu-inline .ant-menu-submenu {
+  padding-left: 0 !important; // 移除子菜单容器的默认缩进
+}
+
+.ant-menu-inline .ant-menu-sub {
+  padding-left: 0 !important; // 移除子菜单的默认缩进
+}
+
+// 确保菜单项内容区域不受Ant Design默认缩进影响
+.ant-menu-inline .ant-menu-item .ant-menu-title-content,
+.ant-menu-inline .ant-menu-submenu-title .ant-menu-title-content {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+// 强制统一所有菜单项的基础样式 - 已合并到上面的统一样式中
+
+// 确保菜单项和子菜单标题的图标样式一致 - 已合并到上面的统一样式中
+
+// 确保二级菜单项有正确的缩进
+.ant-menu-inline .ant-menu-sub > .ant-menu-item,
+.ant-menu-inline .ant-menu-sub > .ant-menu-submenu > .ant-menu-submenu-title {
+  padding-left: 48px !important; // 二级菜单项和子菜单标题
+  margin: 4px 8px !important; // 保持统一的margin
+}
+
+// 确保普通菜单项图标位置一致 - 修复垂直对齐
+.ant-menu-item {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  
+  .ant-menu-item-icon {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin-right: 10px !important;
+    transition: transform 0.3s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .ant-menu-title-content {
+    padding-left: 0 !important; // 移除额外的左边距
+    flex: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  // 悬浮时图标旋转动画
+  &:hover .ant-menu-item-icon {
+    transform: rotate(15deg) !important;
+  }
+}
+
+// 确保二级菜单项有正确的缩进
+.ant-menu-inline .ant-menu-sub > .ant-menu-item {
+  padding-left: 48px !important; // 确保二级菜单项有正确的左边距
+  margin: 4px 8px !important; // 保持统一的margin
+}
+
+// 强制重置所有菜单项的默认缩进
+.ant-menu-inline .ant-menu-item,
+.ant-menu-inline .ant-menu-submenu-title {
+  padding-left: inherit !important; // 使用父级设置的padding-left
+}
+
+// 确保所有菜单项的基础样式一致
+.ant-menu-inline .ant-menu-item,
+.ant-menu-inline .ant-menu-submenu-title {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 16px !important;
+  margin: 4px 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+}
+
+// 所有菜单项样式已合并到下面的统一样式中
+
+// 确保子菜单箭头样式正确
+.ant-menu-submenu-title .ant-menu-submenu-arrow {
+  display: flex !important;
+  align-items: center !important;
+  margin-left: auto !important;
+  font-size: 12px !important;
+}
+
+// 确保所有一级菜单项的样式完全一致
+.ant-menu-inline > .ant-menu-item,
+.ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title {
+  // 基础样式
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  padding: 0 16px !important;
+  margin: 4px 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  box-sizing: border-box !important;
+  
+  // 图标样式
+  .ant-menu-item-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-right: 10px !important;
+    flex-shrink: 0 !important;
+    font-size: 14px !important;
+  }
+  
+  // 文字样式
+  .ant-menu-title-content {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+// 所有菜单项样式已合并到上面的统一样式中
+
+// 确保二级菜单项有正确的缩进
+.ant-menu-inline .ant-menu-sub .ant-menu-item {
+  padding-left: 48px !important; // 二级菜单项应该有更大的缩进
+  margin: 4px 8px !important; // 保持统一的margin
+  
+  .ant-menu-item-icon {
+    margin-left: 0 !important;
+    margin-right: 10px !important;
+  }
+  
+  .ant-menu-title-content {
+    padding-left: 0 !important;
+  }
+}
+
+// 确保二级菜单项的子菜单有正确的缩进
+.ant-menu-inline .ant-menu-sub .ant-menu-submenu .ant-menu-submenu-title {
+  padding-left: 48px !important; // 二级菜单项应该有更大的缩进
+  margin: 4px 8px !important; // 保持统一的margin
+  
+  .ant-menu-item-icon {
+    margin-left: 0 !important;
+    margin-right: 10px !important;
+  }
+  
+  .ant-menu-title-content {
+    padding-left: 0 !important;
+  }
+}
+
+// 确保所有菜单项的图标和文字垂直对齐
+.ant-menu-inline .ant-menu-item .ant-menu-item-icon,
+.ant-menu-inline .ant-menu-submenu-title .ant-menu-item-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 10px !important;
+  flex-shrink: 0 !important;
+  font-size: 14px !important;
+}
+
+// 确保所有菜单项的文字垂直对齐
+.ant-menu-inline .ant-menu-item .ant-menu-title-content,
+.ant-menu-inline .ant-menu-submenu-title .ant-menu-title-content {
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+// 双列菜单中的主菜单项对齐
+.ant-layout-sider:first-child .ant-menu .ant-menu-item,
+.ant-layout-sider:first-child .ant-menu .ant-menu-submenu-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  height: 48px !important;
+  position: relative !important;
+  
+  .ant-menu-item-icon {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin-right: 0 !important;
+    font-size: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .ant-menu-title-content {
+    display: none !important;
+  }
+  
+  .ant-menu-submenu-arrow {
+    display: none !important; // 隐藏双列菜单中的箭头
+  }
+}
+
+// 双列菜单的Sider内容控制
+.ant-layout-sider .sider-header {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+// 全局滚动控制
+html, body {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  max-width: 100vw !important;
+  min-height: 100vh !important;
+}
+
+#root {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  min-height: 100vh !important;
+}
+
+// 主布局容器滚动控制
+.ant-layout {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  min-height: 100vh !important;
+}
+
+// 确保所有布局容器都不会溢出
+.ant-layout-sider, .ant-layout-header, .ant-layout-content {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// 内容区域滚动控制
+.ant-layout-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  min-height: calc(100vh - 64px) !important; // 使用最小高度，允许内容自然扩展
+}
+
+// 内容区域内的所有元素
+.ant-layout-content > * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+// 防止表格、卡片等组件溢出
+.ant-table, .ant-card, .ant-row, .ant-col {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+// 确保页面内容不会超出
+.content-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  padding: 24px !important;
+}
+
+// 表格响应式优化
+.table-container {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// 原生表格响应式处理
+table {
+  width: 100% !important;
+  min-width: 600px !important; // 设置最小宽度，防止内容挤压
+  table-layout: auto !important; // 使用自动布局
+}
+
+// 表格单元格响应式
+th, td {
+  white-space: nowrap !important; // 防止文字换行
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 200px !important; // 限制最大宽度
+}
+
+// 表格头部响应式
+th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: var(--content-card-bg) !important;
+}
+
+// 小屏幕下的表格优化
+@media (max-width: 768px) {
+  .table-container {
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  table {
+    min-width: 500px !important;
+    font-size: 12px !important;
+  }
+  
+  th, td {
+    padding: 8px 6px !important;
+    max-width: 150px !important;
+  }
+}
+
+// 超小屏幕下的表格优化
+@media (max-width: 480px) {
+  table {
+    min-width: 400px !important;
+    font-size: 10px !important;
+  }
+  
+  th, td {
+    padding: 6px 4px !important;
+    max-width: 120px !important;
+  }
+}
+
+// Ant Design表格响应式优化
+.ant-table-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.ant-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Ant Design表格容器 - 允许水平滚动
+.ant-table-container {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// Ant Design表格头部 - 恢复默认行为
+.ant-table-thead > tr > th {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+// Ant Design表格单元格 - 恢复默认行为
+.ant-table-tbody > tr > td {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+// ProTable响应式优化
+.ant-pro-table {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.ant-pro-table .ant-table-wrapper {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+// 小屏幕下的Ant Design表格优化
+@media (max-width: 768px) {
+  .ant-table {
+    min-width: 500px !important;
+    font-size: 12px !important;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px 6px !important;
+    max-width: 150px !important;
+  }
+}
+
+// 超小屏幕下的Ant Design表格优化
+@media (max-width: 480px) {
+  .ant-table {
+    min-width: 400px !important;
+    font-size: 10px !important;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 6px 4px !important;
+    max-width: 120px !important;
+  }
+}
+
+// 全局滚动条样式 - 简化版本
+html {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent !important;
+}
+
+// Webkit浏览器滚动条样式
+::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 3px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+// 隐藏滚动条按钮（上下箭头）
+::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+// 确保全局滚动条可见
+body {
+  overflow-y: auto !important;
+}
+
+// 主布局滚动条
+.ant-layout {
+  overflow-y: auto !important;
+}
+
+// 内容区域滚动条 - 只在需要时显示
+.ant-layout-content {
+  overflow-y: auto !important;
+  min-height: calc(100vh - 64px) !important;
+}
+
+// 防止滚动条相关的三角形图标
+* {
+  scrollbar-width: thin !important;
+}
+
+// 确保没有多余的滚动条装饰
+::-webkit-scrollbar-track-piece {
+  background: transparent !important;
+}
+
+::-webkit-scrollbar-resizer {
+  display: none !important;
+}
+
+// 防止Ant Design组件的滚动条出现异常
+.ant-table-body,
+.ant-table-content,
+.ant-pro-table {
+  scrollbar-width: thin !important;
+}
+
+.ant-table-body::-webkit-scrollbar,
+.ant-table-content::-webkit-scrollbar,
+.ant-pro-table::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb,
+.ant-table-content::-webkit-scrollbar-thumb,
+.ant-pro-table::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 3px !important;
+}
+
+.ant-table-body::-webkit-scrollbar-button,
+.ant-table-content::-webkit-scrollbar-button,
+.ant-pro-table::-webkit-scrollbar-button {
+  display: none !important;
+}
+
+// 确保内容区域宽度适应布局
+.ant-layout-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// 防止页面刷新时出现不必要的滚动条
+.content-area {
+  overflow: hidden !important;
+}
+
+.content-area > * {
+  overflow: hidden !important;
+}
+
+// 只在需要时显示滚动条
+.content-area .ant-table-wrapper {
+  overflow: visible !important;
+}
+
+.content-area .ant-table-body {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+// 确保表格容器宽度适应内容区域
+.ant-table-wrapper,
+.ant-pro-table {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+// 确保表格内容区域能够正确滚动
+.ant-table-body {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  box-sizing: border-box !important;
+}
+

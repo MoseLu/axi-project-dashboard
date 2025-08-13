@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import './styles/theme.scss';
+import './styles/theme-transitions.css';
+import './styles/badge-fix.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(

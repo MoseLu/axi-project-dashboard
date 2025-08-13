@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="axi-deploy 部署进度可视化仪表板" />
+    <meta name="keywords" content="部署,监控,可视化,仪表板" />
+    <meta name="author" content="运维团队" />
+    <title>axi项目看板</title>
+    
+    <!-- 主题检测脚本 - 在页面加载前应用主题，避免样式水合问题 -->
+    <script>
+      (function() {
+        // 获取保存的主题设置
+        function getTheme() {
+          try {
+            const savedSettings = localStorage.getItem('axi-dashboard-settings');
+            if (savedSettings) {
+              const settings = JSON.parse(savedSettings);
+              return settings.theme || 'dark';
+            }
+          } catch (e) {
+            console.warn('Failed to load theme from localStorage:', e);
+          }
+          return 'dark'; // 默认主题
+        }
+        
+        // 应用主题到HTML元素
+        function applyTheme(theme) {
+          const html = document.documentElement;
+          
+          if (theme === 'dark') {
+            html.setAttribute('data-theme', 'dark');
+          } else if (theme === 'light') {
+            html.setAttribute('data-theme', 'light');
+          } else if (theme === 'auto') {
+            // 自动主题 - 跟随系统
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+          }
+          
+          // 应用基础CSS变量
+          html.style.setProperty('--primary-color', '#667eea');
+          html.style.setProperty('--border-radius', '8px');
+          html.style.setProperty('--border-radius-sm', '6px');
+          html.style.setProperty('--border-radius-lg', '10px');
+        }
+        
+        // 立即应用主题
+        const theme = getTheme();
+        applyTheme(theme);
+        
+        // 监听系统主题变化（仅对auto模式有效）
+        if (theme === 'auto') {
+          const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          mediaQuery.addEventListener('change', function(e) {
+            applyTheme('auto');
+          });
+        }
+      })();
+    </script>
+    
+    <!-- 防止闪烁的样式 -->
+    <style>
+      /* 在CSS加载前防止闪烁 */
+      html {
+        visibility: hidden;
+      }
+      
+      /* 确保页面在主题应用后可见 */
+      html[data-theme] {
+        visibility: visible;
+      }
+      
+      /* 基础主题变量 - 在CSS文件加载前提供基础样式 */
+      :root {
+        --primary-color: #667eea;
+        --border-radius: 8px;
+        --border-radius-sm: 6px;
+        --border-radius-lg: 10px;
+      }
+      
+      /* 浅色主题基础变量 */
+      [data-theme="light"] {
+        --text-color: #000000;
+        --text-color-secondary: #666666;
+        --bg-color: #ffffff;
+        --bg-color-secondary: #f5f5f5;
+        --border-color: #d9d9d9;
+        --component-bg: #ffffff;
+        --component-bg-hover: #f5f5f5;
+      }
+      
+      /* 深色主题基础变量 */
+      [data-theme="dark"] {
+        --text-color: #ffffff;
+        --text-color-secondary: #a6a6a6;
+        --bg-color: #000000;
+        --bg-color-secondary: #141414;
+        --border-color: #303030;
+        --component-bg: #141414;
+        --component-bg-hover: #1f1f1f;
+      }
+      
+      /* 基础样式 */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      
+      #root {
+        min-height: 100vh;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

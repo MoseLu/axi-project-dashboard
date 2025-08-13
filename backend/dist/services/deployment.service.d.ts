@@ -19,6 +19,19 @@ export interface DeploymentMetrics {
     successfulDeployments: number;
     failedDeployments: number;
     averageDeploymentTime: number;
+    projectStats?: {
+        project: string;
+        total: number;
+        success: number;
+        failed: number;
+        successRate: number;
+    }[];
+    dailyStats?: {
+        date: string;
+        total: number;
+        success: number;
+        failed: number;
+    }[];
 }
 export interface DeploymentQueryParams {
     page: number;

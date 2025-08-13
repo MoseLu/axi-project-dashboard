@@ -1,0 +1,126 @@
+/* 主题切换动画样式 */
+
+.theme-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.theme-transition-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  transform-origin: top right;
+  will-change: transform;
+}
+
+.theme-transition-circle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  transform-origin: center;
+}
+
+/* 旧主题圆圈 - 左侧 */
+.theme-transition-circle.old-theme {
+  background: var(--old-theme-bg);
+  z-index: 2;
+  /* 第三象限圆弧 - 从右上角开始，向左下角扩散 */
+  clip-path: polygon(50% 0%, 100% 0%, 100% 50%, 50% 50%);
+}
+
+/* 新主题圆圈 - 右侧 */
+.theme-transition-circle.new-theme {
+  background: var(--new-theme-bg);
+  z-index: 1;
+  /* 第三象限圆弧 - 从右上角开始，向左下角扩散 */
+  clip-path: polygon(0% 50%, 50% 50%, 50% 100%, 0% 100%);
+}
+
+/* 深色到浅色主题切换 */
+.dark-to-light .theme-transition-circle.old-theme {
+  background: #000000;
+}
+
+.dark-to-light .theme-transition-circle.new-theme {
+  background: #ffffff;
+}
+
+/* 浅色到深色主题切换 */
+.light-to-dark .theme-transition-circle.old-theme {
+  background: #ffffff;
+}
+
+.light-to-dark .theme-transition-circle.new-theme {
+  background: #000000;
+}
+
+/* 动画关键帧 - 圆弧扩散 */
+@keyframes themeTransitionExpand {
+  0% {
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    transform: scale(2) rotate(22.5deg);
+  }
+  100% {
+    transform: scale(4) rotate(45deg);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .theme-transition-container {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-transition-container {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* 性能优化 */
+.theme-transition-overlay {
+  contain: layout style paint;
+}
+
+.theme-transition-container {
+  contain: layout style paint;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 高刷新率屏幕优化 */
+@media (prefers-reduced-motion: no-preference) {
+  .theme-transition-container {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* 减少动画偏好设置 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition-container {
+    transition: transform 0.3s ease;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  .theme-transition-overlay {
+    display: none !important;
+  }
+}

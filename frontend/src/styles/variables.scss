@@ -1,0 +1,191 @@
+// 主题变量定义
+:root {
+  // 基础颜色
+  --primary-color: #1890ff;
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #ff4d4f;
+  --info-color: #1890ff;
+  
+  // 文字颜色
+  --text-color: #000000;
+  --text-color-secondary: #666666;
+  --text-color-disabled: #bfbfbf;
+  
+  // 背景颜色
+  --bg-color: #ffffff;
+  --bg-color-secondary: #f5f5f5;
+  --bg-color-tertiary: #fafafa;
+  
+  // 边框颜色
+  --border-color: #d9d9d9;
+  --border-color-split: #f0f0f0;
+  
+  // 组件背景
+  --component-bg: #ffffff;
+  --component-bg-hover: #f5f5f5;
+  --component-bg-active: #e6f7ff;
+  
+  // 阴影
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --box-shadow-secondary: 0 1px 2px rgba(0, 0, 0, 0.1);
+  
+  // 圆角
+  --border-radius: 6px;
+  --border-radius-sm: 4px;
+  --border-radius-lg: 8px;
+  
+  // 间距
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  // 顶栏专用颜色（浅色主题）
+  --header-bg: rgba(255, 255, 255, 0.95);
+  --header-bg-hover: rgba(255, 255, 255, 0.98);
+  --header-text: #1a1a1a;
+  --header-text-secondary: #595959;
+  --header-icon: #595959;
+  --header-icon-hover: #1a1a1a;
+  --header-border: rgba(0, 0, 0, 0.06);
+  --header-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  
+  // 侧边栏专用颜色（浅色主题）
+  --sider-bg: rgba(255, 255, 255, 0.9);
+  --sider-bg-hover: rgba(255, 255, 255, 0.95);
+  --sider-text: #1a1a1a;
+  --sider-text-hover: #1890ff;
+  --sider-border: rgba(0, 0, 0, 0.06);
+  
+  // 侧边栏动画相关变量
+  --sider-width: 256px;
+  --sider-collapsed-width: 80px;
+  --sider-transition-duration: 0.3s;
+  --sider-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-title-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-menu-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // 侧边栏动画相关变量
+  --sider-width: 256px;
+  --sider-collapsed-width: 80px;
+  --sider-transition-duration: 0.3s;
+  --sider-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-title-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-menu-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // 内容区域专用颜色（浅色主题）
+  --content-bg: #f8f9fa;
+  --content-text: #1a1a1a;
+  --content-text-secondary: #595959;
+  --content-card-bg: rgba(255, 255, 255, 0.9);
+  --content-card-border: rgba(0, 0, 0, 0.08);
+  --content-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --content-glass-bg: rgba(255, 255, 255, 0.8);
+  --content-glass-border: rgba(255, 255, 255, 0.3);
+  
+  // 渐变背景
+  --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-bg-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-primary: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  --gradient-success: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  --gradient-warning: linear-gradient(135deg, #faad14 0%, #d48806 100%);
+  --gradient-error: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+  
+  // 装饰元素
+  --decoration-bg: rgba(255, 255, 255, 0.1);
+  --decoration-border: rgba(255, 255, 255, 0.2);
+  --decoration-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+// 深色主题
+[data-theme="dark"] {
+  // 基础颜色
+  --primary-color: #1890ff;
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #ff4d4f;
+  --info-color: #1890ff;
+  
+  // 文字颜色
+  --text-color: #ffffff;
+  --text-color-secondary: #a6a6a6;
+  --text-color-disabled: #595959;
+  
+  // 背景颜色
+  --bg-color: #000000;
+  --bg-color-secondary: #141414;
+  --bg-color-tertiary: #1f1f1f;
+  
+  // 边框颜色
+  --border-color: #303030;
+  --border-color-split: #262626;
+  
+  // 组件背景
+  --component-bg: #141414;
+  --component-bg-hover: #1f1f1f;
+  --component-bg-active: #111b26;
+
+  // 阴影
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --box-shadow-secondary: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+  // 顶栏专用颜色（深色主题）
+  --header-bg: rgba(20, 20, 20, 0.95);
+  --header-bg-hover: rgba(20, 20, 20, 0.98);
+  --header-text: #ffffff;
+  --header-text-secondary: #a6a6a6;
+  --header-icon: #a6a6a6;
+  --header-icon-hover: #ffffff;
+  --header-border: rgba(255, 255, 255, 0.08);
+  --header-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  
+  // 侧边栏专用颜色（深色主题）
+  --sider-bg: rgba(20, 20, 20, 0.9);
+  --sider-bg-hover: rgba(20, 20, 20, 0.95);
+  --sider-text: #ffffff;
+  --sider-text-hover: #1890ff;
+  --sider-border: rgba(255, 255, 255, 0.08);
+  
+  // 侧边栏动画相关变量（深色主题保持相同）
+  --sider-width: 256px;
+  --sider-collapsed-width: 80px;
+  --sider-transition-duration: 0.3s;
+  --sider-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-title-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-menu-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // 侧边栏动画相关变量（深色主题保持相同）
+  --sider-width: 256px;
+  --sider-collapsed-width: 80px;
+  --sider-transition-duration: 0.3s;
+  --sider-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-title-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --sider-menu-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // 内容区域专用颜色（深色主题）
+  --content-bg: #0a0a0a;
+  --content-text: #ffffff;
+  --content-text-secondary: #a6a6a6;
+  --content-card-bg: rgba(20, 20, 20, 0.9);
+  --content-card-border: rgba(255, 255, 255, 0.08);
+  --content-card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --content-glass-bg: rgba(20, 20, 20, 0.8);
+  --content-glass-border: rgba(255, 255, 255, 0.1);
+  
+  // 渐变背景（深色主题使用更深的渐变）
+  --gradient-bg: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  --gradient-bg-alt: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+  --gradient-primary: linear-gradient(135deg, #177ddc 0%, #0958b5 100%);
+  --gradient-success: linear-gradient(135deg, #49aa19 0%, #3c8618 100%);
+  --gradient-warning: linear-gradient(135deg, #d89614 0%, #b37f15 100%);
+  --gradient-error: linear-gradient(135deg, #d32029 0%, #a61d24 100%);
+  
+  // 装饰元素
+  --decoration-bg: rgba(255, 255, 255, 0.05);
+  --decoration-border: rgba(255, 255, 255, 0.1);
+  --decoration-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+

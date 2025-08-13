@@ -148,7 +148,7 @@ class DeploymentService {
     }
     async getDeploymentMetrics() {
         try {
-            const [totalDeployments, successfulDeployments, failedDeployments, averageTimeResult,] = await Promise.all([
+            const [totalDeployments, successfulDeployments, failedDeployments, averageTimeResult, projectStatsResult, dailyStatsResult,] = await Promise.all([
                 deployment_1.Deployment.count(),
                 deployment_1.Deployment.count({ where: { status: 'success' } }),
                 deployment_1.Deployment.count({ where: { status: 'failed' } }),
@@ -156,15 +156,61 @@ class DeploymentService {
                     attributes: [[deployment_1.Deployment.sequelize.fn('AVG', deployment_1.Deployment.sequelize.col('duration')), 'averageTime']],
                     where: { status: { [sequelize_1.Op.in]: ['success', 'failed'] } },
                 }),
+                deployment_1.Deployment.findAll({
+                    attributes: [
+                        'project_name',
+                        [deployment_1.Deployment.sequelize.fn('COUNT', deployment_1.Deployment.sequelize.col('id')), 'total'],
+                        [deployment_1.Deployment.sequelize.fn('SUM', deployment_1.Deployment.sequelize.literal("CASE WHEN status = 'success' THEN 1 ELSE 0 END")), 'success'],
+                        [deployment_1.Deployment.sequelize.fn('SUM', deployment_1.Deployment.sequelize.literal("CASE WHEN status = 'failed' THEN 1 ELSE 0 END")), 'failed'],
+                    ],
+                    group: ['project_name'],
+                    order: [[deployment_1.Deployment.sequelize.fn('COUNT', deployment_1.Deployment.sequelize.col('id')), 'DESC']],
+                    limit: 10,
+                }),
+                deployment_1.Deployment.findAll({
+                    attributes: [
+                        [deployment_1.Deployment.sequelize.fn('DATE', deployment_1.Deployment.sequelize.col('created_at')), 'date'],
+                        [deployment_1.Deployment.sequelize.fn('COUNT', deployment_1.Deployment.sequelize.col('id')), 'total'],
+                        [deployment_1.Deployment.sequelize.fn('SUM', deployment_1.Deployment.sequelize.literal("CASE WHEN status = 'success' THEN 1 ELSE 0 END")), 'success'],
+                        [deployment_1.Deployment.sequelize.fn('SUM', deployment_1.Deployment.sequelize.literal("CASE WHEN status = 'failed' THEN 1 ELSE 0 END")), 'failed'],
+                    ],
+                    where: {
+                        created_at: {
+                            [sequelize_1.Op.gte]: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+                        },
+                    },
+                    group: [deployment_1.Deployment.sequelize.fn('DATE', deployment_1.Deployment.sequelize.col('created_at'))],
+                    order: [[deployment_1.Deployment.sequelize.fn('DATE', deployment_1.Deployment.sequelize.col('created_at')), 'ASC']],
+                }),
             ]);
             const averageDeploymentTime = averageTimeResult
                 ? Math.round(parseFloat(averageTimeResult.get('averageTime')) || 0)
                 : 0;
+            const projectStats = projectStatsResult.map((item) => {
+                const total = parseInt(item.get('total'));
+                const success = parseInt(item.get('success'));
+                const failed = parseInt(item.get('failed'));
+                return {
+                    project: item.get('project_name'),
+                    total,
+                    success,
+                    failed,
+                    successRate: total > 0 ? Math.round((success / total) * 100) : 0,
+                };
+            });
+            const dailyStats = dailyStatsResult.map((item) => ({
+                date: item.get('date'),
+                total: parseInt(item.get('total')),
+                success: parseInt(item.get('success')),
+                failed: parseInt(item.get('failed')),
+            }));
             const metrics = {
                 totalDeployments,
                 successfulDeployments,
                 failedDeployments,
                 averageDeploymentTime,
+                projectStats,
+                dailyStats,
             };
             return metrics;
         }

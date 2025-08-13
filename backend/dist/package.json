@@ -18,7 +18,9 @@
     "typecheck": "tsc --noEmit",
     "clean": "rimraf dist",
     "migration:run": "ts-node src/database/migrations/run.ts",
-    "seed:run": "ts-node src/database/seeds/run.ts"
+    "seed:run": "ts-node src/database/seeds/run.ts",
+    "cleanup:test-data": "ts-node src/scripts/cleanup-test-data.ts",
+    "db:init": "ts-node -r tsconfig-paths/register src/scripts/init-database.ts"
   },
   "keywords": [
     "axi-deploy",

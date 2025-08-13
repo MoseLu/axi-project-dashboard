@@ -2,8 +2,12 @@ import { Router, Request, Response } from 'express';
 import { logger } from '@/utils/logger';
 import { ApiResponse } from '@/types';
 import { DeploymentService } from '@/services/deployment.service';
+import authRoutes from './auth.routes';
 
 const router = Router();
+
+// 认证路由
+router.use('/auth', authRoutes);
 
 // Health check route
 router.get('/health', (req: Request, res: Response) => {

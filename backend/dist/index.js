@@ -24,6 +24,7 @@ const metrics_service_1 = require("./services/metrics.service");
 const health_service_1 = require("./services/health.service");
 const deployment_service_1 = require("./services/deployment.service");
 const graceful_shutdown_1 = require("./utils/graceful-shutdown");
+const init_database_1 = __importDefault(require("./scripts/init-database"));
 class Application {
     constructor() {
         this.app = (0, express_1.default)();
@@ -178,6 +179,8 @@ class Application {
                 try {
                     const dbConnection = await (0, connection_1.connectDatabase)();
                     logger_1.logger.info('✅ MySQL connected successfully');
+                    await (0, init_database_1.default)();
+                    logger_1.logger.info('✅ Database tables initialized successfully');
                     await (0, sequelize_1.testConnection)();
                     await (0, sequelize_1.syncDatabase)();
                     logger_1.logger.info('✅ Sequelize database initialized successfully');

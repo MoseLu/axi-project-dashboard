@@ -1,0 +1,389 @@
+/* Ant Design Badge 徽标修复样式 */
+
+/* 确保Badge徽标不会被body的overflow hidden影响 */
+.ant-badge {
+  position: relative;
+  display: inline-block;
+}
+
+.ant-badge-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+  z-index: 1000;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  color: #fff;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+  text-align: center;
+  background: #ff4d4f;
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px #fff;
+}
+
+.ant-badge-count-sm {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 16px;
+  border-radius: 8px;
+}
+
+/* 确保徽标在header中正确显示 */
+header .ant-badge-count {
+  z-index: 1001;
+}
+
+/* 修复徽标被截断的问题 */
+body {
+  overflow-x: visible !important;
+}
+
+/* 确保内容区域不会截断徽标 */
+.content-area {
+  overflow-x: visible !important;
+  overflow-y: auto !important;
+}
+
+/* 确保所有可能包含徽标的容器都不会截断徽标 */
+.ant-layout,
+.ant-layout-header,
+.ant-layout-content,
+.ant-layout-sider {
+  overflow-x: visible !important;
+}
+
+/* 确保徽标容器有足够的空间 */
+.ant-badge .ant-badge-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  transform: none;
+}
+
+/* 针对小尺寸徽标的特殊处理 */
+.ant-badge .ant-badge-count-sm {
+  top: -6px;
+  right: -6px;
+}
+
+/* 确保徽标在滚动时也能正确显示 */
+.ant-scroll-number {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.ant-scroll-number-only {
+  position: relative;
+  display: inline-block;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ant-scroll-number-only-unit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.ant-scroll-number-only-unit.current {
+  transform: translateY(0);
+}
+
+/* 确保徽标在主题切换时也能正确显示 */
+.theme-dark .ant-badge-count,
+.theme-light .ant-badge-count {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* 修复徽标在移动端的显示问题 */
+@media (max-width: 768px) {
+  .ant-badge-count {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 11px;
+    line-height: 18px;
+    border-radius: 9px;
+  }
+  
+  .ant-badge-count-sm {
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    font-size: 9px;
+    line-height: 14px;
+    border-radius: 7px;
+  }
+}
+
+/* 确保徽标在z-index层级中正确显示 */
+.ant-badge-count {
+  z-index: 9999 !important;
+}
+
+/* 修复徽标在固定定位元素中的显示问题 */
+.ant-layout-header .ant-badge-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  transform: none;
+  z-index: 1001;
+}
+
+/* 确保徽标不会被其他元素遮挡 */
+.ant-badge-count::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: inherit;
+  border-radius: inherit;
+}
+
+/* 修复徽标在固定定位元素中的显示问题 */
+.ant-layout-header .ant-badge {
+  position: relative;
+  z-index: 1000;
+}
+
+/* 修复header中徽标的显示问题 */
+.ant-layout-header .ant-badge-count {
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  transform: none !important;
+  z-index: 1001 !important;
+  overflow: visible !important;
+}
+
+/* 确保header不会截断徽标 */
+.ant-layout-header {
+  overflow: visible !important;
+}
+
+/* 修复Space组件中徽标的显示问题 */
+.ant-space .ant-badge {
+  position: relative;
+  z-index: 1000;
+}
+
+.ant-space .ant-badge-count {
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  transform: none !important;
+  z-index: 1001 !important;
+  overflow: visible !important;
+}
+
+/* 确保徽标在滚动容器中也能正确显示 */
+.ant-layout-content .ant-badge-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  transform: none;
+  z-index: 1001;
+}
+
+/* 修复徽标在主题切换时的显示问题 */
+.ant-badge-count {
+  transition: all 0.3s ease;
+}
+
+/* 确保徽标在移动端也能正确显示 */
+@media (max-width: 768px) {
+  .ant-badge-count {
+    position: absolute !important;
+    top: -6px !important;
+    right: -6px !important;
+    transform: none !important;
+    z-index: 9999 !important;
+  }
+  
+  .ant-badge-count-sm {
+    top: -4px !important;
+    right: -4px !important;
+  }
+}
+
+/* 修复徽标在特定布局中的显示问题 */
+.ant-space .ant-badge-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  transform: none;
+  z-index: 1001;
+}
+
+/* 确保徽标在按钮中的显示 */
+.ant-btn .ant-badge-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  transform: none;
+  z-index: 1001;
+}
+
+/* 修复顶栏通知badge被截断的问题 */
+.ant-layout-header {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* 确保header内的所有容器都不会截断badge */
+.ant-layout-header > * {
+  overflow: visible !important;
+}
+
+/* 修复Space组件在header中的badge显示 */
+.ant-layout-header .ant-space {
+  overflow: visible !important;
+  position: relative;
+}
+
+.ant-layout-header .ant-space .ant-badge {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* 确保badge在header中完全可见 - 调整定位避免被图标遮挡 */
+.ant-layout-header .ant-badge-count {
+  position: absolute !important;
+  top: -10px !important;
+  right: -10px !important;
+  transform: none !important;
+  z-index: 10001 !important;
+  overflow: visible !important;
+  pointer-events: none;
+}
+
+/* 针对小尺寸badge的特殊处理 */
+.ant-layout-header .ant-badge-count-sm {
+  top: -8px !important;
+  right: -8px !important;
+}
+
+/* 确保badge不会被任何容器截断 */
+.ant-layout-header * {
+  overflow: visible !important;
+}
+
+/* 修复badge在按钮中的显示 */
+.ant-layout-header .ant-btn {
+  overflow: visible !important;
+  position: relative;
+}
+
+.ant-layout-header .ant-btn .ant-badge {
+  overflow: visible !important;
+  position: relative;
+}
+
+/* 确保badge在header中的z-index最高 */
+.ant-layout-header .ant-badge-count {
+  z-index: 10000 !important;
+}
+
+/* 修复badge在移动端的显示 */
+@media (max-width: 768px) {
+  .ant-layout-header .ant-badge-count {
+    top: -8px !important;
+    right: -8px !important;
+    z-index: 10000 !important;
+  }
+  
+  .ant-layout-header .ant-badge-count-sm {
+    top: -6px !important;
+    right: -6px !important;
+  }
+}
+
+/* 确保badge在所有主题下都能正确显示 */
+[data-theme="light"] .ant-badge-count,
+[data-theme="dark"] .ant-badge-count {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+/* 修复badge在header中的定位问题 */
+.ant-layout-header .ant-badge {
+  display: inline-block !important;
+  position: relative !important;
+}
+
+/* 确保badge不会被transform影响 */
+.ant-layout-header .ant-badge-count {
+  transform: none !important;
+  position: absolute !important;
+}
+
+/* 修复badge在header中的显示层级 */
+.ant-layout-header {
+  z-index: 1000;
+}
+
+.ant-layout-header .ant-badge-count {
+  z-index: 10001 !important;
+}
+
+/* 专门针对header中通知图标的badge优化 */
+.ant-layout-header .ant-badge .ant-badge-count {
+  /* 调整badge大小，避免被大图标遮挡 */
+  min-width: 14px !important;
+  height: 14px !important;
+  padding: 0 3px !important;
+  font-size: 9px !important;
+  line-height: 14px !important;
+  border-radius: 7px !important;
+  
+  /* 调整位置，确保完全可见 - 因为按钮更小了，调整偏移量 */
+  top: -6px !important;
+  right: -6px !important;
+}
+
+/* 针对小尺寸badge的特殊处理 */
+.ant-layout-header .ant-badge .ant-badge-count-sm {
+  min-width: 10px !important;
+  height: 10px !important;
+  padding: 0 2px !important;
+  font-size: 7px !important;
+  line-height: 10px !important;
+  border-radius: 5px !important;
+  
+  top: -4px !important;
+  right: -4px !important;
+}
+
+/* 确保badge在按钮hover时也能正确显示 */
+.ant-layout-header .ant-btn:hover .ant-badge-count {
+  z-index: 10002 !important;
+}
+
+/* 修复badge在按钮缩放时的显示 */
+.ant-layout-header .ant-btn[style*="transform"] .ant-badge-count {
+  transform: none !important;
+  position: absolute !important;
+}
+
+/* 确保badge在所有状态下都可见 */
+.ant-layout-header .ant-badge-count {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
