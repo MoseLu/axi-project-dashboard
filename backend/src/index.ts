@@ -217,7 +217,7 @@ class Application {
   private async initializeServices(): Promise<void> {
     try {
       // 检查是否跳过数据库初始化
-      const skipDbInit = process.env.SKIP_DB_INIT === 'true';
+      const skipDbInit = process.env.SKIP_DB_INIT === 'true' || !process.env.MYSQL_HOST;
       
       // 连接数据库
       if (!skipDbInit) {
@@ -238,15 +238,19 @@ class Application {
           logger.warn('⚠️ Database connection failed, continuing without database:', error);
         }
       } else {
-        logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true)');
+        logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true or no MYSQL_HOST)');
       }
 
       // 连接 Redis
-      try {
-        await connectRedis();
-        logger.info('✅ Redis connected successfully');
-      } catch (error) {
-        logger.warn('⚠️ Redis connection failed, continuing without Redis:', error);
+      if (process.env.REDIS_URI) {
+        try {
+          await connectRedis();
+          logger.info('✅ Redis connected successfully');
+        } catch (error) {
+          logger.warn('⚠️ Redis connection failed, continuing without Redis:', error);
+        }
+      } else {
+        logger.info('⏭️ Skipping Redis connection (no REDIS_URI)');
       }
 
       // 初始化 Socket 服务
