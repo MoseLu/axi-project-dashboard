@@ -48,7 +48,7 @@ const AppContent: React.FC = () => {
     <ThemeTransitionManager>
       <ConfigProvider locale={zhCN} theme={themeConfig}>
         <AntApp>
-          <Router>
+          <Router basename={process.env.NODE_ENV === 'production' ? '/project-dashboard' : '/'}>
             <Routes>
             {/* 登录页面 - 不需要认证 */}
             <Route path="/login" element={
