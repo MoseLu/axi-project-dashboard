@@ -82,7 +82,7 @@ jobs:
           pnpm run build
           echo "✅ 前端构建完成"
           echo "构建产物:"
-          ls -la build/ || echo "build 目录不存在"
+          ls -la dist/ || echo "dist 目录不存在"
 
       - name: 准备后端生产依赖
         working-directory: backend
@@ -209,7 +209,7 @@ jobs:
           fi
           
           # 复制前端构建产物
-          cp -r frontend/build dist/frontend
+          cp -r frontend/dist dist/frontend
           
           # 复制配置文件
           cp ecosystem.config.js dist/
