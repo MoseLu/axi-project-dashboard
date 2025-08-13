@@ -175,8 +175,9 @@ jobs:
           echo "🔧 准备部署文件..."
           mkdir -p dist
           
-          # 复制后端构建产物
-          cp -r backend/dist/* dist/backend/
+                     # 复制后端构建产物
+           mkdir -p dist/backend
+           cp -r backend/dist/* dist/backend/
           cp -r temp_backend_deps/node_modules dist/
           cp backend/package.json dist/
           cp backend/package.json dist/backend/
