@@ -487,7 +487,9 @@ router.post('/upload-avatar', authMiddleware, (req: Request, res: Response, next
       });
     }
     next();
+    return; // 确保回调函数有返回值
   });
+  return; // 添加明确的返回值
 }, async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;

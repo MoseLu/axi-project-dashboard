@@ -12,6 +12,7 @@ const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const path_1 = __importDefault(require("path"));
 const config_1 = require("./config/config");
 const connection_1 = require("./database/connection");
 const sequelize_1 = require("./database/sequelize");
@@ -89,7 +90,7 @@ class Application {
         });
     }
     initializeRoutes() {
-        this.app.use('/api', (req, res, next) => {
+        this.app.use('/project-dashboard/api', (req, res, next) => {
             req.deploymentService = this.deploymentService;
             next();
         }, routes_1.routes);
@@ -144,6 +145,7 @@ class Application {
             this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
         }
         this.app.use('/static', express_1.default.static('public'));
+        this.app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../uploads')));
         this.app.use('*', (req, res) => {
             res.status(404).json({
                 success: false,
