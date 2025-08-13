@@ -33,7 +33,7 @@ export const envConfig = getEnvConfig();
 
 // API URL 构建器
 export const buildApiUrl = (endpoint: string): string => {
-  return `${envConfig.apiPrefix}${endpoint}`;
+  return `${envConfig.baseUrl}${envConfig.apiPrefix}${endpoint}`;
 };
 
 // 页面 URL 构建器
