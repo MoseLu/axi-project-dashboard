@@ -184,6 +184,7 @@ jobs:
           cp backend/build.js dist/backend/
           cp backend/tsconfig.json dist/backend/
           cp backend/test-simple.js dist/backend/
+          cp backend/index.js dist/backend/
           
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."
