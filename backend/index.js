@@ -7,13 +7,16 @@ console.log('🚀 启动 axi-project-dashboard 后端服务...');
 
 // 检查可能的启动文件路径
 const possiblePaths = [
-  './dist/index.js',           // 编译后的文件
+  './index.js',                // 当前目录的编译后文件
+  './dist/index.js',           // dist 目录中的编译后文件
   './src/index.ts',            // TypeScript 源文件
   './src/index.js',            // JavaScript 源文件
-  '../dist/index.js',          // 相对路径
-  '../src/index.ts',           // 相对路径
-  path.join(__dirname, 'dist', 'index.js'),  // 绝对路径
-  path.join(__dirname, 'src', 'index.ts'),   // 绝对路径
+  '../index.js',               // 上级目录的编译后文件
+  '../dist/index.js',          // 上级目录的 dist 文件
+  '../src/index.ts',           // 上级目录的源文件
+  path.join(__dirname, 'index.js'),      // 绝对路径 - 当前目录
+  path.join(__dirname, 'dist', 'index.js'),  // 绝对路径 - dist 目录
+  path.join(__dirname, 'src', 'index.ts'),   // 绝对路径 - src 目录
 ];
 
 let startFile = null;
@@ -31,6 +34,20 @@ if (!startFile) {
   console.error('❌ 未找到可用的启动文件');
   console.error('📋 检查的文件路径:');
   possiblePaths.forEach(p => console.error(`   - ${p}`));
+  
+  // 显示当前目录的文件列表，帮助调试
+  console.error('📋 当前目录文件列表:');
+  try {
+    const files = fs.readdirSync('.');
+    files.forEach(file => {
+      const stat = fs.statSync(file);
+      const type = stat.isDirectory() ? 'dir' : 'file';
+      console.error(`   - ${file} (${type})`);
+    });
+  } catch (error) {
+    console.error('   - 无法读取目录:', error.message);
+  }
+  
   process.exit(1);
 }
 
