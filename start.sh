@@ -92,6 +92,14 @@ pm2 resurrect 2>/dev/null || echo "PM2 resurrect 失败"
 echo "📋 清理后的 PM2 进程列表:"
 pm2 list || echo "PM2 列表获取失败"
 
+# 运行 PM2 清理脚本
+echo "🧹 运行 PM2 清理脚本..."
+if [ -f "clean-pm2.js" ]; then
+    node clean-pm2.js
+else
+    echo "⚠️  clean-pm2.js 不存在，跳过清理脚本"
+fi
+
 # 启动服务
 echo "🚀 启动服务..."
 echo "📁 检查关键文件:"
