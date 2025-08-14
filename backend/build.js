@@ -118,6 +118,28 @@ try {
     
     fs.writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
     console.log('  📄 Copied and fixed package.json to dist/');
+    
+    // 复制 node_modules 到 dist（如果存在）
+    if (fs.existsSync('node_modules')) {
+      console.log('  📁 Copying node_modules to dist/...');
+      try {
+        // 只复制必要的依赖
+        const essentialDeps = ['module-alias', 'express', 'socket.io', 'cors', 'helmet', 'compression', 'express-rate-limit'];
+        essentialDeps.forEach(dep => {
+          const sourcePath = path.join('node_modules', dep);
+          const targetPath = path.join('dist', 'node_modules', dep);
+          if (fs.existsSync(sourcePath)) {
+            if (!fs.existsSync(path.join('dist', 'node_modules'))) {
+              fs.mkdirSync(path.join('dist', 'node_modules'), { recursive: true });
+            }
+            copyDirectory(sourcePath, targetPath);
+            console.log(`    📄 Copied ${dep} to dist/node_modules/`);
+          }
+        });
+      } catch (error) {
+        console.log(`  ⚠️ Failed to copy node_modules: ${error.message}`);
+      }
+    }
   }
       
       console.log('✅ Pre-compiled files copied to dist directory');
