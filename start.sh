@@ -124,84 +124,67 @@ echo "🚀 启动服务..."
 echo "📁 检查关键文件:"
 echo "- ecosystem.config.js: $([ -f "ecosystem.config.js" ] && echo "存在" || echo "不存在")"
 echo "- backend/start-simple.js: $([ -f "backend/start-simple.js" ] && echo "存在" || echo "不存在")"
+echo "- frontend-server.js: $([ -f "frontend-server.js" ] && echo "存在" || echo "不存在")"
 
-# 直接启动后端服务，避免使用 ecosystem.config.js
-echo "🚀 直接启动后端服务..."
-cd backend
-echo "🔍 当前目录: $(pwd)"
-echo "🔍 检查 start-simple.js 文件:"
-ls -la start-simple.js || echo "start-simple.js 不存在"
-
-# 尝试直接使用 Node.js 启动，避免 PM2 问题
-echo "🚀 尝试直接使用 Node.js 启动..."
-if [ -f "start-simple.js" ]; then
-    echo "✅ start-simple.js 存在，直接启动..."
-    # 设置环境变量
-    export NODE_ENV=production
-    export PORT=8090
-    export WEBSOCKET_PORT=8091
-    
-    # 直接启动服务
-    node start-simple.js &
-    BACKEND_PID=$!
-    echo "✅ 后端服务已启动，PID: $BACKEND_PID"
-    
-    # 等待服务启动
-    sleep 3
-    
-    # 检查服务是否正在运行
-    if kill -0 $BACKEND_PID 2>/dev/null; then
-        echo "✅ 后端服务正在运行"
-    else
-        echo "❌ 后端服务启动失败"
-        exit 1
-    fi
-else
-    echo "❌ start-simple.js 不存在"
-    exit 1
+# 检查前端构建
+if [ ! -d "frontend/dist" ]; then
+    echo "🔨 构建前端..."
+    cd frontend
+    pnpm run build
+    cd ..
 fi
 
-cd ..
+# 使用 PM2 启动服务
+echo "🚀 使用 PM2 启动服务..."
+if [ -f "ecosystem.config.js" ]; then
+    echo "✅ ecosystem.config.js 存在，使用 PM2 启动..."
+    pm2 start ecosystem.config.js --update-env
+    echo "✅ PM2 启动命令执行完成"
+else
+    echo "❌ ecosystem.config.js 不存在"
+    exit 1
+fi
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
 sleep 5
 
-# 检查服务状态
-echo "🔍 检查服务状态..."
-if [ -n "$BACKEND_PID" ] && kill -0 $BACKEND_PID 2>/dev/null; then
-    echo "✅ 后端服务启动成功，PID: $BACKEND_PID"
-else
-    echo "❌ 后端服务启动失败"
-    exit 1
-fi
-
-# 前端服务通过 Nginx 提供静态文件，不需要单独的服务
-echo "ℹ️  前端服务通过 Nginx 提供静态文件"
-
 # 检查后端端口监听
-echo "🔍 检查后端端口 $PORT 监听状态..."
+echo "🔍 检查后端端口 8090 监听状态..."
 for i in {1..15}; do
-    if netstat -tlnp 2>/dev/null | grep -q ":$PORT"; then
-        echo "✅ 后端端口 $PORT 正在监听"
+    if netstat -tlnp 2>/dev/null | grep -q ":8090"; then
+        echo "✅ 后端端口 8090 正在监听"
         break
     fi
     if [ $i -eq 15 ]; then
-        echo "❌ 后端端口 $PORT 未在30秒内开始监听"
+        echo "❌ 后端端口 8090 未在30秒内开始监听"
         pm2 logs dashboard-backend --lines 10
         exit 1
     fi
-    echo "⏳ 等待后端端口 $PORT 监听... ($i/15)"
+    echo "⏳ 等待后端端口 8090 监听... ($i/15)"
     sleep 2
 done
 
-# 前端通过 Nginx 提供服务，不需要检查端口
-echo "ℹ️  前端通过 Nginx 提供服务，跳过端口检查"
+# 检查前端端口监听
+echo "🔍 检查前端端口 3000 监听状态..."
+for i in {1..15}; do
+    if netstat -tlnp 2>/dev/null | grep -q ":3000"; then
+        echo "✅ 前端端口 3000 正在监听"
+        break
+    fi
+    if [ $i -eq 15 ]; then
+        echo "❌ 前端端口 3000 未在30秒内开始监听"
+        pm2 logs dashboard-frontend --lines 10
+        exit 1
+    fi
+    echo "⏳ 等待前端端口 3000 监听... ($i/15)"
+    sleep 2
+done
 
 # 测试后端健康检查
 echo "🔍 测试后端健康检查..."
 for i in {1..5}; do
-    if curl -f http://localhost:$PORT/health > /dev/null 2>&1; then
+    if curl -f http://localhost:8090/health > /dev/null 2>&1; then
         echo "✅ 后端健康检查通过"
         break
     fi
@@ -213,14 +196,27 @@ for i in {1..5}; do
     sleep 2
 done
 
-# 前端通过 Nginx 提供服务，不需要测试
-echo "ℹ️  前端通过 Nginx 提供服务，跳过服务测试"
+# 测试前端健康检查
+echo "🔍 测试前端健康检查..."
+for i in {1..5}; do
+    if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+        echo "✅ 前端健康检查通过"
+        break
+    fi
+    if [ $i -eq 5 ]; then
+        echo "❌ 前端健康检查失败"
+        exit 1
+    fi
+    echo "⏳ 等待前端健康检查... ($i/5)"
+    sleep 2
+done
 
 echo "🎉 axi-project-dashboard 启动完成！"
 echo "📊 服务信息:"
-echo "- 后端API: http://localhost:$PORT"
-echo "- 后端健康检查: http://localhost:$PORT/health"
-echo "- 前端服务: http://localhost:$FRONTEND_PORT"
+echo "- 后端API: http://localhost:8090"
+echo "- 后端健康检查: http://localhost:8090/health"
+echo "- 前端服务: http://localhost:3000"
+echo "- 前端健康检查: http://localhost:3000/health"
 echo "- 前端静态文件: ./frontend/dist"
 echo "- PM2状态:"
-pm2 list | grep -E "dashboard-backend"
+pm2 list | grep -E "dashboard-"

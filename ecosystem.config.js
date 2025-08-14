@@ -81,6 +81,50 @@ module.exports = {
       // 健康检查
       health_check_grace_period: 3000,
       health_check_fatal_exceptions: true
+    },
+    {
+      name: 'dashboard-frontend',
+      script: './frontend-server.js',
+      cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
+      instances: 1,
+      exec_mode: 'fork',
+      
+      // 环境变量
+      env: {
+        NODE_ENV: 'production',
+        FRONTEND_PORT: 3000,  // 前端服务端口
+        
+        // CORS 配置
+        CORS_ORIGIN: 'https://redamancy.com.cn',
+        
+        // 时区配置
+        TZ: 'Asia/Shanghai'
+      },
+      
+      // 日志配置
+      log_file: '/var/log/axi-deploy-dashboard/frontend-combined.log',
+      out_file: '/var/log/axi-deploy-dashboard/frontend-out.log',
+      error_file: '/var/log/axi-deploy-dashboard/frontend-error.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      
+      // 进程管理
+      restart_delay: 5000,
+      max_restarts: 3,
+      min_uptime: '30s',
+      
+      // 监控配置
+      monitoring: false,
+      
+      // 自动重启配置
+      watch: false,
+      ignore_watch: ['node_modules', 'logs'],
+      
+      // 内存限制
+      max_memory_restart: '512M',
+      
+      // 健康检查
+      health_check_grace_period: 3000,
+      health_check_fatal_exceptions: true
     }
   ]
 };
