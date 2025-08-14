@@ -98,20 +98,12 @@ echo "📁 检查关键文件:"
 echo "- ecosystem.config.js: $([ -f "ecosystem.config.js" ] && echo "存在" || echo "不存在")"
 echo "- backend/start-simple.js: $([ -f "backend/start-simple.js" ] && echo "存在" || echo "不存在")"
 
-if [ -f "ecosystem.config.js" ]; then
-    echo "📋 使用 ecosystem.config.js 启动后端服务..."
-    echo "🔍 ecosystem.config.js 内容预览:"
-    head -20 ecosystem.config.js
-    pm2 start ecosystem.config.js
-    echo "✅ PM2 启动命令执行完成"
-else
-    # 直接启动后端服务
-    echo "🚀 启动后端服务..."
-    cd backend
-    pm2 start start-simple.js --name dashboard-backend --env production
-    cd ..
-    echo "✅ PM2 启动命令执行完成"
-fi
+# 直接启动后端服务，避免使用 ecosystem.config.js
+echo "🚀 直接启动后端服务..."
+cd backend
+pm2 start start-simple.js --name dashboard-backend --env production
+cd ..
+echo "✅ PM2 启动命令执行完成"
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
