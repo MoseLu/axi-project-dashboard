@@ -2,6 +2,25 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// 复制目录的辅助函数
+function copyDirectory(source, destination) {
+  if (!fs.existsSync(destination)) {
+    fs.mkdirSync(destination, { recursive: true });
+  }
+  
+  const files = fs.readdirSync(source);
+  files.forEach(file => {
+    const sourcePath = path.join(source, file);
+    const destPath = path.join(destination, file);
+    
+    if (fs.statSync(sourcePath).isDirectory()) {
+      copyDirectory(sourcePath, destPath);
+    } else {
+      fs.copyFileSync(sourcePath, destPath);
+    }
+  });
+}
+
 console.log('🔨 Building backend...');
 
 try {
@@ -45,6 +64,43 @@ try {
     if (fs.existsSync('index.js') && fs.existsSync('index.d.ts')) {
       console.log('✅ Found compiled files, skipping src directory creation');
       console.log('📋 This appears to be a pre-compiled project');
+      
+      // 但是仍然需要创建 dist 目录并复制文件
+      console.log('📁 Creating dist directory for pre-compiled files...');
+      if (!fs.existsSync('dist')) {
+        fs.mkdirSync('dist', { recursive: true });
+      }
+      
+      // 复制所有编译后的文件到 dist 目录
+      const filesToCopy = [
+        'index.js', 'index.d.ts', 'index.js.map', 'index.d.ts.map',
+        'config', 'database', 'middleware', 'routes', 'scripts', 'services', 'types', 'utils'
+      ];
+      
+      filesToCopy.forEach(item => {
+        if (fs.existsSync(item)) {
+          const targetPath = path.join('dist', item);
+          if (fs.statSync(item).isDirectory()) {
+            // 复制目录
+            if (!fs.existsSync(targetPath)) {
+              fs.mkdirSync(targetPath, { recursive: true });
+            }
+            copyDirectory(item, targetPath);
+          } else {
+            // 复制文件
+            fs.copyFileSync(item, targetPath);
+          }
+          console.log(`  📄 Copied ${item} to dist/`);
+        }
+      });
+      
+      // 复制 package.json 到 dist
+      if (fs.existsSync('package.json')) {
+        fs.copyFileSync('package.json', 'dist/package.json');
+        console.log('  📄 Copied package.json to dist/');
+      }
+      
+      console.log('✅ Pre-compiled files copied to dist directory');
       return;
     }
     
