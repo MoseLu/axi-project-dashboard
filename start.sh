@@ -74,20 +74,43 @@ fi
 
 # 停止现有服务
 echo "🛑 停止现有服务..."
-pm2 stop dashboard-backend 2>/dev/null || true
-pm2 delete dashboard-backend 2>/dev/null || true
+echo "📋 当前 PM2 进程列表:"
+pm2 list || echo "PM2 列表获取失败"
+
+echo "🛑 停止所有相关服务..."
+pm2 stop dashboard-backend 2>/dev/null || echo "停止 dashboard-backend 失败（可能不存在）"
+pm2 stop dashboard-frontend 2>/dev/null || echo "停止 dashboard-frontend 失败（可能不存在）"
+
+echo "🗑️ 删除所有相关服务..."
+pm2 delete dashboard-backend 2>/dev/null || echo "删除 dashboard-backend 失败（可能不存在）"
+pm2 delete dashboard-frontend 2>/dev/null || echo "删除 dashboard-frontend 失败（可能不存在）"
+
+echo "🧹 清理 PM2 进程列表..."
+pm2 kill 2>/dev/null || echo "PM2 kill 失败"
+pm2 resurrect 2>/dev/null || echo "PM2 resurrect 失败"
+
+echo "📋 清理后的 PM2 进程列表:"
+pm2 list || echo "PM2 列表获取失败"
 
 # 启动服务
 echo "🚀 启动服务..."
+echo "📁 检查关键文件:"
+echo "- ecosystem.config.js: $([ -f "ecosystem.config.js" ] && echo "存在" || echo "不存在")"
+echo "- backend/start-simple.js: $([ -f "backend/start-simple.js" ] && echo "存在" || echo "不存在")"
+
 if [ -f "ecosystem.config.js" ]; then
     echo "📋 使用 ecosystem.config.js 启动后端服务..."
+    echo "🔍 ecosystem.config.js 内容预览:"
+    head -20 ecosystem.config.js
     pm2 start ecosystem.config.js
+    echo "✅ PM2 启动命令执行完成"
 else
     # 直接启动后端服务
     echo "🚀 启动后端服务..."
     cd backend
     pm2 start start-simple.js --name dashboard-backend --env production
     cd ..
+    echo "✅ PM2 启动命令执行完成"
 fi
 
 # 等待服务启动
