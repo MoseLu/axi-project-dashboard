@@ -97,7 +97,26 @@ echo "🧹 运行 PM2 清理脚本..."
 if [ -f "clean-pm2.js" ]; then
     node clean-pm2.js
 else
-    echo "⚠️  clean-pm2.js 不存在，跳过清理脚本"
+    echo "⚠️  clean-pm2.js 不存在，使用内置清理逻辑"
+    echo "🧹 内置 PM2 清理逻辑..."
+    
+    # 检查并删除所有相关进程
+    echo "📋 检查 PM2 进程列表..."
+    PM2_LIST=$(pm2 list 2>/dev/null || echo "")
+    echo "$PM2_LIST"
+    
+    # 删除所有包含 dashboard 的进程
+    echo "🗑️ 删除所有 dashboard 相关进程..."
+    pm2 delete dashboard-backend 2>/dev/null || echo "删除 dashboard-backend 失败（可能不存在）"
+    pm2 delete dashboard-frontend 2>/dev/null || echo "删除 dashboard-frontend 失败（可能不存在）"
+    
+    # 彻底清理 PM2
+    echo "🧹 彻底清理 PM2..."
+    pm2 kill 2>/dev/null || echo "PM2 kill 失败"
+    pm2 resurrect 2>/dev/null || echo "PM2 resurrect 失败"
+    
+    echo "📋 清理后的 PM2 进程列表:"
+    pm2 list 2>/dev/null || echo "PM2 列表获取失败"
 fi
 
 # 启动服务
