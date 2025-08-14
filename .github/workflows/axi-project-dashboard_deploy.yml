@@ -321,6 +321,7 @@ jobs:
           echo '    cp -r frontend $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
+          echo '    cp frontend-server.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
           echo '    chmod -R 755 $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
@@ -339,6 +340,7 @@ jobs:
           echo '    cp -r frontend $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
+          echo '    cp frontend-server.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
           echo '    sudo chown -R $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
@@ -362,6 +364,7 @@ jobs:
           echo 'echo "📋 验证部署文件..."' >> dist/deploy.sh
           echo 'ls -la backend/index.js || echo "❌ backend/index.js 不存在"' >> dist/deploy.sh
           echo 'ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"' >> dist/deploy.sh
+          echo 'ls -la frontend-server.js || echo "❌ frontend-server.js 不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/express/ || echo "❌ express模块不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/merge-descriptors/ || echo "❌ merge-descriptors模块不存在"' >> dist/deploy.sh
           echo 'ls -la node_modules/depd/ || echo "❌ depd模块不存在"' >> dist/deploy.sh
