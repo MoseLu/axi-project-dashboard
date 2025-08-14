@@ -101,9 +101,13 @@ echo "- backend/start-simple.js: $([ -f "backend/start-simple.js" ] && echo "存
 # 直接启动后端服务，避免使用 ecosystem.config.js
 echo "🚀 直接启动后端服务..."
 cd backend
+echo "🔍 当前目录: $(pwd)"
+echo "🔍 检查 start-simple.js 文件:"
+ls -la start-simple.js || echo "start-simple.js 不存在"
+echo "🚀 启动后端服务..."
 pm2 start start-simple.js --name dashboard-backend --env production
-cd ..
 echo "✅ PM2 启动命令执行完成"
+cd ..
 
 # 等待服务启动
 echo "⏳ 等待服务启动..."
