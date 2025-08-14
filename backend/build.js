@@ -101,6 +101,9 @@ try {
     // 修复 main 字段
     packageJson.main = 'index.js';
     
+    // 修复 start 脚本
+    packageJson.scripts.start = 'node index.js';
+    
     // 修复模块别名配置
     packageJson._moduleAliases = {
       "@": ".",
