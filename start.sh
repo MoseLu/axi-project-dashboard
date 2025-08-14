@@ -131,9 +131,36 @@ cd backend
 echo "🔍 当前目录: $(pwd)"
 echo "🔍 检查 start-simple.js 文件:"
 ls -la start-simple.js || echo "start-simple.js 不存在"
-echo "🚀 启动后端服务..."
-pm2 start start-simple.js --name dashboard-backend --env production
-echo "✅ PM2 启动命令执行完成"
+
+# 尝试直接使用 Node.js 启动，避免 PM2 问题
+echo "🚀 尝试直接使用 Node.js 启动..."
+if [ -f "start-simple.js" ]; then
+    echo "✅ start-simple.js 存在，直接启动..."
+    # 设置环境变量
+    export NODE_ENV=production
+    export PORT=8090
+    export WEBSOCKET_PORT=8091
+    
+    # 直接启动服务
+    node start-simple.js &
+    BACKEND_PID=$!
+    echo "✅ 后端服务已启动，PID: $BACKEND_PID"
+    
+    # 等待服务启动
+    sleep 3
+    
+    # 检查服务是否正在运行
+    if kill -0 $BACKEND_PID 2>/dev/null; then
+        echo "✅ 后端服务正在运行"
+    else
+        echo "❌ 后端服务启动失败"
+        exit 1
+    fi
+else
+    echo "❌ start-simple.js 不存在"
+    exit 1
+fi
+
 cd ..
 
 # 等待服务启动
@@ -142,11 +169,10 @@ sleep 5
 
 # 检查服务状态
 echo "🔍 检查服务状态..."
-if pm2 list | grep -q "dashboard-backend"; then
-    echo "✅ 后端服务启动成功"
+if [ -n "$BACKEND_PID" ] && kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "✅ 后端服务启动成功，PID: $BACKEND_PID"
 else
     echo "❌ 后端服务启动失败"
-    pm2 logs dashboard-backend --lines 10
     exit 1
 fi
 
