@@ -43,7 +43,7 @@ if [ ! -d "frontend/dist" ]; then
 fi
 
 # 检查后端构建
-if [ ! -d "backend/dist" ] && [ ! -f "backend/index.js" ]; then
+if [ ! -d "backend/dist" ]; then
     echo "🔨 构建后端..."
     cd backend
     pnpm run build
