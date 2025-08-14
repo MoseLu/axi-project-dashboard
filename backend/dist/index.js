@@ -176,7 +176,7 @@ class Application {
     }
     async initializeServices() {
         try {
-            const skipDbInit = process.env.SKIP_DB_INIT === 'true';
+            const skipDbInit = process.env.SKIP_DB_INIT === 'true' || !process.env.MYSQL_HOST;
             if (!skipDbInit) {
                 try {
                     const dbConnection = await (0, connection_1.connectDatabase)();
@@ -192,14 +192,19 @@ class Application {
                 }
             }
             else {
-                logger_1.logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true)');
+                logger_1.logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true or no MYSQL_HOST)');
             }
-            try {
-                await (0, redis_service_1.connectRedis)();
-                logger_1.logger.info('✅ Redis connected successfully');
+            if (process.env.REDIS_URI) {
+                try {
+                    await (0, redis_service_1.connectRedis)();
+                    logger_1.logger.info('✅ Redis connected successfully');
+                }
+                catch (error) {
+                    logger_1.logger.warn('⚠️ Redis connection failed, continuing without Redis:', error);
+                }
             }
-            catch (error) {
-                logger_1.logger.warn('⚠️ Redis connection failed, continuing without Redis:', error);
+            else {
+                logger_1.logger.info('⏭️ Skipping Redis connection (no REDIS_URI)');
             }
             try {
                 await this.socketService.initialize();

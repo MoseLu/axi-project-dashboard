@@ -142,8 +142,8 @@ const parseCorsOrigin = (value: string | undefined): string | string[] => {
 const configData: Config = {
   // 基础配置
   nodeEnv: process.env.NODE_ENV || 'development',
-  port: parseNumber(process.env.PORT, 8081),
-  websocketPort: parseNumber(process.env.WEBSOCKET_PORT, 8082),
+  port: parseNumber(process.env.PORT, process.env.NODE_ENV === 'production' ? 8090 : 8081),
+  websocketPort: parseNumber(process.env.WEBSOCKET_PORT, process.env.NODE_ENV === 'production' ? 8091 : 8082),
   
   // 数据库配置
   mysqlHost: process.env.MYSQL_HOST || '127.0.0.1',

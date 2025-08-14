@@ -7,15 +7,15 @@ console.log('🚀 启动 axi-project-dashboard 后端服务...');
 
 // 检查可能的启动文件路径
 const possiblePaths = [
+  './dist/index.js',           // dist 目录中的编译后文件（优先）
   './index.js',                // 当前目录的编译后文件
-  './dist/index.js',           // dist 目录中的编译后文件
   './src/index.ts',            // TypeScript 源文件
   './src/index.js',            // JavaScript 源文件
-  '../index.js',               // 上级目录的编译后文件
   '../dist/index.js',          // 上级目录的 dist 文件
+  '../index.js',               // 上级目录的编译后文件
   '../src/index.ts',           // 上级目录的源文件
+  path.join(__dirname, 'dist', 'index.js'),  // 绝对路径 - dist 目录（优先）
   path.join(__dirname, 'index.js'),      // 绝对路径 - 当前目录
-  path.join(__dirname, 'dist', 'index.js'),  // 绝对路径 - dist 目录
   path.join(__dirname, 'src', 'index.ts'),   // 绝对路径 - src 目录
 ];
 
