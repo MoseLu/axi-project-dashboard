@@ -79,28 +79,15 @@ pm2 delete dashboard-backend dashboard-frontend 2>/dev/null || true
 
 # 启动服务
 echo "🚀 启动服务..."
-if [ -f "ecosystem.config.js" ] && [ -f "frontend-server.js" ]; then
-    echo "📋 使用 ecosystem.config.js 启动完整服务..."
+if [ -f "ecosystem.config.js" ]; then
+    echo "📋 使用 ecosystem.config.js 启动后端服务..."
     pm2 start ecosystem.config.js
-elif [ -f "ecosystem.config.js" ] && [ ! -f "frontend-server.js" ]; then
-    echo "⚠️  frontend-server.js 不存在，仅启动后端服务..."
-    # 只启动后端服务
+else
+    # 直接启动后端服务
+    echo "🚀 启动后端服务..."
     cd backend
     pm2 start start-simple.js --name dashboard-backend --env production
     cd ..
-else
-    # 分别启动前端和后端
-    echo "🚀 启动后端服务..."
-    cd backend
-    pm2 start start-server.js --name dashboard-backend --env production
-    cd ..
-    
-    if [ -f "frontend-server.js" ]; then
-        echo "🚀 启动前端服务..."
-        pm2 start frontend-server.js --name dashboard-frontend --env production
-    else
-        echo "⚠️  frontend-server.js 不存在，跳过前端服务启动"
-    fi
 fi
 
 # 等待服务启动
@@ -117,11 +104,8 @@ else
     exit 1
 fi
 
-if pm2 list | grep -q "dashboard-frontend"; then
-    echo "✅ 前端服务启动成功"
-else
-    echo "⚠️ 前端服务未启动（可能因为 frontend-server.js 不存在）"
-fi
+# 前端服务通过 Nginx 提供静态文件，不需要单独的服务
+echo "ℹ️  前端服务通过 Nginx 提供静态文件"
 
 # 检查后端端口监听
 echo "🔍 检查后端端口 $PORT 监听状态..."
@@ -139,26 +123,8 @@ for i in {1..15}; do
     sleep 2
 done
 
-# 检查前端端口监听（仅当前端服务启动时）
-if pm2 list | grep -q "dashboard-frontend"; then
-    FRONTEND_PORT=3000
-    echo "🔍 检查前端端口 $FRONTEND_PORT 监听状态..."
-    for i in {1..10}; do
-        if netstat -tlnp 2>/dev/null | grep -q ":$FRONTEND_PORT"; then
-            echo "✅ 前端端口 $FRONTEND_PORT 正在监听"
-            break
-        fi
-        if [ $i -eq 10 ]; then
-            echo "❌ 前端端口 $FRONTEND_PORT 未在20秒内开始监听"
-            pm2 logs dashboard-frontend --lines 10
-            exit 1
-        fi
-        echo "⏳ 等待前端端口 $FRONTEND_PORT 监听... ($i/10)"
-        sleep 2
-    done
-else
-    echo "⚠️ 前端服务未启动，跳过前端端口检查"
-fi
+# 前端通过 Nginx 提供服务，不需要检查端口
+echo "ℹ️  前端通过 Nginx 提供服务，跳过端口检查"
 
 # 测试后端健康检查
 echo "🔍 测试后端健康检查..."
@@ -175,24 +141,8 @@ for i in {1..5}; do
     sleep 2
 done
 
-# 测试前端服务（仅当前端服务启动时）
-if pm2 list | grep -q "dashboard-frontend"; then
-    echo "🔍 测试前端服务..."
-    for i in {1..3}; do
-        if curl -f http://localhost:3000 > /dev/null 2>&1; then
-            echo "✅ 前端服务测试通过"
-            break
-        fi
-        if [ $i -eq 3 ]; then
-            echo "❌ 前端服务测试失败"
-            exit 1
-        fi
-        echo "⏳ 等待前端服务测试... ($i/3)"
-        sleep 2
-    done
-else
-    echo "⚠️ 前端服务未启动，跳过前端服务测试"
-fi
+# 前端通过 Nginx 提供服务，不需要测试
+echo "ℹ️  前端通过 Nginx 提供服务，跳过服务测试"
 
 echo "🎉 axi-project-dashboard 启动完成！"
 echo "📊 服务信息:"
