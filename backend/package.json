@@ -10,6 +10,7 @@
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
     "dev:fast": "SKIP_DB_INIT=true ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts",
     "build": "node build.js",
+    "build:simple": "node simple-build.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

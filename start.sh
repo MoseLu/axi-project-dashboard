@@ -65,23 +65,28 @@ fi
 if [ ! -d "backend/dist" ]; then
     echo "🔨 构建后端..."
     cd backend
-    pnpm run build
+    pnpm run build:simple || pnpm run build
     cd ..
 fi
 
 # 停止现有服务
 echo "🛑 停止现有服务..."
-pm2 stop dashboard-backend 2>/dev/null || true
-pm2 delete dashboard-backend 2>/dev/null || true
+pm2 stop dashboard-backend dashboard-frontend 2>/dev/null || true
+pm2 delete dashboard-backend dashboard-frontend 2>/dev/null || true
 
-# 启动后端服务
-echo "🚀 启动后端服务..."
+# 启动服务
+echo "🚀 启动服务..."
 if [ -f "ecosystem.config.js" ]; then
     pm2 start ecosystem.config.js
 else
+    # 分别启动前端和后端
+    echo "🚀 启动后端服务..."
     cd backend
-    pm2 start index.js --name dashboard-backend --env production
+    pm2 start start-server.js --name dashboard-backend --env production
     cd ..
+    
+    echo "🚀 启动前端服务..."
+    pm2 start frontend-server.js --name dashboard-frontend --env production
 fi
 
 # 等待服务启动
@@ -90,38 +95,90 @@ sleep 5
 
 # 检查服务状态
 echo "🔍 检查服务状态..."
-pm2 status
-
-# 检查端口监听
-echo "🔍 检查端口监听..."
-if netstat -tlnp 2>/dev/null | grep -q ":$PORT"; then
-    echo "✅ 端口 $PORT 正在监听"
+if pm2 list | grep -q "dashboard-backend"; then
+    echo "✅ 后端服务启动成功"
 else
-    echo "❌ 端口 $PORT 未监听"
-    echo "📋 PM2 日志:"
+    echo "❌ 后端服务启动失败"
     pm2 logs dashboard-backend --lines 10
     exit 1
 fi
 
-# 健康检查
-echo "🏥 健康检查..."
-for i in {1..6}; do
-    echo "尝试 $i/6..."
-    if curl -f "http://localhost:$PORT/health" >/dev/null 2>&1; then
-        echo "✅ 健康检查成功"
+if pm2 list | grep -q "dashboard-frontend"; then
+    echo "✅ 前端服务启动成功"
+else
+    echo "❌ 前端服务启动失败"
+    pm2 logs dashboard-frontend --lines 10
+    exit 1
+fi
+
+# 检查后端端口监听
+echo "🔍 检查后端端口 $PORT 监听状态..."
+for i in {1..15}; do
+    if netstat -tlnp 2>/dev/null | grep -q ":$PORT"; then
+        echo "✅ 后端端口 $PORT 正在监听"
         break
-    else
-        echo "❌ 健康检查失败"
-        if [ $i -eq 6 ]; then
-            echo "📋 PM2 日志:"
-            pm2 logs dashboard-backend --lines 10
-            exit 1
-        fi
-        sleep 5
     fi
+    if [ $i -eq 15 ]; then
+        echo "❌ 后端端口 $PORT 未在30秒内开始监听"
+        pm2 logs dashboard-backend --lines 10
+        exit 1
+    fi
+    echo "⏳ 等待后端端口 $PORT 监听... ($i/15)"
+    sleep 2
 done
 
-echo "🎉 axi-project-dashboard 启动成功！"
-echo "🌐 访问地址: http://localhost:$PORT"
-echo "📊 PM2 状态:"
-pm2 status
+# 检查前端端口监听
+FRONTEND_PORT=3000
+echo "🔍 检查前端端口 $FRONTEND_PORT 监听状态..."
+for i in {1..10}; do
+    if netstat -tlnp 2>/dev/null | grep -q ":$FRONTEND_PORT"; then
+        echo "✅ 前端端口 $FRONTEND_PORT 正在监听"
+        break
+    fi
+    if [ $i -eq 10 ]; then
+        echo "❌ 前端端口 $FRONTEND_PORT 未在20秒内开始监听"
+        pm2 logs dashboard-frontend --lines 10
+        exit 1
+    fi
+    echo "⏳ 等待前端端口 $FRONTEND_PORT 监听... ($i/10)"
+    sleep 2
+done
+
+# 测试后端健康检查
+echo "🔍 测试后端健康检查..."
+for i in {1..5}; do
+    if curl -f http://localhost:$PORT/health > /dev/null 2>&1; then
+        echo "✅ 后端健康检查通过"
+        break
+    fi
+    if [ $i -eq 5 ]; then
+        echo "❌ 后端健康检查失败"
+        exit 1
+    fi
+    echo "⏳ 等待后端健康检查... ($i/5)"
+    sleep 2
+done
+
+# 测试前端服务
+echo "🔍 测试前端服务..."
+for i in {1..3}; do
+    if curl -f http://localhost:$FRONTEND_PORT > /dev/null 2>&1; then
+        echo "✅ 前端服务测试通过"
+        break
+    fi
+    if [ $i -eq 3 ]; then
+        echo "❌ 前端服务测试失败"
+        exit 1
+    fi
+    echo "⏳ 等待前端服务测试... ($i/3)"
+    sleep 2
+done
+
+echo "🎉 axi-project-dashboard 启动完成！"
+echo "📊 服务信息:"
+echo "- 后端API: http://localhost:$PORT"
+echo "- 后端健康检查: http://localhost:$PORT/health"
+echo "- 前端服务: http://localhost:$FRONTEND_PORT"
+echo "- 前端静态文件: ./frontend/dist"
+echo "- PM2状态:"
+pm2 list | grep -E "(dashboard-backend|dashboard-frontend)"

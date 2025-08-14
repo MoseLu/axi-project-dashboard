@@ -248,11 +248,11 @@ jobs:
           echo 'pnpm install --force || echo "Dependencies installation completed"' >> dist/start.sh
           echo 'echo "🔨 Building project..."' >> dist/start.sh
           echo 'cd backend' >> dist/start.sh
-          echo 'pnpm run build || { echo "ERROR: Build failed"; exit 1; }' >> dist/start.sh
+          echo 'pnpm run build:simple || { echo "ERROR: Simple build failed, trying full build..."; pnpm run build || { echo "ERROR: All builds failed"; exit 1; }; }' >> dist/start.sh
           echo 'cd ..' >> dist/start.sh
-          echo 'echo "Found ecosystem.config.js, starting service..."' >> dist/start.sh
-          echo '$PM2_CMD stop dashboard-backend 2>/dev/null || true' >> dist/start.sh
-          echo '$PM2_CMD delete dashboard-backend 2>/dev/null || true' >> dist/start.sh
+          echo 'echo "Found ecosystem.config.js, starting services..."' >> dist/start.sh
+          echo '$PM2_CMD stop dashboard-backend dashboard-frontend 2>/dev/null || true' >> dist/start.sh
+          echo '$PM2_CMD delete dashboard-backend dashboard-frontend 2>/dev/null || true' >> dist/start.sh
           echo '$PM2_CMD start ecosystem.config.js --update-env' >> dist/start.sh
           echo 'echo "✅ PM2启动命令执行完成"' >> dist/start.sh
           echo 'echo "⏳ Waiting for service to start..."' >> dist/start.sh
