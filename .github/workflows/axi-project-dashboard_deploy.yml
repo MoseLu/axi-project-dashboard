@@ -650,7 +650,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                                 start_cmd    : 'bash start.sh',
+                                 start_cmd    : 'bash start-standard.sh',
                 service_port : '8090', // 使用配置的端口
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
