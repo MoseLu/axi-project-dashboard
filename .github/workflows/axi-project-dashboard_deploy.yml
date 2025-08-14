@@ -34,10 +34,15 @@ jobs:
           # 重新安装依赖，使用干净的安装
           echo "📝 重新安装项目依赖..."
           pnpm install --no-frozen-lockfile --shamefully-hoist
+          # 安装前端服务器需要的依赖
+          echo "🔧 安装前端服务器依赖..."
+          pnpm add helmet compression --prod
           # 验证关键依赖
           echo "🔍 验证关键依赖..."
           ls -la node_modules/depd/ || echo "⚠️ depd 模块未找到"
           ls -la node_modules/express/ || echo "⚠️ express 模块未找到"
+          ls -la node_modules/helmet/ || echo "⚠️ helmet 模块未找到"
+          ls -la node_modules/compression/ || echo "⚠️ compression 模块未找到"
 
       - name: 检查项目结构
         run: |
@@ -131,6 +136,10 @@ jobs:
             echo "🔧 手动安装缺失的关键依赖..."
             pnpm add $MISSING_CRITICAL --prod
           fi
+          
+          # 安装前端服务器需要的依赖
+          echo "🔧 安装前端服务器依赖..."
+          pnpm add helmet compression --prod
           
           # 最终验证
           echo "✅ Express依赖安装完成"
