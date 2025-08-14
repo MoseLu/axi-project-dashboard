@@ -186,6 +186,13 @@ jobs:
           cp backend/test-simple.js dist/backend/
           cp backend/index.js dist/backend/
           
+          # 复制关键的启动和构建脚本
+          cp backend/start-server.js dist/backend/
+          cp backend/start-simple.js dist/backend/
+          cp backend/simple-build.js dist/backend/
+          cp backend/quick-start.js dist/backend/
+          cp backend/test-start.js dist/backend/
+          
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."
           ls -la dist/backend/ || echo "❌ backend构建产物不存在"
@@ -212,6 +219,9 @@ jobs:
           
           # 复制前端构建产物
           cp -r frontend/dist dist/frontend
+          
+          # 复制前端服务器文件
+          cp frontend-server.js dist/
           
           # 复制配置文件
           cp ecosystem.config.js dist/
@@ -241,6 +251,14 @@ jobs:
           echo '    echo "ERROR: ecosystem.config.js not found"' >> dist/start.sh
           echo '    exit 1' >> dist/start.sh
           echo 'fi' >> dist/start.sh
+          echo 'if [ ! -f "backend/start-simple.js" ]; then' >> dist/start.sh
+          echo '    echo "ERROR: backend/start-simple.js not found"' >> dist/start.sh
+          echo '    exit 1' >> dist/start.sh
+          echo 'fi' >> dist/start.sh
+          echo 'if [ ! -f "frontend-server.js" ]; then' >> dist/start.sh
+          echo '    echo "ERROR: frontend-server.js not found"' >> dist/start.sh
+          echo '    exit 1' >> dist/start.sh
+          echo 'fi' >> dist/start.sh
           echo 'echo "🔧 Fixing dependencies..."' >> dist/start.sh
           echo 'cd backend' >> dist/start.sh
           echo 'pnpm add side-channel --save || echo "side-channel already installed"' >> dist/start.sh
@@ -248,7 +266,13 @@ jobs:
           echo 'pnpm install --force || echo "Dependencies installation completed"' >> dist/start.sh
           echo 'echo "🔨 Building project..."' >> dist/start.sh
           echo 'cd backend' >> dist/start.sh
-          echo 'pnpm run build:simple || { echo "ERROR: Simple build failed, trying full build..."; pnpm run build || { echo "ERROR: All builds failed"; exit 1; }; }' >> dist/start.sh
+          echo 'if [ -f "simple-build.js" ]; then' >> dist/start.sh
+          echo '    echo "Using simple build..."' >> dist/start.sh
+          echo '    node simple-build.js || { echo "ERROR: Simple build failed, trying full build..."; node build.js || { echo "ERROR: All builds failed"; exit 1; }; }' >> dist/start.sh
+          echo 'else' >> dist/start.sh
+          echo '    echo "Using full build..."' >> dist/start.sh
+          echo '    node build.js || { echo "ERROR: Build failed"; exit 1; }' >> dist/start.sh
+          echo 'fi' >> dist/start.sh
           echo 'cd ..' >> dist/start.sh
           echo 'echo "Found ecosystem.config.js, starting services..."' >> dist/start.sh
           echo '$PM2_CMD stop dashboard-backend dashboard-frontend 2>/dev/null || true' >> dist/start.sh
