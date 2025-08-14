@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'dashboard-backend',
       script: './backend/start-simple.js',
-      cwd: '/srv/apps/axi-project-dashboard',
+      cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
       instances: 1,
       exec_mode: 'fork',
       
@@ -85,7 +85,7 @@ module.exports = {
     {
       name: 'dashboard-frontend',
       script: './frontend-server.js',
-      cwd: '/srv/apps/axi-project-dashboard',
+      cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
       instances: 1,
       exec_mode: 'fork',
       

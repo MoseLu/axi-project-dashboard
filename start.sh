@@ -43,6 +43,9 @@ echo "- WEBSOCKET_PORT: $WEBSOCKET_PORT"
 if [ ! -d "node_modules" ]; then
     echo "📦 安装依赖..."
     pnpm install --prod
+else
+    echo "📦 检查并更新依赖..."
+    pnpm install --prod
 fi
 
 # 检查后端依赖
