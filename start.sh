@@ -10,6 +10,25 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
+# 检查是否存在额外的 dist- 目录结构
+if [ -d "dist-axi-project-dashboard" ]; then
+    echo "🔧 检测到额外的 dist- 目录结构，正在修复..."
+    echo "📁 当前目录内容:"
+    ls -la
+    
+    # 移动 dist- 目录下的所有内容到当前目录
+    echo "📦 移动文件到正确位置..."
+    mv dist-axi-project-dashboard/* .
+    mv dist-axi-project-dashboard/.* . 2>/dev/null || true
+    
+    # 删除空的 dist- 目录
+    rmdir dist-axi-project-dashboard
+    
+    echo "✅ 目录结构修复完成"
+    echo "📁 修复后的目录内容:"
+    ls -la
+fi
+
 # 设置环境变量
 export NODE_ENV=${NODE_ENV:-production}
 export PORT=${PORT:-8090}
