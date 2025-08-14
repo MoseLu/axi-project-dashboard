@@ -94,11 +94,28 @@ try {
         }
       });
       
-      // 复制 package.json 到 dist
-      if (fs.existsSync('package.json')) {
-        fs.copyFileSync('package.json', 'dist/package.json');
-        console.log('  📄 Copied package.json to dist/');
-      }
+        // 复制 package.json 到 dist 并修复配置
+  if (fs.existsSync('package.json')) {
+    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    
+    // 修复 main 字段
+    packageJson.main = 'index.js';
+    
+    // 修复模块别名配置
+    packageJson._moduleAliases = {
+      "@": ".",
+      "@config": "./config",
+      "@services": "./services",
+      "@middleware": "./middleware",
+      "@utils": "./utils",
+      "@types": "./types",
+      "@database": "./database",
+      "@routes": "./routes"
+    };
+    
+    fs.writeFileSync('dist/package.json', JSON.stringify(packageJson, null, 2));
+    console.log('  📄 Copied and fixed package.json to dist/');
+  }
       
       console.log('✅ Pre-compiled files copied to dist directory');
       return;
