@@ -40,20 +40,48 @@ echo "- PORT: $PORT"
 echo "- WEBSOCKET_PORT: $WEBSOCKET_PORT"
 
 # 检查依赖
-if [ ! -d "node_modules" ]; then
-    echo "📦 安装依赖..."
-    pnpm install --prod
+echo "📦 检查并安装依赖..."
+if command -v pnpm &> /dev/null; then
+    echo "✅ 使用 pnpm 安装依赖..."
+    if [ ! -d "node_modules" ]; then
+        echo "📦 安装根目录依赖..."
+        pnpm install --prod || npm install --production
+    else
+        echo "📦 更新根目录依赖..."
+        pnpm install --prod || npm install --production
+    fi
+    
+    # 检查后端依赖
+    if [ ! -d "backend/node_modules" ]; then
+        echo "📦 安装后端依赖..."
+        cd backend
+        pnpm install --prod || npm install --production
+        cd ..
+    fi
 else
-    echo "📦 检查并更新依赖..."
-    pnpm install --prod
+    echo "⚠️  pnpm 不可用，使用 npm 安装依赖..."
+    if [ ! -d "node_modules" ]; then
+        echo "📦 安装根目录依赖..."
+        npm install --production
+    else
+        echo "📦 更新根目录依赖..."
+        npm install --production
+    fi
+    
+    # 检查后端依赖
+    if [ ! -d "backend/node_modules" ]; then
+        echo "📦 安装后端依赖..."
+        cd backend
+        npm install --production
+        cd ..
+    fi
 fi
 
-# 检查后端依赖
-if [ ! -d "backend/node_modules" ]; then
-    echo "📦 安装后端依赖..."
-    cd backend
-    pnpm install --prod
-    cd ..
+# 验证关键依赖
+echo "🔍 验证关键依赖..."
+if [ ! -d "node_modules/express" ]; then
+    echo "❌ express 依赖缺失，尝试重新安装..."
+    npm install express helmet compression --save
 fi
 
 # 检查前端构建
