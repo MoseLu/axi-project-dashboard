@@ -36,7 +36,7 @@ jobs:
           pnpm install --no-frozen-lockfile --shamefully-hoist
           # 安装前端服务器需要的依赖
           echo "🔧 安装前端服务器依赖..."
-          pnpm add helmet compression --prod -w
+          pnpm add helmet compression --prod -w --ignore-scripts
           # 验证关键依赖
           echo "🔍 验证关键依赖..."
           ls -la node_modules/depd/ || echo "⚠️ depd 模块未找到"
@@ -139,7 +139,7 @@ jobs:
           
           # 安装前端服务器需要的依赖
           echo "🔧 安装前端服务器依赖..."
-          pnpm add helmet compression --prod -w
+          pnpm add helmet compression --prod -w --ignore-scripts
           
           # 最终验证
           echo "✅ Express依赖安装完成"
