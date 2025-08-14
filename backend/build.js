@@ -41,6 +41,13 @@ try {
       console.log('⚠️ Could not list directory contents:', error.message);
     }
     
+    // 检查是否已经有编译后的文件
+    if (fs.existsSync('index.js') && fs.existsSync('index.d.ts')) {
+      console.log('✅ Found compiled files, skipping src directory creation');
+      console.log('📋 This appears to be a pre-compiled project');
+      return;
+    }
+    
     // 自动创建 src 目录
     console.log('🔧 Auto-creating src directory...');
     fs.mkdirSync('src', { recursive: true });
