@@ -74,8 +74,8 @@ fi
 
 # 停止现有服务
 echo "🛑 停止现有服务..."
-pm2 stop dashboard-backend dashboard-frontend 2>/dev/null || true
-pm2 delete dashboard-backend dashboard-frontend 2>/dev/null || true
+pm2 stop dashboard-backend 2>/dev/null || true
+pm2 delete dashboard-backend 2>/dev/null || true
 
 # 启动服务
 echo "🚀 启动服务..."
@@ -151,4 +151,4 @@ echo "- 后端健康检查: http://localhost:$PORT/health"
 echo "- 前端服务: http://localhost:$FRONTEND_PORT"
 echo "- 前端静态文件: ./frontend/dist"
 echo "- PM2状态:"
-pm2 list | grep -E "(dashboard-backend|dashboard-frontend)"
+pm2 list | grep -E "dashboard-backend"
