@@ -74,6 +74,126 @@ app.get('/api/status', (req, res) => {
   });
 });
 
+// 认证端点
+app.post('/api/auth/login', (req, res) => {
+  console.log('🔐 登录请求:', req.body);
+  
+  // 简化的登录逻辑（仅用于测试）
+  const { username, password } = req.body;
+  
+  if (username && password) {
+    // 模拟成功登录
+    res.json({
+      success: true,
+      message: '登录成功',
+      data: {
+        user: {
+          id: 1,
+          username: username,
+          email: `${username}@example.com`,
+          role: 'admin'
+        },
+        token: 'mock-jwt-token-' + Date.now(),
+        expiresIn: 3600
+      }
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      message: '用户名和密码不能为空'
+    });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  console.log('🚪 登出请求');
+  res.json({
+    success: true,
+    message: '登出成功'
+  });
+});
+
+app.post('/api/auth/register', (req, res) => {
+  console.log('📝 注册请求:', req.body);
+  
+  const { username, email, password } = req.body;
+  
+  if (username && email && password) {
+    res.json({
+      success: true,
+      message: '注册成功',
+      data: {
+        user: {
+          id: Date.now(),
+          username: username,
+          email: email,
+          role: 'user'
+        }
+      }
+    });
+  } else {
+    res.status(400).json({
+      success: false,
+      message: '用户名、邮箱和密码不能为空'
+    });
+  }
+});
+
+app.get('/api/auth/me', (req, res) => {
+  console.log('👤 获取用户信息请求');
+  
+  // 模拟用户信息
+  res.json({
+    success: true,
+    data: {
+      user: {
+        id: 1,
+        username: 'admin',
+        email: 'admin@example.com',
+        role: 'admin'
+      }
+    }
+  });
+});
+
+// 部署相关端点
+app.get('/api/deployments', (req, res) => {
+  console.log('📦 获取部署列表请求');
+  
+  res.json({
+    success: true,
+    data: {
+      deployments: [
+        {
+          id: 1,
+          project: 'axi-project-dashboard',
+          status: 'running',
+          startTime: new Date().toISOString(),
+          endTime: null,
+          logs: ['服务启动成功', '端口8090监听正常', '简化版服务运行中']
+        }
+      ]
+    }
+  });
+});
+
+app.post('/api/deployments', (req, res) => {
+  console.log('🚀 创建部署请求:', req.body);
+  
+  res.json({
+    success: true,
+    message: '部署创建成功',
+    data: {
+      deployment: {
+        id: Date.now(),
+        project: req.body.project || 'unknown',
+        status: 'pending',
+        startTime: new Date().toISOString()
+      }
+    }
+  });
+});
+
 // 根路径
 app.get('/', (req, res) => {
   res.json({
@@ -82,7 +202,17 @@ app.get('/', (req, res) => {
     environment: NODE_ENV,
     endpoints: {
       health: '/health',
-      apiStatus: '/api/status'
+      apiStatus: '/api/status',
+      auth: {
+        login: 'POST /api/auth/login',
+        logout: 'POST /api/auth/logout',
+        register: 'POST /api/auth/register',
+        me: 'GET /api/auth/me'
+      },
+      deployments: {
+        list: 'GET /api/deployments',
+        create: 'POST /api/deployments'
+      }
     }
   });
 });
