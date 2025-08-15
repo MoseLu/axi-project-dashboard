@@ -7,7 +7,36 @@ echo "🚀 启动 axi-project-dashboard 项目..."
 # 检查当前目录
 if [ ! -f "package.json" ]; then
     echo "❌ 错误：请在项目根目录执行此脚本"
-    exit 1
+    echo "📁 当前目录内容:"
+    ls -la
+    echo "🔍 查找 package.json 文件..."
+    PACKAGE_JSON_PATH=$(find . -name "package.json" -type f 2>/dev/null | head -1)
+    
+    if [ -n "$PACKAGE_JSON_PATH" ]; then
+        echo "🔧 找到 package.json 文件: $PACKAGE_JSON_PATH"
+        echo "📦 正在修复目录结构..."
+        
+        # 获取 package.json 所在的目录
+        PACKAGE_DIR=$(dirname "$PACKAGE_JSON_PATH")
+        
+        if [ "$PACKAGE_DIR" != "." ]; then
+            echo "📁 移动 $PACKAGE_DIR 目录下的所有文件到当前目录..."
+            
+            # 移动 package.json 所在目录下的所有文件到当前目录
+            mv "$PACKAGE_DIR"/* . 2>/dev/null || true
+            mv "$PACKAGE_DIR"/.* . 2>/dev/null || true
+            
+            # 删除空的目录
+            rmdir "$PACKAGE_DIR" 2>/dev/null || true
+            
+            echo "✅ 目录结构修复完成"
+            echo "📁 修复后的目录内容:"
+            ls -la
+        fi
+    else
+        echo "❌ 未找到 package.json 文件，无法继续"
+        exit 1
+    fi
 fi
 
 # 检查是否存在额外的 dist- 目录结构
@@ -28,6 +57,54 @@ if [ -d "dist-axi-project-dashboard" ]; then
     echo "📁 修复后的目录内容:"
     ls -la
 fi
+
+# 检查是否存在其他可能的 dist- 目录
+for dist_dir in dist-*; do
+    if [ -d "$dist_dir" ] && [ "$dist_dir" != "dist-axi-project-dashboard" ]; then
+        echo "🔧 检测到额外的 dist- 目录: $dist_dir，正在修复..."
+        echo "📁 $dist_dir 目录内容:"
+        ls -la "$dist_dir/"
+        
+        # 移动 dist- 目录下的所有内容到当前目录
+        echo "📦 移动文件到正确位置..."
+        mv "$dist_dir"/* . 2>/dev/null || true
+        mv "$dist_dir"/.* . 2>/dev/null || true
+        
+        # 删除空的 dist- 目录
+        rmdir "$dist_dir" 2>/dev/null || true
+        
+        echo "✅ 目录结构修复完成"
+        echo "📁 修复后的目录内容:"
+        ls -la
+        break
+    fi
+done
+
+# 检查是否存在其他可能的子目录包含项目文件
+echo "🔍 检查是否存在其他包含项目文件的子目录..."
+for subdir in */; do
+    if [ -d "$subdir" ] && [ "$subdir" != "backend/" ] && [ "$subdir" != "frontend/" ] && [ "$subdir" != "node_modules/" ]; then
+        echo "🔍 检查子目录: $subdir"
+        if [ -f "${subdir}package.json" ] || [ -f "${subdir}ecosystem.config.js" ] || [ -f "${subdir}start.sh" ]; then
+            echo "🔧 发现包含项目文件的子目录: $subdir，正在修复..."
+            echo "📁 $subdir 目录内容:"
+            ls -la "$subdir"
+            
+            # 移动子目录下的所有内容到当前目录
+            echo "📦 移动文件到正确位置..."
+            mv "$subdir"/* . 2>/dev/null || true
+            mv "$subdir"/.* . 2>/dev/null || true
+            
+            # 删除空的子目录
+            rmdir "$subdir" 2>/dev/null || true
+            
+            echo "✅ 子目录结构修复完成"
+            echo "📁 修复后的目录内容:"
+            ls -la
+            break
+        fi
+    fi
+done
 
 # 设置环境变量
 export NODE_ENV=${NODE_ENV:-production}

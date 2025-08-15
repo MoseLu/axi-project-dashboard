@@ -180,6 +180,11 @@ jobs:
           echo "🔧 准备部署文件..."
           mkdir -p dist
           
+          # 复制根目录的 package.json 文件（关键修复）
+          echo "📁 复制根目录 package.json..."
+          cp package.json dist/
+          echo "✅ 根目录 package.json 复制完成"
+          
           # 复制整个 backend 目录（包含所有文件）
           echo "📁 复制整个 backend 目录..."
           cp -r backend dist/
@@ -230,12 +235,18 @@ jobs:
           
           # 复制启动脚本
           cp start.sh dist/
+          cp start-simple.sh dist/
           cp start-standard.sh dist/ || echo "⚠️ start-standard.sh 不存在，将使用默认启动脚本"
-          cp start-simple.sh dist/ || echo "⚠️ start-simple.sh 不存在，将使用默认启动脚本"
           
           chmod +x dist/start.sh
+          chmod +x dist/start-simple.sh
           chmod +x dist/start-standard.sh 2>/dev/null || true
-          chmod +x dist/start-simple.sh 2>/dev/null || true
+          
+          # 验证根目录关键文件
+          echo "🔍 验证根目录关键文件..."
+          ls -la dist/package.json || echo "❌ package.json 不存在"
+          ls -la dist/ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"
+          ls -la dist/start.sh || echo "❌ start.sh 不存在"
           
           echo "✅ 部署文件准备完成"
           echo "部署包内容:"
@@ -495,7 +506,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                start_cmd    : 'bash start.sh',
+                start_cmd    : 'bash start-simple.sh',
                 service_port : servicePort, // 动态获取的端口
                 nginx_config : nginxConfig,
                 test_url     : testUrl, // 动态构建的测试URL
