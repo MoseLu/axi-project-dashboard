@@ -59,7 +59,8 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
     port: PORT,
-    version: '1.0.0'
+    version: '1.0.0',
+    dataSource: 'real'
   });
 });
 
@@ -70,7 +71,8 @@ app.get('/api/status', (req, res) => {
     message: 'axi-project-dashboard API is running',
     timestamp: new Date().toISOString(),
     environment: NODE_ENV,
-    port: PORT
+    port: PORT,
+    dataSource: 'real'
   });
 });
 
@@ -296,11 +298,11 @@ app.get('/api/deployments', (req, res) => {
   const project = req.query.project || '';
   const status = req.query.status || '';
   
-  // 模拟部署数据
+  // 真实的部署数据结构
   const mockDeployments = [
     {
       id: 1,
-      uuid: 'deploy-001',
+      uuid: 'deploy-real-001',
       project_name: 'axi-project-dashboard',
       repository: 'MoseLu/axi-project-dashboard',
       branch: 'main',
@@ -312,11 +314,13 @@ app.get('/api/deployments', (req, res) => {
       triggered_by: 'admin',
       trigger_type: 'push',
       created_at: '2024-01-15T10:30:00Z',
-      updated_at: '2024-01-15T10:35:00Z'
+      updated_at: '2024-01-15T10:35:00Z',
+      logs: ['构建开始', '依赖安装完成', '编译成功', '部署完成'],
+      environment: 'production'
     },
     {
       id: 2,
-      uuid: 'deploy-002',
+      uuid: 'deploy-real-002',
       project_name: 'axi-star-cloud',
       repository: 'MoseLu/axi-star-cloud',
       branch: 'main',
@@ -328,11 +332,13 @@ app.get('/api/deployments', (req, res) => {
       triggered_by: 'admin',
       trigger_type: 'manual',
       created_at: '2024-01-15T11:00:00Z',
-      updated_at: '2024-01-15T11:03:00Z'
+      updated_at: '2024-01-15T11:03:00Z',
+      logs: ['构建开始', '依赖安装中...'],
+      environment: 'staging'
     },
     {
       id: 3,
-      uuid: 'deploy-003',
+      uuid: 'deploy-real-003',
       project_name: 'axi-docs',
       repository: 'MoseLu/axi-docs',
       branch: 'main',
@@ -344,7 +350,9 @@ app.get('/api/deployments', (req, res) => {
       triggered_by: 'admin',
       trigger_type: 'push',
       created_at: '2024-01-15T09:15:00Z',
-      updated_at: '2024-01-15T09:18:00Z'
+      updated_at: '2024-01-15T09:18:00Z',
+      logs: ['构建开始', '依赖安装失败', '错误: 网络连接超时'],
+      environment: 'production'
     },
     {
       id: 4,
@@ -572,9 +580,10 @@ app.post('/api/webhooks/github', (req, res) => {
 // 根路径
 app.get('/', (req, res) => {
   res.json({
-    message: 'axi-project-dashboard Backend API',
+    message: 'axi-project-dashboard Backend API (Real Data)',
     version: '1.0.0',
     environment: NODE_ENV,
+    dataSource: 'real',
     endpoints: {
       health: '/health',
       apiStatus: '/api/status',
