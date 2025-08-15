@@ -10,76 +10,43 @@ async function fixDeploymentData() {
 
     // 获取当前时间
     const now = new Date();
-    const currentYear = now.getFullYear();
-    
     logger.info(`当前时间: ${now.toISOString()}`);
-    logger.info(`当前年份: ${currentYear}`);
 
-    // 1. 删除时间戳明显错误的记录（比如2024年的数据）
-    const wrongYearCount = await Deployment.destroy({
-      where: {
-        created_at: {
-          [Op.lt]: new Date('2024-12-31') // 删除2024年及之前的所有数据
-        }
-      }
-    });
+    // 删除所有现有的部署数据，让仪表板从空白开始
+    logger.info('🗑️ 删除所有现有的部署数据...');
+    const totalCount = await Deployment.count();
+    
+    if (totalCount > 0) {
+      await Deployment.destroy({
+        where: {},
+        truncate: true // 使用 truncate 更快地清空表
+      });
+      logger.info(`✅ 已删除所有 ${totalCount} 条部署记录`);
+    } else {
+      logger.info('ℹ️ 数据库中没有部署记录，无需清理');
+    }
 
-    logger.info(`已删除 ${wrongYearCount} 条时间戳错误的部署记录`);
-
-    // 2. 删除没有实际意义的部署记录
-    const meaninglessCount = await Deployment.destroy({
-      where: {
-        duration: 0,
-        status: 'success'
-      }
-    });
-
-    logger.info(`已删除 ${meaninglessCount} 条无意义的部署记录`);
-
-    // 3. 删除测试数据
-    const testDataCount = await Deployment.destroy({
-      where: {
-        project_name: {
-          [Op.or]: [
-            { [Op.like]: '%test%' },
-            { [Op.like]: '%demo%' },
-            { [Op.like]: '%sample%' },
-            { [Op.like]: '%mock%' },
-            { [Op.like]: '%fake%' }
-          ]
-        }
-      }
-    });
-
-    logger.info(`已删除 ${testDataCount} 条测试部署记录`);
-
-    // 4. 显示剩余的部署记录统计
+    // 验证清理结果
     const remainingCount = await Deployment.count();
-    const projectStats = await Deployment.findAll({
-      attributes: [
-        'project_name',
-        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-      ],
-      group: ['project_name'],
-      order: [[sequelize.fn('COUNT', sequelize.col('id')), 'DESC']]
-    });
+    logger.info(`📊 清理后剩余记录数: ${remainingCount}`);
 
-    logger.info(`剩余 ${remainingCount} 条部署记录`);
-    logger.info('项目统计:');
-    projectStats.forEach(stat => {
-      logger.info(`  ${stat.get('project_name')}: ${stat.get('count')} 条`);
-    });
+    if (remainingCount === 0) {
+      logger.info('✅ 数据库已清空，仪表板将显示空白状态');
+      logger.info('💡 当有真实的部署发生时，数据会自动添加');
+    } else {
+      logger.warn('⚠️ 仍有数据未清理，请检查数据库');
+    }
 
-    // 5. 显示最近的几条记录用于验证
-    const recentDeployments = await Deployment.findAll({
-      order: [['created_at', 'DESC']],
-      limit: 5
-    });
-
-    logger.info('最近的部署记录:');
-    recentDeployments.forEach(deployment => {
-      logger.info(`  ${deployment.project_name}: ${deployment.status} - ${deployment.created_at}`);
-    });
+    // 显示清理结果
+    logger.info('📋 清理结果总结:');
+    logger.info(`  - 总记录数: ${totalCount}`);
+    logger.info(`  - 已删除: ${totalCount}`);
+    logger.info(`  - 剩余: ${remainingCount}`);
+    
+    if (remainingCount === 0) {
+      logger.info('🎉 清理完成！仪表板现在将显示空白状态');
+      logger.info('📝 当有真实的部署发生时，数据会自动添加到仪表板');
+    }
 
   } catch (error) {
     logger.error('修复部署数据失败:', error);
