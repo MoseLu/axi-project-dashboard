@@ -156,6 +156,43 @@ app.get('/api/auth/me', (req, res) => {
   });
 });
 
+app.get('/api/auth/verify', (req, res) => {
+  console.log('🔍 Token验证请求');
+  
+  // 从请求头获取token
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: '未提供token'
+    });
+  }
+  
+  // 简化的token验证逻辑（仅用于测试）
+  // 在实际生产环境中，应该验证JWT token的有效性
+  if (token.startsWith('mock-jwt-token-')) {
+    res.json({
+      success: true,
+      message: 'Token验证成功',
+      data: {
+        user: {
+          id: 1,
+          username: 'admin',
+          email: 'admin@example.com',
+          role: 'admin'
+        }
+      }
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      message: 'Token无效'
+    });
+  }
+});
+
 // 部署相关端点
 app.get('/api/deployments', (req, res) => {
   console.log('📦 获取部署列表请求');
@@ -207,7 +244,8 @@ app.get('/', (req, res) => {
         login: 'POST /api/auth/login',
         logout: 'POST /api/auth/logout',
         register: 'POST /api/auth/register',
-        me: 'GET /api/auth/me'
+        me: 'GET /api/auth/me',
+        verify: 'GET /api/auth/verify'
       },
       deployments: {
         list: 'GET /api/deployments',
