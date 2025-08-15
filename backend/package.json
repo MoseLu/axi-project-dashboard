@@ -20,6 +20,7 @@
     "migration:run": "ts-node src/database/migrations/run.ts",
     "seed:run": "ts-node src/database/seeds/run.ts",
     "cleanup:test-data": "ts-node src/scripts/cleanup-test-data.ts",
+    "fix:deployment-data": "ts-node src/scripts/fix-deployment-data.ts",
     "db:init": "ts-node -r tsconfig-paths/register src/scripts/init-database.ts"
   },
   "keywords": [
