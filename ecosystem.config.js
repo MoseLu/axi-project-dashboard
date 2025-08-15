@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'dashboard-backend',
-      script: 'backend/start-simple.js',
+      script: 'backend/start-real.js',
       cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
       instances: 1,
       exec_mode: 'fork',
@@ -19,6 +19,7 @@ module.exports = {
         MYSQL_USER: 'root',
         MYSQL_PASSWORD: '123456',
         MYSQL_DATABASE: 'project_dashboard',
+        SKIP_DB_INIT: 'false', // 启用数据库初始化
         REDIS_URI: 'redis://localhost:6379',
         
         // 安全配置
