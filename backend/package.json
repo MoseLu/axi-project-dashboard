@@ -21,7 +21,7 @@
     "seed:run": "ts-node src/database/seeds/run.ts",
     "cleanup:test-data": "ts-node src/scripts/cleanup-test-data.ts",
     "fix:deployment-data": "ts-node -r tsconfig-paths/register src/scripts/fix-deployment-data.ts",
-    "fix:deployment-data:js": "node src/scripts/fix-deployment-data.js",
+    "fix:deployment-data:js": "node fix-deployment-data.js",
     "db:init": "ts-node -r tsconfig-paths/register src/scripts/init-database.ts"
   },
   "keywords": [

@@ -24,9 +24,9 @@ else
     if pnpm run fix:deployment-data:js 2>/dev/null || npm run fix:deployment-data:js 2>/dev/null; then
         echo "✅ JavaScript 版本运行成功"
     else
-        echo "❌ 两种版本都失败了"
-        echo "尝试直接运行 JavaScript 文件..."
-        node src/scripts/fix-deployment-data.js
+            echo "❌ 两种版本都失败了"
+    echo "尝试直接运行 JavaScript 文件..."
+    node fix-deployment-data.js
     fi
 fi
 
