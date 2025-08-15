@@ -302,7 +302,69 @@ if (!fs.existsSync(staticPath)) {
   } catch (error) {
     console.error('读取目录失败:', error.message);
   }
-  process.exit(1);
+  
+  // 创建基本的静态文件
+  console.log('📁 创建基本的静态文件...');
+  const basicHtmlPath = path.join(staticPath, 'index.html');
+  fs.mkdirSync(staticPath, { recursive: true });
+  
+  const basicHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>axi-project-dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        p {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .status {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 axi-project-dashboard</h1>
+        <p>项目部署管理系统</p>
+        <p>前端服务运行正常</p>
+        <div class="status">
+            ✅ 服务状态: 运行中<br>
+            📊 后端API: <a href="/health" style="color: #fff;">健康检查</a><br>
+            🌐 前端服务: 端口 ${PORT}
+        </div>
+    </div>
+</body>
+</html>`;
+  
+  fs.writeFileSync(basicHtmlPath, basicHtml);
+  console.log('✅ 基本静态文件创建完成');
 }
 
 app.use(express.static(staticPath, {

@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'dashboard-backend',
-      script: 'pnpm',
-      args: 'start',
+      script: 'node',
+      args: 'backend/dist/index.js',
       cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
       instances: 1,
       exec_mode: 'fork',
@@ -85,8 +85,7 @@ module.exports = {
     },
     {
       name: 'dashboard-frontend',
-      script: 'pnpm',
-      args: 'run dev:fast',
+      script: 'frontend-server.js',
       cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
       instances: 1,
       exec_mode: 'fork',

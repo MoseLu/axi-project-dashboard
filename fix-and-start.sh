@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🚀 启动 axi-project-dashboard 项目 (标准版)..."
+echo "🔧 修复并启动 axi-project-dashboard 项目..."
 
 # 检查当前目录
 if [ ! -f "package.json" ]; then
@@ -10,42 +10,51 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
-# 设置环境变量
-export NODE_ENV=${NODE_ENV:-production}
-export PORT=${PORT:-8090}
+echo "📋 当前目录: $(pwd)"
+echo "📁 目录内容:"
+ls -la
 
-echo "📋 环境配置:"
-echo "- NODE_ENV: $NODE_ENV"
-echo "- PORT: $PORT"
-
-# 检查并安装依赖
-echo "📦 检查并安装依赖..."
+# 1. 安装根目录依赖
+echo "📦 步骤1: 安装根目录依赖..."
 if [ ! -d "node_modules" ]; then
     echo "📦 安装根目录依赖..."
     pnpm install --prod || npm install --production
+else
+    echo "📦 更新根目录依赖..."
+    pnpm install --prod || npm install --production
 fi
 
-# 检查后端依赖
+# 2. 安装后端依赖
+echo "📦 步骤2: 安装后端依赖..."
 if [ ! -d "backend/node_modules" ]; then
     echo "📦 安装后端依赖..."
     cd backend
     pnpm install --prod || npm install --production
     cd ..
+else
+    echo "📦 更新后端依赖..."
+    cd backend
+    pnpm install --prod || npm install --production
+    cd ..
 fi
 
-# 检查前端依赖
+# 3. 安装前端依赖
+echo "📦 步骤3: 安装前端依赖..."
 if [ ! -d "frontend/node_modules" ]; then
     echo "📦 安装前端依赖..."
     cd frontend
     pnpm install --prod || npm install --production
     cd ..
+else
+    echo "📦 更新前端依赖..."
+    cd frontend
+    pnpm install --prod || npm install --production
+    cd ..
 fi
 
-# 检查并创建 frontend-server.js
-echo "🔍 检查 frontend-server.js 文件..."
-if [ ! -f "frontend-server.js" ]; then
-    echo "❌ frontend-server.js 不存在，正在创建..."
-    cat > frontend-server.js << 'EOF'
+# 4. 创建 frontend-server.js
+echo "🔧 步骤4: 创建 frontend-server.js..."
+cat > frontend-server.js << 'EOF'
 #!/usr/bin/env node
 
 const express = require('express');
@@ -181,19 +190,6 @@ app.use(express.static(staticPath, {
   lastModified: true
 }));
 
-// API 路由代理到后端
-app.use('/api', (req, res) => {
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:8090';
-  const proxy = require('http-proxy-middleware').createProxyMiddleware({
-    target: backendUrl,
-    changeOrigin: true,
-    pathRewrite: {
-      '^/api': '/api'
-    }
-  });
-  proxy(req, res);
-});
-
 // 健康检查端点
 app.get('/health', (req, res) => {
   res.json({
@@ -237,37 +233,70 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 EOF
-    echo "✅ frontend-server.js 创建完成"
+
+echo "✅ frontend-server.js 创建完成"
+
+# 5. 构建后端
+echo "🔨 步骤5: 构建后端..."
+if [ -f "backend/package.json" ]; then
+    cd backend
+    echo "📋 后端构建脚本:"
+    cat package.json | grep -A 10 '"scripts"'
+    
+    echo "🔨 尝试构建后端..."
+    pnpm run build:simple || pnpm run build || npm run build
+    cd ..
+else
+    echo "⚠️  backend/package.json 不存在，跳过构建"
 fi
 
-# 构建项目
-echo "🔨 构建项目..."
-pnpm run build || npm run build
+# 6. 构建前端
+echo "🔨 步骤6: 构建前端..."
+if [ -f "frontend/package.json" ]; then
+    cd frontend
+    echo "📋 前端构建脚本:"
+    cat package.json | grep -A 10 '"scripts"'
+    
+    echo "🔨 尝试构建前端..."
+    pnpm run build || npm run build
+    cd ..
+else
+    echo "⚠️  frontend/package.json 不存在，跳过构建"
+fi
 
-# 停止现有服务
-echo "🛑 停止现有服务..."
+# 7. 停止现有服务
+echo "🛑 步骤7: 停止现有服务..."
 pm2 stop dashboard-backend 2>/dev/null || echo "停止 dashboard-backend 失败（可能不存在）"
 pm2 stop dashboard-frontend 2>/dev/null || echo "停止 dashboard-frontend 失败（可能不存在）"
 pm2 delete dashboard-backend 2>/dev/null || echo "删除 dashboard-backend 失败（可能不存在）"
 pm2 delete dashboard-frontend 2>/dev/null || echo "删除 dashboard-frontend 失败（可能不存在）"
 
-# 启动后端服务
-echo "🚀 启动后端服务..."
-pm2 start ecosystem.config.js --only dashboard-backend
+# 8. 启动后端服务
+echo "🚀 步骤8: 启动后端服务..."
+if [ -f "backend/dist/index.js" ]; then
+    echo "✅ 使用构建后的后端文件启动..."
+    pm2 start ecosystem.config.js --only dashboard-backend
+elif [ -f "backend/index.js" ]; then
+    echo "⚠️ 使用源码后端文件启动..."
+    pm2 start --name dashboard-backend --cwd /srv/apps/axi-project-dashboard node -- backend/index.js
+else
+    echo "❌ 后端文件不存在，无法启动"
+    exit 1
+fi
 
-# 启动前端服务
-echo "🚀 启动前端服务..."
+# 9. 启动前端服务
+echo "🚀 步骤9: 启动前端服务..."
 pm2 start ecosystem.config.js --only dashboard-frontend
 
-# 等待服务启动
-echo "⏳ 等待服务启动..."
+# 10. 等待服务启动
+echo "⏳ 步骤10: 等待服务启动..."
 sleep 10
 
-# 检查服务状态
-echo "🔍 检查服务状态..."
+# 11. 检查服务状态
+echo "🔍 步骤11: 检查服务状态..."
 pm2 list | grep -E "dashboard-"
 
-echo "🎉 axi-project-dashboard 启动完成！"
+echo "🎉 axi-project-dashboard 修复并启动完成！"
 echo "📊 服务信息:"
 echo "- 后端API: http://localhost:8090"
 echo "- 前端服务: http://localhost:3000"

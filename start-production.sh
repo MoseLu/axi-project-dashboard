@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🚀 启动 axi-project-dashboard 项目 (标准版)..."
+echo "🚀 启动 axi-project-dashboard 项目 (生产环境)..."
 
 # 检查当前目录
 if [ ! -f "package.json" ]; then
@@ -181,19 +181,6 @@ app.use(express.static(staticPath, {
   lastModified: true
 }));
 
-// API 路由代理到后端
-app.use('/api', (req, res) => {
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:8090';
-  const proxy = require('http-proxy-middleware').createProxyMiddleware({
-    target: backendUrl,
-    changeOrigin: true,
-    pathRewrite: {
-      '^/api': '/api'
-    }
-  });
-  proxy(req, res);
-});
-
 // 健康检查端点
 app.get('/health', (req, res) => {
   res.json({
@@ -240,9 +227,25 @@ EOF
     echo "✅ frontend-server.js 创建完成"
 fi
 
-# 构建项目
-echo "🔨 构建项目..."
-pnpm run build || npm run build
+# 构建后端
+echo "🔨 构建后端..."
+if [ -f "backend/package.json" ]; then
+    cd backend
+    pnpm run build:simple || pnpm run build || npm run build
+    cd ..
+else
+    echo "⚠️  backend/package.json 不存在，跳过构建"
+fi
+
+# 构建前端
+echo "🔨 构建前端..."
+if [ -f "frontend/package.json" ]; then
+    cd frontend
+    pnpm run build || npm run build
+    cd ..
+else
+    echo "⚠️  frontend/package.json 不存在，跳过构建"
+fi
 
 # 停止现有服务
 echo "🛑 停止现有服务..."
@@ -253,7 +256,12 @@ pm2 delete dashboard-frontend 2>/dev/null || echo "删除 dashboard-frontend 失
 
 # 启动后端服务
 echo "🚀 启动后端服务..."
-pm2 start ecosystem.config.js --only dashboard-backend
+if [ -f "backend/dist/index.js" ]; then
+    pm2 start ecosystem.config.js --only dashboard-backend
+else
+    echo "❌ 后端构建文件不存在，尝试直接启动..."
+    pm2 start --name dashboard-backend --cwd /srv/apps/axi-project-dashboard node -- backend/index.js
+fi
 
 # 启动前端服务
 echo "🚀 启动前端服务..."
