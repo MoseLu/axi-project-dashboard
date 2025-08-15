@@ -7,6 +7,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 
+console.log('🚀 启动 axi-project-dashboard 简化后端服务...');
+
 // 创建 Express 应用
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +17,6 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 8090;
 const NODE_ENV = process.env.NODE_ENV || 'production';
 
-console.log('🚀 启动 axi-project-dashboard 后端服务 (简化版)...');
 console.log(`📊 环境: ${NODE_ENV}`);
 console.log(`🔌 端口: ${PORT}`);
 
@@ -25,12 +26,15 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"]
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "ws:", "wss:"]
     }
   }
 }));
 
+app.use(compression());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true,
@@ -38,7 +42,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -50,129 +53,104 @@ app.use((req, res, next) => {
 
 // 健康检查端点
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    message: 'axi-project-dashboard API is running (simplified)',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0',
-    services: {
-      http: 'up',
-      database: 'unknown',
-      redis: 'unknown'
-    }
-  });
-});
-
-// 指标端点
-app.get('/metrics', (req, res) => {
   res.json({
-    success: true,
-    data: {
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      timestamp: new Date().toISOString()
-    }
+    status: 'ok',
+    service: 'axi-project-dashboard-backend',
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV,
+    port: PORT,
+    version: '1.0.0'
   });
 });
 
-// API 路由
-app.use('/project-dashboard/api', (req, res, next) => {
-  // 模拟部署服务
-  if (req.path === '/deployments') {
-    return res.json({
-      success: true,
-      data: {
-        deployments: [
-          {
-            id: '1',
-            project: 'axi-project-dashboard',
-            status: 'running',
-            startTime: new Date().toISOString(),
-            endTime: null,
-            logs: ['服务启动成功', '端口8090监听正常', '简化版服务运行中']
-          }
-        ]
-      }
-    });
-  }
-  
-  if (req.path === '/health') {
-    return res.json({
-      success: true,
-      data: {
-        status: 'healthy',
-        services: {
-          http: 'up',
-          database: 'unknown',
-          redis: 'unknown'
-        }
-      }
-    });
-  }
-  
-  next();
+// API 状态端点
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'axi-project-dashboard API is running',
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV,
+    port: PORT
+  });
 });
 
-// 静态文件服务
-app.use('/static', express.static('public'));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// 根路径
+app.get('/', (req, res) => {
+  res.json({
+    message: 'axi-project-dashboard Backend API',
+    version: '1.0.0',
+    environment: NODE_ENV,
+    endpoints: {
+      health: '/health',
+      apiStatus: '/api/status'
+    }
+  });
+});
 
 // 404 处理
 app.use('*', (req, res) => {
   res.status(404).json({
-    success: false,
-    message: 'Route not found',
+    error: 'Not Found',
+    message: `Route ${req.originalUrl} not found`,
     timestamp: new Date().toISOString()
   });
 });
 
 // 错误处理中间件
-app.use((error, req, res, next) => {
-  console.error('Error:', error);
+app.use((err, req, res, next) => {
+  console.error('❌ 服务器错误:', err);
   res.status(500).json({
-    success: false,
-    message: 'Internal server error',
+    error: 'Internal Server Error',
+    message: NODE_ENV === 'development' ? err.message : 'Something went wrong',
     timestamp: new Date().toISOString()
   });
 });
 
 // 启动服务器
 server.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-  console.log(`🔗 API URL: http://localhost:${PORT}/project-dashboard/api`);
-  console.log(`💚 Health Check: http://localhost:${PORT}/health`);
-  console.log(`📊 Metrics: http://localhost:${PORT}/metrics`);
+  console.log(`✅ 后端服务启动成功！`);
+  console.log(`🌐 访问地址: http://localhost:${PORT}`);
+  console.log(`📊 健康检查: http://localhost:${PORT}/health`);
+  console.log(`🔗 API状态: http://localhost:${PORT}/api/status`);
   
-  if (NODE_ENV === 'development') {
-    console.log(`📚 API Docs: http://localhost:${PORT}/api-docs`);
-  }
+  // 发送心跳信号
+  setInterval(() => {
+    console.log(`💓 心跳信号 - ${new Date().toISOString()} - 服务运行正常`);
+  }, 30000); // 每30秒发送一次心跳
 });
 
 // 优雅关闭
 process.on('SIGTERM', () => {
-  console.log('🛑 Received SIGTERM, shutting down gracefully...');
+  console.log('🛑 收到 SIGTERM 信号，正在关闭后端服务...');
   server.close(() => {
-    console.log('✅ Server closed');
+    console.log('✅ 后端服务已关闭');
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 Received SIGINT, shutting down gracefully...');
+  console.log('🛑 收到 SIGINT 信号，正在关闭后端服务...');
   server.close(() => {
-    console.log('✅ Server closed');
+    console.log('✅ 后端服务已关闭');
     process.exit(0);
   });
 });
 
 // 处理未捕获的异常
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
+  console.error('❌ 未捕获的异常:', error);
+  server.close(() => {
+    console.log('✅ 后端服务已关闭');
+    process.exit(1);
+  });
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  console.error('❌ 未处理的 Promise 拒绝:', reason);
+  server.close(() => {
+    console.log('✅ 后端服务已关闭');
+    process.exit(1);
+  });
 });
+
+console.log('🎉 简化后端服务初始化完成，等待连接...');
