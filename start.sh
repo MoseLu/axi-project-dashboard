@@ -175,7 +175,7 @@ if [ ! -d "backend/dist" ] || [ -z "$(ls -A backend/dist 2>/dev/null)" ]; then
     echo "🔨 构建后端..."
     if [ -f "backend/package.json" ]; then
         cd backend
-        pnpm run build:simple || pnpm run build || npm run build
+        pnpm run build || npm run build
         cd ..
     else
         echo "⚠️  backend/package.json 不存在，跳过构建"
