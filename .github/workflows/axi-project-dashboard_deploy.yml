@@ -187,20 +187,13 @@ jobs:
           cp backend/package.json dist/backend/
           cp backend/build.js dist/backend/
           cp backend/tsconfig.json dist/backend/
-          cp backend/test-simple.js dist/backend/
-          cp backend/index.js dist/backend/
           
-          # 复制关键的启动和构建脚本
-          cp backend/start-server.js dist/backend/
+          # 复制关键的启动脚本
           cp backend/start-simple.js dist/backend/
-          cp backend/simple-build.js dist/backend/
-          cp backend/quick-start.js dist/backend/
-          cp backend/test-start.js dist/backend/
           
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."
           ls -la dist/backend/ || echo "❌ backend构建产物不存在"
-          ls -la dist/backend/test-simple.js || echo "❌ 测试服务器文件不存在"
           
           # 验证Express核心依赖
           echo "🔍 验证Express依赖链..."
