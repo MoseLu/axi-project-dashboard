@@ -112,11 +112,32 @@ server.listen(PORT, () => {
   console.log(`🌐 访问地址: http://localhost:${PORT}`);
   console.log(`📊 健康检查: http://localhost:${PORT}/health`);
   console.log(`🔗 API状态: http://localhost:${PORT}/api/status`);
+  console.log(`🔌 端口监听: ${PORT}`);
+  
+  // 验证端口监听
+  const net = require('net');
+  const testServer = net.createServer();
+  testServer.listen(PORT, () => {
+    console.log(`✅ 端口 ${PORT} 监听验证成功`);
+    testServer.close();
+  });
+  testServer.on('error', (err) => {
+    console.log(`❌ 端口 ${PORT} 监听验证失败: ${err.message}`);
+  });
   
   // 发送心跳信号
   setInterval(() => {
-    console.log(`💓 心跳信号 - ${new Date().toISOString()} - 服务运行正常`);
+    console.log(`💓 心跳信号 - ${new Date().toISOString()} - 服务运行正常 - 端口: ${PORT}`);
   }, 30000); // 每30秒发送一次心跳
+});
+
+// 添加错误处理
+server.on('error', (err) => {
+  console.error(`❌ 服务器启动失败: ${err.message}`);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ 端口 ${PORT} 已被占用`);
+    process.exit(1);
+  }
 });
 
 // 优雅关闭
