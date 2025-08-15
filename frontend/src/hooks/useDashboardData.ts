@@ -54,13 +54,26 @@ export const useDashboardData = (): UseDashboardDataReturn => {
       
       if (deploymentsRes.ok) {
         const deploymentsData = await deploymentsRes.json();
-        setDeployments(deploymentsData.data || []);
+        setDeployments(Array.isArray(deploymentsData.data) ? deploymentsData.data : []);
         setPagination(deploymentsData.pagination || pagination);
+      } else {
+        console.error('获取部署数据失败:', deploymentsRes.status, deploymentsRes.statusText);
+        setDeployments([]);
       }
       
       if (metricsRes.ok) {
         const metricsData = await metricsRes.json();
         setMetrics(metricsData.data || {
+          totalDeployments: 0,
+          successfulDeployments: 0,
+          failedDeployments: 0,
+          averageDeploymentTime: 0,
+          projectStats: [],
+          dailyStats: []
+        });
+      } else {
+        console.error('获取指标数据失败:', metricsRes.status, metricsRes.statusText);
+        setMetrics({
           totalDeployments: 0,
           successfulDeployments: 0,
           failedDeployments: 0,

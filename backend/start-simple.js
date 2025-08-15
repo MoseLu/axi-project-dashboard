@@ -193,26 +193,7 @@ app.get('/api/auth/verify', (req, res) => {
   }
 });
 
-// 部署相关端点
-app.get('/api/deployments', (req, res) => {
-  console.log('📦 获取部署列表请求');
-  
-  res.json({
-    success: true,
-    data: {
-      deployments: [
-        {
-          id: 1,
-          project: 'axi-project-dashboard',
-          status: 'running',
-          startTime: new Date().toISOString(),
-          endTime: null,
-          logs: ['服务启动成功', '端口8090监听正常', '简化版服务运行中']
-        }
-      ]
-    }
-  });
-});
+
 
 app.post('/api/deployments', (req, res) => {
   console.log('🚀 创建部署请求:', req.body);

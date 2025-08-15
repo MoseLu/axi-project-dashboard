@@ -23,7 +23,7 @@ const DashboardPage: React.FC = () => {
     ? Math.round((metrics.successfulDeployments / metrics.totalDeployments) * 100) 
     : 100;
 
-  const recentDeployments = deployments.slice(0, 5);
+  const recentDeployments = Array.isArray(deployments) ? deployments.slice(0, 5) : [];
 
   const columns = [
     {
