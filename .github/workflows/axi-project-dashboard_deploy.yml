@@ -180,17 +180,20 @@ jobs:
           echo "🔧 准备部署文件..."
           mkdir -p dist
           
-          # 复制后端构建产物
-          mkdir -p dist/backend
+          # 复制整个 backend 目录（包含所有文件）
+          echo "📁 复制整个 backend 目录..."
+          cp -r backend dist/
+          
+          # 覆盖构建产物和依赖
           cp -r backend/dist/* dist/backend/
           cp -r temp_backend_deps/node_modules dist/
-          cp backend/package.json dist/
-          cp backend/package.json dist/backend/
-          cp backend/build.js dist/backend/
-          cp backend/tsconfig.json dist/backend/
           
-          # 复制关键的启动脚本（如果存在）
-          cp backend/start-simple.js dist/backend/ 2>/dev/null || echo "⚠️ start-simple.js 不存在，跳过"
+          # 确保脚本文件有执行权限
+          chmod +x dist/backend/run-fix-data.sh 2>/dev/null || true
+          
+          echo "✅ backend 目录复制完成"
+          echo "📁 backend 目录内容:"
+          ls -la dist/backend/
           
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."
