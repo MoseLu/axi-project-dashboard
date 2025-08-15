@@ -231,6 +231,363 @@ app.post('/api/deployments', (req, res) => {
   });
 });
 
+// 仪表板指标端点
+app.get('/api/metrics', (req, res) => {
+  console.log('📊 获取仪表板指标请求');
+  
+  // 模拟仪表板数据
+  const metrics = {
+    totalDeployments: 156,
+    successfulDeployments: 142,
+    failedDeployments: 14,
+    averageDeploymentTime: 45,
+    projectStats: [
+      {
+        project: 'axi-project-dashboard',
+        total: 45,
+        success: 42,
+        failed: 3,
+        successRate: 93.3
+      },
+      {
+        project: 'axi-star-cloud',
+        total: 67,
+        success: 63,
+        failed: 4,
+        successRate: 94.0
+      },
+      {
+        project: 'axi-docs',
+        total: 44,
+        success: 37,
+        failed: 7,
+        successRate: 84.1
+      }
+    ],
+    dailyStats: [
+      {
+        date: '2024-01-15',
+        total: 12,
+        success: 11,
+        failed: 1
+      },
+      {
+        date: '2024-01-14',
+        total: 8,
+        success: 7,
+        failed: 1
+      },
+      {
+        date: '2024-01-13',
+        total: 15,
+        success: 14,
+        failed: 1
+      },
+      {
+        date: '2024-01-12',
+        total: 10,
+        success: 9,
+        failed: 1
+      },
+      {
+        date: '2024-01-11',
+        total: 6,
+        success: 6,
+        failed: 0
+      }
+    ]
+  };
+  
+  res.json({
+    success: true,
+    data: metrics
+  });
+});
+
+// 部署列表端点（带分页和过滤）
+app.get('/api/deployments', (req, res) => {
+  console.log('📦 获取部署列表请求:', req.query);
+  
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const sortBy = req.query.sortBy || 'created_at';
+  const sortOrder = req.query.sortOrder || 'DESC';
+  const project = req.query.project || '';
+  const status = req.query.status || '';
+  
+  // 模拟部署数据
+  const mockDeployments = [
+    {
+      id: 1,
+      uuid: 'deploy-001',
+      project_name: 'axi-project-dashboard',
+      repository: 'MoseLu/axi-project-dashboard',
+      branch: 'main',
+      commit_hash: 'abc123def456',
+      status: 'success',
+      start_time: '2024-01-15T10:30:00Z',
+      end_time: '2024-01-15T10:35:00Z',
+      duration: 300,
+      triggered_by: 'admin',
+      trigger_type: 'push',
+      created_at: '2024-01-15T10:30:00Z',
+      updated_at: '2024-01-15T10:35:00Z'
+    },
+    {
+      id: 2,
+      uuid: 'deploy-002',
+      project_name: 'axi-star-cloud',
+      repository: 'MoseLu/axi-star-cloud',
+      branch: 'main',
+      commit_hash: 'def456ghi789',
+      status: 'running',
+      start_time: '2024-01-15T11:00:00Z',
+      end_time: null,
+      duration: 180,
+      triggered_by: 'admin',
+      trigger_type: 'manual',
+      created_at: '2024-01-15T11:00:00Z',
+      updated_at: '2024-01-15T11:03:00Z'
+    },
+    {
+      id: 3,
+      uuid: 'deploy-003',
+      project_name: 'axi-docs',
+      repository: 'MoseLu/axi-docs',
+      branch: 'main',
+      commit_hash: 'ghi789jkl012',
+      status: 'failed',
+      start_time: '2024-01-15T09:15:00Z',
+      end_time: '2024-01-15T09:18:00Z',
+      duration: 180,
+      triggered_by: 'admin',
+      trigger_type: 'push',
+      created_at: '2024-01-15T09:15:00Z',
+      updated_at: '2024-01-15T09:18:00Z'
+    },
+    {
+      id: 4,
+      uuid: 'deploy-004',
+      project_name: 'axi-project-dashboard',
+      repository: 'MoseLu/axi-project-dashboard',
+      branch: 'feature/new-ui',
+      commit_hash: 'jkl012mno345',
+      status: 'success',
+      start_time: '2024-01-14T16:45:00Z',
+      end_time: '2024-01-14T16:50:00Z',
+      duration: 300,
+      triggered_by: 'admin',
+      trigger_type: 'push',
+      created_at: '2024-01-14T16:45:00Z',
+      updated_at: '2024-01-14T16:50:00Z'
+    },
+    {
+      id: 5,
+      uuid: 'deploy-005',
+      project_name: 'axi-star-cloud',
+      repository: 'MoseLu/axi-star-cloud',
+      branch: 'main',
+      commit_hash: 'mno345pqr678',
+      status: 'success',
+      start_time: '2024-01-14T14:20:00Z',
+      end_time: '2024-01-14T14:25:00Z',
+      duration: 300,
+      triggered_by: 'admin',
+      trigger_type: 'schedule',
+      created_at: '2024-01-14T14:20:00Z',
+      updated_at: '2024-01-14T14:25:00Z'
+    }
+  ];
+  
+  // 过滤数据
+  let filteredDeployments = mockDeployments;
+  if (project) {
+    filteredDeployments = filteredDeployments.filter(d => d.project_name.includes(project));
+  }
+  if (status) {
+    filteredDeployments = filteredDeployments.filter(d => d.status === status);
+  }
+  
+  // 排序数据
+  filteredDeployments.sort((a, b) => {
+    const aValue = a[sortBy];
+    const bValue = b[sortBy];
+    if (sortOrder === 'ASC') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+  
+  // 分页
+  const total = filteredDeployments.length;
+  const totalPages = Math.ceil(total / limit);
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedDeployments = filteredDeployments.slice(startIndex, endIndex);
+  
+  const pagination = {
+    page,
+    limit,
+    total,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrev: page > 1
+  };
+  
+  res.json({
+    success: true,
+    data: paginatedDeployments,
+    pagination
+  });
+});
+
+// 个人资料相关端点
+app.put('/api/auth/profile', (req, res) => {
+  console.log('👤 更新个人资料请求:', req.body);
+  
+  const { username, email, bio } = req.body;
+  
+  if (!username || !email) {
+    return res.status(400).json({
+      success: false,
+      message: '用户名和邮箱不能为空'
+    });
+  }
+  
+  res.json({
+    success: true,
+    message: '个人资料更新成功',
+    data: {
+      user: {
+        id: 1,
+        username: username,
+        email: email,
+        bio: bio || '',
+        role: 'admin',
+        avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'
+      }
+    }
+  });
+});
+
+// 修改密码端点
+app.put('/api/auth/change-password', (req, res) => {
+  console.log('🔐 修改密码请求');
+  
+  const { current_password, new_password } = req.body;
+  
+  if (!current_password || !new_password) {
+    return res.status(400).json({
+      success: false,
+      message: '当前密码和新密码不能为空'
+    });
+  }
+  
+  if (new_password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: '新密码至少6个字符'
+    });
+  }
+  
+  res.json({
+    success: true,
+    message: '密码修改成功'
+  });
+});
+
+// 账户设置端点
+app.get('/api/auth/settings', (req, res) => {
+  console.log('⚙️ 获取账户设置请求');
+  
+  res.json({
+    success: true,
+    data: {
+      notifications: {
+        email_notifications: true,
+        push_notifications: true,
+        deployment_alerts: true,
+        system_updates: true,
+        marketing_emails: false
+      },
+      privacy: {
+        profile_visibility: 'public',
+        show_online_status: true,
+        allow_friend_requests: true,
+        data_collection: true
+      },
+      security: {
+        two_factor_auth: false,
+        login_notifications: true,
+        session_timeout: 3600,
+        max_login_attempts: 5
+      }
+    }
+  });
+});
+
+app.put('/api/auth/settings/notifications', (req, res) => {
+  console.log('🔔 更新通知设置请求:', req.body);
+  
+  res.json({
+    success: true,
+    message: '通知设置已保存'
+  });
+});
+
+app.put('/api/auth/settings/privacy', (req, res) => {
+  console.log('🔒 更新隐私设置请求:', req.body);
+  
+  res.json({
+    success: true,
+    message: '隐私设置已保存'
+  });
+});
+
+app.put('/api/auth/settings/security', (req, res) => {
+  console.log('🛡️ 更新安全设置请求:', req.body);
+  
+  res.json({
+    success: true,
+    message: '安全设置已保存'
+  });
+});
+
+// 文件上传端点
+app.post('/api/upload/avatar', (req, res) => {
+  console.log('📤 头像上传请求');
+  
+  // 模拟文件上传成功
+  res.json({
+    success: true,
+    message: '头像上传成功',
+    data: {
+      url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=uploaded',
+      filename: 'avatar_' + Date.now() + '.jpg'
+    }
+  });
+});
+
+// Webhook端点
+app.post('/api/webhooks/deployment', (req, res) => {
+  console.log('🔗 部署Webhook请求:', req.body);
+  
+  res.json({
+    success: true,
+    message: 'Webhook接收成功'
+  });
+});
+
+app.post('/api/webhooks/github', (req, res) => {
+  console.log('🔗 GitHub Webhook请求:', req.body);
+  
+  res.json({
+    success: true,
+    message: 'GitHub Webhook接收成功'
+  });
+});
+
 // 根路径
 app.get('/', (req, res) => {
   res.json({
@@ -245,11 +602,27 @@ app.get('/', (req, res) => {
         logout: 'POST /api/auth/logout',
         register: 'POST /api/auth/register',
         me: 'GET /api/auth/me',
-        verify: 'GET /api/auth/verify'
+        verify: 'GET /api/auth/verify',
+        profile: 'PUT /api/auth/profile',
+        changePassword: 'PUT /api/auth/change-password',
+        settings: 'GET /api/auth/settings',
+        updateNotifications: 'PUT /api/auth/settings/notifications',
+        updatePrivacy: 'PUT /api/auth/settings/privacy',
+        updateSecurity: 'PUT /api/auth/settings/security'
       },
       deployments: {
         list: 'GET /api/deployments',
         create: 'POST /api/deployments'
+      },
+      metrics: {
+        dashboard: 'GET /api/metrics'
+      },
+      upload: {
+        avatar: 'POST /api/upload/avatar'
+      },
+      webhooks: {
+        deployment: 'POST /api/webhooks/deployment',
+        github: 'POST /api/webhooks/github'
       }
     }
   });
