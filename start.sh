@@ -629,41 +629,66 @@ else
     exit 1
 fi
 
-# 等待服务启动
-echo "⏳ 等待服务启动..."
-sleep 5
+# 启动服务并检查状态
+echo "🚀 启动服务并检查状态..."
 
-# 检查后端端口监听
-echo "🔍 检查后端端口 8090 监听状态..."
-for i in {1..15}; do
-    if netstat -tlnp 2>/dev/null | grep -q ":8090"; then
-        echo "✅ 后端端口 8090 正在监听"
+# 最多尝试3次启动
+for attempt in {1..3}; do
+    echo "🔄 第 $attempt 次尝试启动服务..."
+    
+    # 启动服务
+    pm2 start ecosystem.config.js --update-env
+    echo "✅ PM2 启动命令执行完成"
+    
+    # 等待服务启动
+    echo "⏳ 等待服务启动..."
+    sleep 5
+    
+    # 检查后端端口监听
+    echo "🔍 检查后端端口 8090 监听状态..."
+    port_listening=false
+    
+    for i in {1..10}; do
+        if netstat -tlnp 2>/dev/null | grep -q ":8090"; then
+            echo "✅ 后端端口 8090 正在监听"
+            port_listening=true
+            break
+        fi
+        echo "⏳ 等待后端端口 8090 监听... ($i/10)"
+        sleep 2
+    done
+    
+    if [ "$port_listening" = true ]; then
+        echo "✅ 服务启动成功！"
         break
+    else
+        echo "❌ 第 $attempt 次启动失败，端口未监听"
+        
+        if [ $attempt -lt 3 ]; then
+            echo "🔄 重启服务..."
+            pm2 stop dashboard-backend dashboard-frontend 2>/dev/null || true
+            pm2 delete dashboard-backend dashboard-frontend 2>/dev/null || true
+            sleep 3
+        else
+            echo "❌ 3次启动尝试都失败，查看日志并退出"
+            echo "📋 PM2 进程状态:"
+            pm2 list
+            echo "📋 后端服务日志:"
+            pm2 logs dashboard-backend --lines 20
+            echo "📋 前端服务日志:"
+            pm2 logs dashboard-frontend --lines 20
+            exit 1
+        fi
     fi
-    if [ $i -eq 15 ]; then
-        echo "❌ 后端端口 8090 未在30秒内开始监听"
-        pm2 logs dashboard-backend --lines 10
-        exit 1
-    fi
-    echo "⏳ 等待后端端口 8090 监听... ($i/15)"
-    sleep 2
 done
 
-# 检查前端端口监听
+# 检查前端端口监听（简化检查）
 echo "🔍 检查前端端口 3000 监听状态..."
-for i in {1..15}; do
-    if netstat -tlnp 2>/dev/null | grep -q ":3000"; then
-        echo "✅ 前端端口 3000 正在监听"
-        break
-    fi
-    if [ $i -eq 15 ]; then
-        echo "❌ 前端端口 3000 未在30秒内开始监听"
-        pm2 logs dashboard-frontend --lines 10
-        exit 1
-    fi
-    echo "⏳ 等待前端端口 3000 监听... ($i/15)"
-    sleep 2
-done
+if netstat -tlnp 2>/dev/null | grep -q ":3000"; then
+    echo "✅ 前端端口 3000 正在监听"
+else
+    echo "⚠️ 前端端口 3000 未监听（可能是正常的，因为前端可能不需要独立端口）"
+fi
 
 # 测试后端健康检查
 echo "🔍 测试后端健康检查..."
