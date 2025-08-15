@@ -181,8 +181,24 @@ if [ ! -d "backend/dist" ] || [ -z "$(ls -A backend/dist 2>/dev/null)" ]; then
         if [ "$NODE_ENV" = "production" ]; then
             echo "⚠️ 生产环境中后端构建产物缺失，这可能是部署问题"
             echo "💡 请检查 CI/CD 构建流程是否正确"
+            echo "🔄 尝试在生产环境中重新构建..."
         fi
+        
+        # 确保安装了所有依赖（包括 devDependencies）
+        echo "📦 安装构建依赖..."
+        pnpm install --no-frozen-lockfile || npm install
+        
+        # 尝试构建
+        echo "🔨 开始构建..."
         pnpm run build || npm run build
+        
+        # 验证构建结果
+        if [ -f "dist/index.js" ]; then
+            echo "✅ 后端构建成功"
+        else
+            echo "❌ 后端构建失败，但继续尝试启动..."
+        fi
+        
         cd ..
     else
         echo "⚠️  backend/package.json 不存在，跳过构建"
@@ -631,7 +647,20 @@ echo "- frontend-server.js: $([ -f "frontend-server.js" ] && echo "存在" || ec
 echo "🚀 使用 PM2 启动服务..."
 if [ -f "ecosystem.config.js" ]; then
     echo "✅ ecosystem.config.js 存在，使用 PM2 启动..."
-    pm2 start ecosystem.config.js --update-env
+    
+    # 先尝试停止和删除现有进程
+    echo "🛑 清理现有 PM2 进程..."
+    pm2 stop dashboard-backend dashboard-frontend 2>/dev/null || echo "停止进程失败（可能不存在）"
+    pm2 delete dashboard-backend dashboard-frontend 2>/dev/null || echo "删除进程失败（可能不存在）"
+    
+    # 启动服务
+    echo "🚀 启动 PM2 服务..."
+    pm2 start ecosystem.config.js --update-env || {
+        echo "❌ PM2 启动失败，尝试使用简单启动方式..."
+        # 如果 ecosystem 启动失败，尝试直接启动
+        pm2 start backend/start-simple.js --name dashboard-backend || echo "后端启动失败"
+        pm2 start frontend-server.js --name dashboard-frontend || echo "前端启动失败"
+    }
     echo "✅ PM2 启动命令执行完成"
 else
     echo "❌ ecosystem.config.js 不存在"
