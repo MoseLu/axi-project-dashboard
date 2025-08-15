@@ -18,7 +18,7 @@ async function fixDeploymentData() {
     // 1. 删除时间戳明显错误的记录（比如2024年的数据）
     const wrongYearCount = await Deployment.destroy({
       where: {
-        triggered_at: {
+        created_at: {
           [Op.lt]: new Date('2024-12-31') // 删除2024年及之前的所有数据
         }
       }
@@ -29,16 +29,8 @@ async function fixDeploymentData() {
     // 2. 删除没有实际意义的部署记录
     const meaninglessCount = await Deployment.destroy({
       where: {
-        [Op.or]: [
-          {
-            duration: 0,
-            status: 'success'
-          },
-          {
-            duration: { [Op.is]: null },
-            status: 'success'
-          }
-        ]
+        duration: 0,
+        status: 'success'
       }
     });
 
@@ -80,13 +72,13 @@ async function fixDeploymentData() {
 
     // 5. 显示最近的几条记录用于验证
     const recentDeployments = await Deployment.findAll({
-      order: [['triggered_at', 'DESC']],
+      order: [['created_at', 'DESC']],
       limit: 5
     });
 
     logger.info('最近的部署记录:');
     recentDeployments.forEach(deployment => {
-      logger.info(`  ${deployment.project_name}: ${deployment.status} - ${deployment.triggered_at}`);
+      logger.info(`  ${deployment.project_name}: ${deployment.status} - ${deployment.created_at}`);
     });
 
   } catch (error) {
