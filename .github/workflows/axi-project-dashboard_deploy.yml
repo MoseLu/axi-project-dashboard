@@ -230,6 +230,10 @@ jobs:
           # 复制配置文件
           cp ecosystem.config.js dist/
           
+          # 复制新的启动脚本
+          cp start-standard.sh dist/ || echo "⚠️ start-standard.sh 不存在，将使用默认启动脚本"
+          cp start-simple.sh dist/ || echo "⚠️ start-simple.sh 不存在，将使用默认启动脚本"
+          
           # 创建启动脚本（将在服务器上执行）
           echo '#!/bin/bash' > dist/start.sh
           echo 'set -e' >> dist/start.sh
@@ -327,8 +331,12 @@ jobs:
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp frontend-server.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
+          echo '    cp start-standard.sh $TARGET_DIR/ 2>/dev/null || echo "start-standard.sh 不存在"' >> dist/deploy.sh
+          echo '    cp start-simple.sh $TARGET_DIR/ 2>/dev/null || echo "start-simple.sh 不存在"' >> dist/deploy.sh
           echo '    chmod -R 755 $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
+          echo '    chmod +x $TARGET_DIR/start-standard.sh 2>/dev/null || true' >> dist/deploy.sh
+          echo '    chmod +x $TARGET_DIR/start-simple.sh 2>/dev/null || true' >> dist/deploy.sh
           echo 'else' >> dist/deploy.sh
           echo '    echo "以非root用户身份部署..."' >> dist/deploy.sh
           echo '    sudo mkdir -p $TARGET_DIR' >> dist/deploy.sh
@@ -346,8 +354,12 @@ jobs:
           echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp frontend-server.js $TARGET_DIR/' >> dist/deploy.sh
           echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
+          echo '    cp start-standard.sh $TARGET_DIR/ 2>/dev/null || echo "start-standard.sh 不存在"' >> dist/deploy.sh
+          echo '    cp start-simple.sh $TARGET_DIR/ 2>/dev/null || echo "start-simple.sh 不存在"' >> dist/deploy.sh
           echo '    sudo chown -R $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
           echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
+          echo '    chmod +x $TARGET_DIR/start-standard.sh 2>/dev/null || true' >> dist/deploy.sh
+          echo '    chmod +x $TARGET_DIR/start-simple.sh 2>/dev/null || true' >> dist/deploy.sh
           echo 'fi' >> dist/deploy.sh
           echo 'cd $TARGET_DIR' >> dist/deploy.sh
           echo 'echo "🔍 验证部署文件结构..."' >> dist/deploy.sh
