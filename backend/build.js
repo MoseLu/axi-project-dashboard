@@ -13,9 +13,33 @@ try {
     fs.rmSync('dist', { recursive: true, force: true });
   }
 
-  // 编译 TypeScript
-  console.log('📝 编译 TypeScript...');
-  execSync('npx tsc', { stdio: 'inherit' });
+  // 检查是否已经存在编译后的文件
+  if (fs.existsSync('dist') && fs.existsSync('dist/index.js')) {
+    console.log('✅ 发现已编译的文件，跳过编译...');
+  } else {
+    // 尝试编译 TypeScript
+    console.log('📝 尝试编译 TypeScript...');
+    try {
+      // 首先尝试使用本地 TypeScript
+      execSync('npx tsc', { stdio: 'inherit' });
+    } catch (error) {
+      console.log('⚠️ 本地 TypeScript 编译失败，尝试使用全局 TypeScript...');
+      try {
+        execSync('tsc', { stdio: 'inherit' });
+      } catch (globalError) {
+        console.log('⚠️ 全局 TypeScript 也不可用，检查是否有预编译文件...');
+        
+        // 检查是否有预编译的 JavaScript 文件
+        if (fs.existsSync('src/index.ts')) {
+          console.log('📝 发现 TypeScript 源文件，但无法编译...');
+          console.log('💡 请确保在生产环境中包含编译后的文件');
+          throw new Error('TypeScript 编译器不可用，且没有预编译文件');
+        } else {
+          throw new Error('找不到 TypeScript 源文件或编译器');
+        }
+      }
+    }
+  }
 
   // 复制必要的文件到 dist 目录
   console.log('📋 复制配置文件...');

@@ -171,15 +171,24 @@ if [ ! -d "backend/dist" ]; then
     mkdir -p backend/dist
 fi
 
+# 检查是否需要构建后端
 if [ ! -d "backend/dist" ] || [ -z "$(ls -A backend/dist 2>/dev/null)" ]; then
-    echo "🔨 构建后端..."
+    echo "🔨 后端构建产物不存在，尝试构建..."
     if [ -f "backend/package.json" ]; then
         cd backend
+        # 在生产环境中，通常文件已经在 CI/CD 中编译好了
+        # 只有在开发环境或文件确实缺失时才构建
+        if [ "$NODE_ENV" = "production" ]; then
+            echo "⚠️ 生产环境中后端构建产物缺失，这可能是部署问题"
+            echo "💡 请检查 CI/CD 构建流程是否正确"
+        fi
         pnpm run build || npm run build
         cd ..
     else
         echo "⚠️  backend/package.json 不存在，跳过构建"
     fi
+else
+    echo "✅ 后端构建产物已存在，跳过构建"
 fi
 
 # 停止现有服务
