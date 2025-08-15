@@ -179,9 +179,9 @@ jobs:
           echo "🔧 准备部署文件..."
           mkdir -p dist
           
-                     # 复制后端构建产物
-           mkdir -p dist/backend
-           cp -r backend/dist/* dist/backend/
+          # 复制后端构建产物
+          mkdir -p dist/backend
+          cp -r backend/dist/* dist/backend/
           cp -r temp_backend_deps/node_modules dist/
           cp backend/package.json dist/
           cp backend/package.json dist/backend/
@@ -231,216 +231,14 @@ jobs:
           # 复制配置文件
           cp ecosystem.config.js dist/
           
-          # 复制新的启动脚本
+          # 复制启动脚本
+          cp start.sh dist/
           cp start-standard.sh dist/ || echo "⚠️ start-standard.sh 不存在，将使用默认启动脚本"
           cp start-simple.sh dist/ || echo "⚠️ start-simple.sh 不存在，将使用默认启动脚本"
           
-          # 创建启动脚本（将在服务器上执行）
-          echo '#!/bin/bash' > dist/start.sh
-          echo 'set -e' >> dist/start.sh
-          echo 'echo "🚀 Starting axi-project-dashboard backend..."' >> dist/start.sh
-          echo 'cd /srv/apps/axi-project-dashboard' >> dist/start.sh
-          echo 'echo "Current directory: $(pwd)"' >> dist/start.sh
-          echo 'echo "Files in directory:"' >> dist/start.sh
-          echo 'ls -la' >> dist/start.sh
-          echo 'which node && echo "Node.js: $(node --version)" || echo "Node.js not found"' >> dist/start.sh
-          echo 'which pnpm && echo "pnpm: $(pnpm --version)" || echo "pnpm not found"' >> dist/start.sh
-          echo 'which npx && echo "npx available" || echo "npx not found"' >> dist/start.sh
-          echo 'if command -v pm2 &> /dev/null; then' >> dist/start.sh
-          echo '    echo "PM2 found: $(pm2 --version)"' >> dist/start.sh
-          echo '    PM2_CMD="pm2"' >> dist/start.sh
-          echo 'elif command -v npx &> /dev/null; then' >> dist/start.sh
-          echo '    echo "Using npx pm2"' >> dist/start.sh
-          echo '    PM2_CMD="npx pm2"' >> dist/start.sh
-          echo 'else' >> dist/start.sh
-          echo '    echo "ERROR: PM2 not available"' >> dist/start.sh
-          echo '    exit 1' >> dist/start.sh
-          echo 'fi' >> dist/start.sh
-          echo 'if [ ! -f ecosystem.config.js ]; then' >> dist/start.sh
-          echo '    echo "ERROR: ecosystem.config.js not found"' >> dist/start.sh
-          echo '    exit 1' >> dist/start.sh
-          echo 'fi' >> dist/start.sh
-          echo 'if [ ! -f "backend/start-simple.js" ]; then' >> dist/start.sh
-          echo '    echo "ERROR: backend/start-simple.js not found"' >> dist/start.sh
-          echo '    exit 1' >> dist/start.sh
-          echo 'fi' >> dist/start.sh
-          echo 'if [ ! -f "frontend-server.js" ]; then' >> dist/start.sh
-          echo '    echo "ERROR: frontend-server.js not found"' >> dist/start.sh
-          echo '    exit 1' >> dist/start.sh
-          echo 'fi' >> dist/start.sh
-          echo 'echo "🔧 Fixing dependencies..."' >> dist/start.sh
-          echo 'cd backend' >> dist/start.sh
-          echo 'pnpm add side-channel --save || echo "side-channel already installed"' >> dist/start.sh
-          echo 'cd ..' >> dist/start.sh
-          echo 'pnpm install --force || echo "Dependencies installation completed"' >> dist/start.sh
-          echo 'echo "🔨 Building project..."' >> dist/start.sh
-          echo 'cd backend' >> dist/start.sh
-          echo 'if [ -f "simple-build.js" ]; then' >> dist/start.sh
-          echo '    echo "Using simple build..."' >> dist/start.sh
-          echo '    node simple-build.js || { echo "ERROR: Simple build failed, trying full build..."; node build.js || { echo "ERROR: All builds failed"; exit 1; }; }' >> dist/start.sh
-          echo 'else' >> dist/start.sh
-          echo '    echo "Using full build..."' >> dist/start.sh
-          echo '    node build.js || { echo "ERROR: Build failed"; exit 1; }' >> dist/start.sh
-          echo 'fi' >> dist/start.sh
-          echo 'cd ..' >> dist/start.sh
-          echo 'echo "Found ecosystem.config.js, starting services..."' >> dist/start.sh
-          echo '$PM2_CMD stop dashboard-backend dashboard-frontend 2>/dev/null || true' >> dist/start.sh
-          echo '$PM2_CMD delete dashboard-backend dashboard-frontend 2>/dev/null || true' >> dist/start.sh
-          echo '$PM2_CMD start ecosystem.config.js --update-env' >> dist/start.sh
-          echo 'echo "✅ PM2启动命令执行完成"' >> dist/start.sh
-          echo 'echo "⏳ Waiting for service to start..."' >> dist/start.sh
-          echo 'SERVICE_PORT=$(grep "PORT:" ecosystem.config.js | head -1 | sed "s/.*PORT: \\([0-9]*\\).*/\\1/")' >> dist/start.sh
-          echo 'if [ -z "$SERVICE_PORT" ]; then' >> dist/start.sh
-          echo '    SERVICE_PORT=8090' >> dist/start.sh
-          echo 'fi' >> dist/start.sh
-          echo 'echo "🔍 检查端口 $SERVICE_PORT..."' >> dist/start.sh
-          echo 'for i in {1..30}; do' >> dist/start.sh
-          echo '    if netstat -tlnp 2>/dev/null | grep -q ":$SERVICE_PORT"; then' >> dist/start.sh
-          echo '        echo "✅ Service is listening on port $SERVICE_PORT"' >> dist/start.sh
-          echo '        break' >> dist/start.sh
-          echo '    fi' >> dist/start.sh
-          echo '    if [ $i -eq 30 ]; then' >> dist/start.sh
-          echo '        echo "❌ Service failed to start on port $SERVICE_PORT after 60 seconds"' >> dist/start.sh
-          echo '        $PM2_CMD logs dashboard-backend --lines 10' >> dist/start.sh
-          echo '        exit 1' >> dist/start.sh
-          echo '    fi' >> dist/start.sh
-          echo '    sleep 2' >> dist/start.sh
-          echo 'done' >> dist/start.sh
-          echo '$PM2_CMD list' >> dist/start.sh
-          echo '$PM2_CMD logs dashboard-backend --lines 5' >> dist/start.sh
-          echo 'echo "✅ Start script completed"' >> dist/start.sh
-          
-          # 创建部署脚本（将在服务器上执行）
-          echo '#!/bin/bash' > dist/deploy.sh
-          echo 'echo "🚀 开始部署 axi-project-dashboard..."' >> dist/deploy.sh
-          echo 'TARGET_DIR="/srv/apps/axi-project-dashboard"' >> dist/deploy.sh
-          echo 'echo "当前用户: $(whoami)"' >> dist/deploy.sh
-          echo 'echo "用户ID: $(id)"' >> dist/deploy.sh
-          echo 'if [ "$(whoami)" = "root" ]; then' >> dist/deploy.sh
-          echo '    echo "以root用户身份部署..."' >> dist/deploy.sh
-          echo '    mkdir -p $TARGET_DIR' >> dist/deploy.sh
-          echo '    pm2 stop dashboard-backend || true' >> dist/deploy.sh
-          echo '    if [ -d "$TARGET_DIR/backend" ]; then' >> dist/deploy.sh
-          echo '        echo "📦 备份现有部署..."' >> dist/deploy.sh
-          echo '        cp -r $TARGET_DIR /srv/backups/axi-project-dashboard-$(date +%Y%m%d_%H%M%S) || true' >> dist/deploy.sh
-          echo '    fi' >> dist/deploy.sh
-          echo '    echo "📂 部署文件到服务器..."' >> dist/deploy.sh
-          echo '    cp -r backend $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp -r node_modules $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp -r frontend $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp frontend-server.js $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp start-standard.sh $TARGET_DIR/ 2>/dev/null || echo "start-standard.sh 不存在"' >> dist/deploy.sh
-          echo '    cp start-simple.sh $TARGET_DIR/ 2>/dev/null || echo "start-simple.sh 不存在"' >> dist/deploy.sh
-          echo '    chmod -R 755 $TARGET_DIR' >> dist/deploy.sh
-          echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
-          echo '    chmod +x $TARGET_DIR/start-standard.sh 2>/dev/null || true' >> dist/deploy.sh
-          echo '    chmod +x $TARGET_DIR/start-simple.sh 2>/dev/null || true' >> dist/deploy.sh
-          echo 'else' >> dist/deploy.sh
-          echo '    echo "以非root用户身份部署..."' >> dist/deploy.sh
-          echo '    sudo mkdir -p $TARGET_DIR' >> dist/deploy.sh
-          echo '    sudo chown $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
-          echo '    pm2 stop dashboard-backend || true' >> dist/deploy.sh
-          echo '    if [ -d "$TARGET_DIR/backend" ]; then' >> dist/deploy.sh
-          echo '        echo "📦 备份现有部署..."' >> dist/deploy.sh
-          echo '        sudo cp -r $TARGET_DIR /srv/backups/axi-project-dashboard-$(date +%Y%m%d_%H%M%S) || true' >> dist/deploy.sh
-          echo '    fi' >> dist/deploy.sh
-          echo '    echo "📂 部署文件到服务器..."' >> dist/deploy.sh
-          echo '    cp -r backend $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp -r node_modules $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp -r frontend $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp package.json $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp ecosystem.config.js $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp frontend-server.js $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp start.sh $TARGET_DIR/' >> dist/deploy.sh
-          echo '    cp start-standard.sh $TARGET_DIR/ 2>/dev/null || echo "start-standard.sh 不存在"' >> dist/deploy.sh
-          echo '    cp start-simple.sh $TARGET_DIR/ 2>/dev/null || echo "start-simple.sh 不存在"' >> dist/deploy.sh
-          echo '    sudo chown -R $(whoami):$(whoami) $TARGET_DIR' >> dist/deploy.sh
-          echo '    chmod +x $TARGET_DIR/start.sh' >> dist/deploy.sh
-          echo '    chmod +x $TARGET_DIR/start-standard.sh 2>/dev/null || true' >> dist/deploy.sh
-          echo '    chmod +x $TARGET_DIR/start-simple.sh 2>/dev/null || true' >> dist/deploy.sh
-          echo 'fi' >> dist/deploy.sh
-          echo 'cd $TARGET_DIR' >> dist/deploy.sh
-          echo 'echo "🔍 验证部署文件结构..."' >> dist/deploy.sh
-          echo 'ls -la backend/ || echo "❌ backend目录不存在"' >> dist/deploy.sh
-          echo 'ls -la backend/index.js || echo "❌ backend/index.js不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/depd/ || echo "❌ depd依赖不存在"' >> dist/deploy.sh
-          echo 'if [ ! -f "backend/index.js" ]; then' >> dist/deploy.sh
-          echo '    echo "❌ 后端主入口文件不存在，部署失败"' >> dist/deploy.sh
-          echo '    exit 1' >> dist/deploy.sh
-          echo 'fi' >> dist/deploy.sh
-          echo 'if [ "$(whoami)" = "root" ]; then' >> dist/deploy.sh
-          echo '    mkdir -p /var/log/axi-deploy-dashboard' >> dist/deploy.sh
-          echo '    chmod 755 /var/log/axi-deploy-dashboard' >> dist/deploy.sh
-          echo 'else' >> dist/deploy.sh
-          echo '    sudo mkdir -p /var/log/axi-deploy-dashboard' >> dist/deploy.sh
-          echo '    sudo chown $(whoami):$(whoami) /var/log/axi-deploy-dashboard' >> dist/deploy.sh
-          echo 'fi' >> dist/deploy.sh
-          echo 'echo "📋 验证部署文件..."' >> dist/deploy.sh
-          echo 'ls -la backend/index.js || echo "❌ backend/index.js 不存在"' >> dist/deploy.sh
-          echo 'ls -la ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"' >> dist/deploy.sh
-          echo 'ls -la frontend-server.js || echo "❌ frontend-server.js 不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/express/ || echo "❌ express模块不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/merge-descriptors/ || echo "❌ merge-descriptors模块不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/depd/ || echo "❌ depd模块不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/debug/ || echo "❌ debug模块不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/finalhandler/ || echo "❌ finalhandler模块不存在"' >> dist/deploy.sh
-          echo 'ls -la node_modules/body-parser/ || echo "❌ body-parser模块不存在"' >> dist/deploy.sh
-          echo 'if [ -f "node_modules/express/package.json" ]; then' >> dist/deploy.sh
-          echo '    EXPRESS_VERSION=$(grep '"'"'"version"'"'"' node_modules/express/package.json | cut -d'"'"'"'"'"' -f4)' >> dist/deploy.sh
-          echo '    echo "✅ Express版本: $EXPRESS_VERSION"' >> dist/deploy.sh
-          echo 'else' >> dist/deploy.sh
-          echo '    echo "❌ Express模块损坏"' >> dist/deploy.sh
-          echo '    exit 1' >> dist/deploy.sh
-          echo 'fi' >> dist/deploy.sh
-          echo 'grep "script:" ecosystem.config.js || echo "❌ PM2脚本配置不存在"' >> dist/deploy.sh
-          echo 'node --version || echo "❌ Node.js未安装"' >> dist/deploy.sh
-          echo 'pnpm --version || echo "❌ pnpm未安装"' >> dist/deploy.sh
-          echo 'pm2 --version || echo "❌ PM2未安装"' >> dist/deploy.sh
-          echo 'echo "🛑 停止旧进程..."' >> dist/deploy.sh
-          echo 'pm2 stop dashboard-backend || echo "没有找到旧进程"' >> dist/deploy.sh
-          echo 'pm2 delete dashboard-backend || echo "没有旧进程需要删除"' >> dist/deploy.sh
-          echo 'echo "🚀 启动后端服务..."' >> dist/deploy.sh
-          echo 'if pm2 start ecosystem.config.js --update-env; then' >> dist/deploy.sh
-          echo '    echo "✅ PM2启动命令执行成功"' >> dist/deploy.sh
-          echo 'else' >> dist/deploy.sh
-          echo '    echo "❌ PM2启动命令失败，退出码: $?"' >> dist/deploy.sh
-          echo '    cat ecosystem.config.js || echo "无法读取ecosystem.config.js"' >> dist/deploy.sh
-          echo '    pwd' >> dist/deploy.sh
-          echo '    ls -la' >> dist/deploy.sh
-          echo 'fi' >> dist/deploy.sh
-          echo 'echo "⏳ 等待服务启动..."' >> dist/deploy.sh
-          echo 'sleep 10' >> dist/deploy.sh
-          echo 'echo "📋 检查PM2服务状态..."' >> dist/deploy.sh
-          echo 'pm2 status' >> dist/deploy.sh
-          echo 'echo ""' >> dist/deploy.sh
-          echo 'echo "📋 检查dashboard-backend进程详情..."' >> dist/deploy.sh
-          echo 'pm2 describe dashboard-backend || echo "❌ dashboard-backend进程不存在"' >> dist/deploy.sh
-          echo 'echo ""' >> dist/deploy.sh
-          echo 'echo "📋 获取最新日志..."' >> dist/deploy.sh
-          echo 'pm2 logs dashboard-backend --lines 20 --nostream || echo "❌ 无法获取日志"' >> dist/deploy.sh
-          echo 'echo "🔍 检查端口8090占用情况..."' >> dist/deploy.sh
-          echo 'netstat -tlnp | grep :8090 || echo "❌ 端口8090未被占用"' >> dist/deploy.sh
-          echo 'echo "🔍 测试本地端口8090..."' >> dist/deploy.sh
-          echo 'for i in {1..3}; do' >> dist/deploy.sh
-          echo '    echo "尝试 $i/3:"' >> dist/deploy.sh
-          echo '    if curl -f http://localhost:8090/health; then' >> dist/deploy.sh
-          echo '        echo "✅ 本地健康检查成功"' >> dist/deploy.sh
-          echo '        break' >> dist/deploy.sh
-          echo '    else' >> dist/deploy.sh
-          echo '        echo "❌ 尝试 $i 失败"' >> dist/deploy.sh
-          echo '        sleep 2' >> dist/deploy.sh
-          echo '    fi' >> dist/deploy.sh
-          echo 'done' >> dist/deploy.sh
-          echo 'echo "✅ axi-project-dashboard 部署完成！"' >> dist/deploy.sh
-          
-          chmod +x dist/deploy.sh
-          
-
-          
           chmod +x dist/start.sh
+          chmod +x dist/start-standard.sh 2>/dev/null || true
+          chmod +x dist/start-simple.sh 2>/dev/null || true
           
           echo "✅ 部署文件准备完成"
           echo "部署包内容:"
@@ -663,7 +461,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                                 start_cmd    : 'bash start-standard.sh',
+                start_cmd    : 'bash start.sh',
                 service_port : '8090', // 使用配置的端口
                 nginx_config : nginxConfig,
                 test_url     : 'https://redamancy.com.cn/project-dashboard/api/health',
