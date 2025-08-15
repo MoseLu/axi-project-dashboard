@@ -189,8 +189,8 @@ jobs:
           cp backend/build.js dist/backend/
           cp backend/tsconfig.json dist/backend/
           
-          # 复制关键的启动脚本
-          cp backend/start-simple.js dist/backend/
+          # 复制关键的启动脚本（如果存在）
+          cp backend/start-simple.js dist/backend/ 2>/dev/null || echo "⚠️ start-simple.js 不存在，跳过"
           
           # 验证关键构建产物
           echo "🔍 验证后端构建产物..."

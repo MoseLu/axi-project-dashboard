@@ -13,8 +13,9 @@ try {
     fs.rmSync('dist', { recursive: true, force: true });
   }
 
-  // 检查是否已经存在编译后的文件
-  if (fs.existsSync('dist') && fs.existsSync('dist/index.js')) {
+  // 检查是否已经存在编译后的文件（在清理之前检查）
+  const hasExistingBuild = fs.existsSync('dist') && fs.existsSync('dist/index.js');
+  if (hasExistingBuild) {
     console.log('✅ 发现已编译的文件，跳过编译...');
   } else {
     // 尝试编译 TypeScript
