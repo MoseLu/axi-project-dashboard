@@ -3,13 +3,10 @@ import {
   Card, 
   Row, 
   Col, 
-  Statistic, 
-  Progress, 
   Tag, 
   Button, 
   Space, 
   Tooltip, 
-  Modal, 
   message,
   Spin,
   Empty,
@@ -22,7 +19,6 @@ import {
   DatabaseOutlined,
   CloudServerOutlined,
   MonitorOutlined,
-  SettingOutlined,
   EyeOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -377,7 +373,7 @@ const ProjectOverviewPage: React.FC = () => {
                           <Text type="secondary">MySQL:</Text>
                           {getDatabaseStatusIcon(project.mysql_status)}
                           {project.mysql_backup_enabled && (
-                            <Tag size="small" color="green">备份已启用</Tag>
+                            <Tag color="green">备份已启用</Tag>
                           )}
                         </div>
                       )}

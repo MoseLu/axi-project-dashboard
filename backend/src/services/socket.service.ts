@@ -22,6 +22,7 @@ enum SocketEventType {
   DEPLOYMENT_UPDATED = 'deployment_updated',
   DEPLOYMENT_COMPLETED = 'deployment_completed',
   DEPLOYMENT_FAILED = 'deployment_failed',
+  STEP_CREATED = 'step_created',
   STEP_STARTED = 'step_started',
   STEP_UPDATED = 'step_updated',
   STEP_COMPLETED = 'step_completed',
@@ -435,6 +436,18 @@ export class SocketService {
 
     this.io.to(`project:${deployment.projectId}`).emit('event', event);
     this.io.to(`deployment:${deployment.id}`).emit('event', event);
+  }
+
+  public emitStepCreated(stepData: any): void {
+    const event: SocketEvent = {
+      type: SocketEventType.STEP_CREATED,
+      payload: stepData,
+      timestamp: new Date(),
+      projectId: stepData.projectId,
+      deploymentId: stepData.deploymentId
+    };
+
+    this.io.to(`deployment:${stepData.deploymentId}`).emit('event', event);
   }
 
   public emitStepStarted(step: DeploymentStep, deploymentId: string, projectId: string): void {

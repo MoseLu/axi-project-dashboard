@@ -45,7 +45,7 @@ export interface ProjectStats {
   failed_deployments: number;
   success_rate: number;
   average_deployment_time: number;
-  last_deployment?: Date;
+  last_deployment?: Date | undefined;
   uptime_percentage: number;
 }
 
@@ -63,8 +63,13 @@ export class ProjectService {
     try {
       const project = await Project.create({
         ...data,
+        is_running: false,
+        total_deployments: 0,
+        successful_deployments: 0,
+        failed_deployments: 0,
+        average_deployment_time: 0,
         environment_variables: data.environment_variables ? JSON.stringify(data.environment_variables) : undefined,
-      });
+      } as any);
 
       logger.info(`Created project: ${project.name}`);
       return project;
@@ -256,7 +261,7 @@ export class ProjectService {
         failed_deployments: failedDeployments,
         success_rate: successRate,
         average_deployment_time: averageDeploymentTime,
-        last_deployment: lastDeployment?.created_at,
+        last_deployment: lastDeployment?.created_at ? new Date(lastDeployment.created_at) : undefined,
         uptime_percentage: uptimePercentage,
       };
     } catch (error) {
@@ -418,9 +423,9 @@ export class ProjectService {
           total_deployments: stats.total_deployments,
           successful_deployments: stats.successful_deployments,
           failed_deployments: stats.failed_deployments,
-          last_deployment: stats.last_deployment,
+          last_deployment: stats.last_deployment ? new Date(stats.last_deployment) : undefined,
           average_deployment_time: stats.average_deployment_time,
-        });
+        } as any);
       }
 
       logger.info(`Synced deployment stats for ${projects.length} projects`);

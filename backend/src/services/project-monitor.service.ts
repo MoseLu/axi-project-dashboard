@@ -38,17 +38,23 @@ export class ProjectMonitorService {
       // 获取内存使用情况
       const { stdout: memoryInfo } = await execAsync('free -m');
       const memoryLines = memoryInfo.split('\n');
-      const memLine = memoryLines[1].split(/\s+/);
-      const totalMemory = parseInt(memLine[1]);
-      const usedMemory = parseInt(memLine[2]);
+      const memLine = memoryLines[1]?.split(/\s+/);
+      if (!memLine || memLine.length < 3) {
+        throw new Error('Invalid memory info format');
+      }
+      const totalMemory = parseInt(memLine[1] || '0');
+      const usedMemory = parseInt(memLine[2] || '0');
       const memoryUsage = Math.round((usedMemory / totalMemory) * 100);
 
       // 获取磁盘使用情况
       const { stdout: diskInfo } = await execAsync('df -m /');
       const diskLines = diskInfo.split('\n');
-      const diskLine = diskLines[1].split(/\s+/);
-      const totalDisk = parseInt(diskLine[1]);
-      const usedDisk = parseInt(diskLine[2]);
+      const diskLine = diskLines[1]?.split(/\s+/);
+      if (!diskLine || diskLine.length < 3) {
+        throw new Error('Invalid disk info format');
+      }
+      const totalDisk = parseInt(diskLine[1] || '0');
+      const usedDisk = parseInt(diskLine[2] || '0');
 
       // 获取CPU使用情况
       const { stdout: cpuInfo } = await execAsync("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1");
@@ -56,7 +62,7 @@ export class ProjectMonitorService {
 
       // 获取系统运行时间
       const { stdout: uptimeInfo } = await execAsync('cat /proc/uptime');
-      const uptime = parseInt(uptimeInfo.split(' ')[0]);
+      const uptime = parseInt(uptimeInfo.split(' ')[0] || '0');
 
       return {
         memory_usage: usedMemory,
@@ -94,8 +100,12 @@ export class ProjectMonitorService {
       const { stdout: psInfo } = await execAsync(`ps -p ${pid} -o pid,ppid,pcpu,pmem,etime --no-headers`);
       const psData = psInfo.trim().split(/\s+/);
       
-      const cpuUsage = parseFloat(psData[2]);
-      const memoryUsage = parseFloat(psData[3]);
+      if (psData.length < 4) {
+        throw new Error('Invalid process info format');
+      }
+      
+      const cpuUsage = parseFloat(psData[2] || '0');
+      const memoryUsage = parseFloat(psData[3] || '0');
 
       // 检查端口是否在监听
       let portStatus = false;
@@ -110,11 +120,11 @@ export class ProjectMonitorService {
 
       return {
         is_running: true,
-        port: portStatus ? port : undefined,
-        pid: parseInt(pid),
-        memory_usage: memoryUsage,
-        cpu_usage: cpuUsage,
-      };
+        port: portStatus ? port : 0,
+        pid: parseInt(pid || '0'),
+        memory_usage: memoryUsage || 0,
+        cpu_usage: cpuUsage || 0,
+      } as any;
     } catch (error) {
       logger.error(`Failed to check service status for ${projectName}:`, error);
       return { is_running: false };
@@ -143,8 +153,10 @@ export class ProjectMonitorService {
               
               if (backupFiles.length > 0) {
                 const latestBackup = backupFiles[backupFiles.length - 1];
-                const backupSize = latestBackup.split(/\s+/)[4];
-                status.mysql_backup_size = parseInt(backupSize);
+                if (latestBackup) {
+                  const backupSize = latestBackup.split(/\s+/)[4];
+                  status.mysql_backup_size = parseInt(backupSize || '0');
+                }
                 
                 // 获取最后备份时间
                 const { stdout: backupTime } = await execAsync(`stat -c %Y "${project.mysql_backup_path}"`);
@@ -218,15 +230,15 @@ export class ProjectMonitorService {
       // 更新项目状态
       await project.update({
         is_running: serviceStatus.is_running && isHealthy,
-        port: serviceStatus.port,
-        memory_usage: serviceStatus.memory_usage,
-        cpu_usage: serviceStatus.cpu_usage,
+        port: serviceStatus.port || 0,
+        memory_usage: serviceStatus.memory_usage || 0,
+        cpu_usage: serviceStatus.cpu_usage || 0,
         uptime: serviceStatus.is_running ? systemMetrics.uptime : 0,
         last_health_check: new Date(),
-        mysql_status: databaseStatus.mysql_status,
-        redis_status: databaseStatus.redis_status,
+        mysql_status: databaseStatus.mysql_status || undefined,
+        redis_status: databaseStatus.redis_status || undefined,
         mysql_backup_last: databaseStatus.mysql_backup_last,
-      });
+      } as any);
 
       logger.info(`Updated status for project ${project.name}: running=${serviceStatus.is_running}, healthy=${isHealthy}`);
     } catch (error) {

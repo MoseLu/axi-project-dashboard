@@ -134,12 +134,16 @@ export class DeploymentService {
         display_name: stepData.display_name,
         step_order: stepData.step_order,
         step_type: stepData.step_type,
+        status: 'pending',
+        duration: 0,
+        progress: 0,
+        retry_count: 0,
         is_required: stepData.is_required ?? true,
         can_retry: stepData.can_retry ?? true,
         max_retries: stepData.max_retries ?? 3,
         depends_on: stepData.depends_on,
         metadata: stepData.metadata,
-      });
+      } as any);
 
       logger.info(`Created deployment step: ${step.step_name} for deployment: ${deploymentUuid}`);
 

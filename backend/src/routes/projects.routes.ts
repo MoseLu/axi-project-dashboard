@@ -3,7 +3,7 @@ import { logger } from '@/utils/logger';
 import { ProjectService } from '@/services/project.service';
 import { DeploymentService } from '@/services/deployment.service';
 
-const router = Router();
+const router: Router = Router();
 
 // 获取项目列表
 router.get('/', async (req: Request, res: Response) => {
