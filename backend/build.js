@@ -104,7 +104,12 @@ app.listen(PORT, () => {
   // 复制上传目录
   if (fs.existsSync('uploads')) {
     console.log('📁 复制上传目录...');
-    execSync('cp -r uploads dist/', { stdio: 'inherit' });
+    // 使用跨平台的复制方法
+    if (process.platform === 'win32') {
+      execSync('xcopy uploads dist\\uploads /E /I /Y', { stdio: 'inherit' });
+    } else {
+      execSync('cp -r uploads dist/', { stdio: 'inherit' });
+    }
   }
 
   // 验证构建结果
@@ -116,7 +121,17 @@ app.listen(PORT, () => {
   }
 
   console.log('✅ 后端构建完成！');
-  console.log('📊 构建产物大小:', execSync('du -sh dist', { encoding: 'utf8' }).trim());
+  // 跨平台的文件大小检查
+  try {
+    if (process.platform === 'win32') {
+      const sizeOutput = execSync('dir dist /s', { encoding: 'utf8' });
+      console.log('📊 构建产物已创建');
+    } else {
+      console.log('📊 构建产物大小:', execSync('du -sh dist', { encoding: 'utf8' }).trim());
+    }
+  } catch (error) {
+    console.log('📊 构建产物已创建（无法获取大小信息）');
+  }
 
 } catch (error) {
   console.error('❌ 构建失败:', error.message);

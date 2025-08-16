@@ -19,7 +19,7 @@ module.exports = {
         MYSQL_USER: 'root',
         MYSQL_PASSWORD: '123456',
         MYSQL_DATABASE: 'project_dashboard',
-        SKIP_DB_INIT: 'false', // 启用数据库初始化
+        SKIP_DB_INIT: 'false', // 启用数据库初始化（模仿 axi-star-cloud 策略：表不存在则创建，已存在则跳过）
         REDIS_URI: 'redis://localhost:6379',
         
         // 安全配置

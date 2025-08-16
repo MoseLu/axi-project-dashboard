@@ -3,11 +3,15 @@ import { logger } from '@/utils/logger';
 import { ApiResponse } from '@/types';
 import { DeploymentService } from '@/services/deployment.service';
 import authRoutes from './auth.routes';
+import projectRoutes from './projects.routes';
 
 const router = Router();
 
 // 认证路由
 router.use('/auth', authRoutes);
+
+// 项目路由
+router.use('/projects', projectRoutes);
 
 // Health check route
 router.get('/health', (req: Request, res: Response) => {
@@ -81,10 +85,171 @@ router.get('/deployments', async (req, res) => {
   }
 });
 
+// 获取部署历史数据
+router.get('/deployments/history', async (req, res) => {
+  try {
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
+    }
+
+    // 获取查询参数
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const project = req.query.project as string;
+    const status = req.query.status as string;
+    const startDate = req.query.startDate as string;
+    const endDate = req.query.endDate as string;
+
+    const history = await deploymentService.getDeploymentHistory({
+      page,
+      limit,
+      project,
+      status,
+      startDate,
+      endDate
+    });
+
+    return res.json({
+      success: true,
+      message: 'Deployment history retrieved successfully',
+      data: history.data,
+      pagination: history.pagination
+    });
+  } catch (error) {
+    logger.error('Failed to get deployment history:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get deployment history',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 获取部署详细步骤
+router.get('/deployments/:deploymentId/steps', async (req, res) => {
+  try {
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
+    }
+
+    const { deploymentId } = req.params;
+    const steps = await deploymentService.getDeploymentSteps(deploymentId);
+
+    return res.json({
+      success: true,
+      message: 'Deployment steps retrieved successfully',
+      data: steps
+    });
+  } catch (error) {
+    logger.error('Failed to get deployment steps:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to get deployment steps',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 更新部署步骤状态
+router.put('/deployments/steps/:stepId', async (req, res) => {
+  try {
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
+    }
+
+    const { stepId } = req.params;
+    const { status, progress, logs, errorMessage, resultData } = req.body;
+
+    const step = await deploymentService.updateDeploymentStepStatus(
+      stepId,
+      status,
+      progress,
+      logs,
+      errorMessage,
+      resultData
+    );
+
+    if (!step) {
+      return res.status(404).json({
+        success: false,
+        message: 'Deployment step not found'
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Deployment step updated successfully',
+      data: step
+    });
+  } catch (error) {
+    logger.error('Failed to update deployment step:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update deployment step',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 重新部署
+router.post('/deployments/:id/redeploy', async (req, res) => {
+  try {
+    const deploymentService = (req as any).deploymentService;
+    if (!deploymentService) {
+      return res.status(503).json({
+        success: false,
+        message: 'Deployment service not available'
+      });
+    }
+
+    const deploymentId = parseInt(req.params.id);
+    if (isNaN(deploymentId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid deployment ID'
+      });
+    }
+
+    const success = await deploymentService.redeployDeployment(deploymentId);
+    
+    if (success) {
+      return res.json({
+        success: true,
+        message: 'Redeployment triggered successfully'
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'Deployment not found'
+      });
+    }
+  } catch (error) {
+    logger.error('Failed to redeploy deployment:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to redeploy deployment',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// 获取项目列表（兼容旧接口）
 router.get('/projects', (req, res) => {
   res.json({
     success: true,
-    message: 'Projects endpoint - Coming soon!',
+    message: 'Projects endpoint - Use /api/projects for full functionality',
     data: []
   });
 });
@@ -169,9 +334,28 @@ router.use('*', (req, res) => {
       'GET /api/health',
       'GET /api/info',
       'GET /api/deployments',
+      'GET /api/deployments/history',
+      'GET /api/deployments/:id/steps',
+      'PUT /api/deployments/steps/:stepId',
+      'POST /api/deployments/:id/redeploy',
       'GET /api/projects',
+      'GET /api/projects/overview',
+      'POST /api/projects',
+      'GET /api/projects/:projectName',
+      'PUT /api/projects/:projectName',
+      'DELETE /api/projects/:projectName',
+      'GET /api/projects/:projectName/stats',
+      'GET /api/projects/:projectName/status',
+      'POST /api/projects/:projectName/status/refresh',
+      'POST /api/projects/:projectName/start',
+      'POST /api/projects/:projectName/stop',
+      'POST /api/projects/:projectName/restart',
+      'GET /api/projects/:projectName/deployments',
+      'POST /api/projects/:projectName/redeploy',
+      'POST /api/projects/sync-stats',
       'GET /api/metrics',
-      'POST /api/webhooks/github'
+      'POST /api/webhooks/github',
+      'POST /api/webhooks/deployment'
     ]
   });
 });

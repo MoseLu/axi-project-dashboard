@@ -111,10 +111,22 @@ export NODE_ENV=${NODE_ENV:-production}
 export PORT=${PORT:-8090}
 export WEBSOCKET_PORT=${WEBSOCKET_PORT:-8091}
 
+# 数据库配置（模仿 axi-star-cloud 策略）
+export MYSQL_HOST=${MYSQL_HOST:-127.0.0.1}
+export MYSQL_PORT=${MYSQL_PORT:-3306}
+export MYSQL_USER=${MYSQL_USER:-root}
+export MYSQL_PASSWORD=${MYSQL_PASSWORD:-123456}
+export MYSQL_DATABASE=${MYSQL_DATABASE:-project_dashboard}
+export SKIP_DB_INIT=${SKIP_DB_INIT:-false}
+
 echo "📋 环境配置:"
 echo "- NODE_ENV: $NODE_ENV"
 echo "- PORT: $PORT"
 echo "- WEBSOCKET_PORT: $WEBSOCKET_PORT"
+echo "- MYSQL_HOST: $MYSQL_HOST"
+echo "- MYSQL_PORT: $MYSQL_PORT"
+echo "- MYSQL_DATABASE: $MYSQL_DATABASE"
+echo "- SKIP_DB_INIT: $SKIP_DB_INIT"
 
 # 检查依赖
 echo "📦 检查并安装依赖..."

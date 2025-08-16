@@ -20,6 +20,8 @@ import { HealthCheckService } from '@/services/health.service';
 import { DeploymentService } from '@/services/deployment.service';
 import { GracefulShutdown } from '@/utils/graceful-shutdown';
 import initializeDatabase from '@/scripts/init-database';
+import { ProjectService } from '@/services/project.service';
+import { ProjectMonitorService } from '@/services/project-monitor.service';
 
 class Application {
   public app: express.Application;
@@ -30,6 +32,8 @@ class Application {
   private healthService: HealthCheckService;
   private deploymentService: DeploymentService;
   private gracefulShutdown: GracefulShutdown;
+  private projectService: ProjectService;
+  private projectMonitorService: ProjectMonitorService;
 
   constructor() {
     this.app = express();
@@ -46,7 +50,9 @@ class Application {
     this.socketService = new SocketService(this.io);
     this.metricsService = new MetricsService();
     this.healthService = new HealthCheckService();
+    this.projectMonitorService = new ProjectMonitorService();
     this.deploymentService = new DeploymentService(this.socketService);
+    this.projectService = new ProjectService(this.projectMonitorService);
     this.gracefulShutdown = new GracefulShutdown();
 
     this.initializeMiddlewares();
@@ -114,6 +120,9 @@ class Application {
     // 将 DeploymentService 注入到请求对象中
     this.app.use('/project-dashboard/api', (req, res, next) => {
       (req as any).deploymentService = this.deploymentService;
+      (req as any).projectService = this.projectService;
+      (req as any).projectMonitorService = this.projectMonitorService;
+      (req as any).socketService = this.socketService;
       next();
     }, routes);
 
@@ -219,26 +228,26 @@ class Application {
       // 检查是否跳过数据库初始化
       const skipDbInit = process.env.SKIP_DB_INIT === 'true' || !process.env.MYSQL_HOST;
       
-      // 连接数据库
+      // 数据库连接（模仿 axi-star-cloud 策略：连接数据库但不自动初始化）
       if (!skipDbInit) {
         try {
+          logger.info('🔧 连接数据库（模仿 axi-star-cloud 策略：连接数据库但不自动初始化）...');
+          
           // 连接 MySQL（用于兼容性）
           const dbConnection = await connectDatabase();
           logger.info('✅ MySQL connected successfully');
-          
-          // 初始化数据库表结构
-          await initializeDatabase();
-          logger.info('✅ Database tables initialized successfully');
           
           // 初始化 Sequelize
           await testConnection();
           await syncDatabase();
           logger.info('✅ Sequelize database initialized successfully');
+          
+          logger.info('💡 数据库连接策略：连接数据库但不自动初始化，初始化在部署时完成');
         } catch (error) {
           logger.warn('⚠️ Database connection failed, continuing without database:', error);
         }
       } else {
-        logger.info('⏭️ Skipping database initialization (SKIP_DB_INIT=true or no MYSQL_HOST)');
+        logger.info('⏭️ Skipping database connection (SKIP_DB_INIT=true or no MYSQL_HOST)');
       }
 
       // 连接 Redis
@@ -275,6 +284,22 @@ class Application {
         logger.info('✅ Health check service initialized');
       } catch (error) {
         logger.warn('⚠️ Health check service initialization failed:', error);
+      }
+
+      // 启动项目监控服务
+      try {
+        this.projectMonitorService.startMonitoring(5); // 每5分钟检查一次
+        logger.info('✅ Project monitor service initialized');
+      } catch (error) {
+        logger.warn('⚠️ Project monitor service initialization failed:', error);
+      }
+
+      // 同步项目部署统计
+      try {
+        await this.projectService.syncProjectDeploymentStats();
+        logger.info('✅ Project deployment stats synced');
+      } catch (error) {
+        logger.warn('⚠️ Project deployment stats sync failed:', error);
       }
 
       logger.info('🎉 All services initialization completed');

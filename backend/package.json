@@ -22,7 +22,12 @@
     "cleanup:test-data": "ts-node src/scripts/cleanup-test-data.ts",
     "fix:deployment-data": "ts-node -r tsconfig-paths/register src/scripts/fix-deployment-data.ts",
     "fix:deployment-data:js": "node fix-deployment-data.js",
-    "db:init": "ts-node -r tsconfig-paths/register src/scripts/init-database.ts"
+    "db:init": "ts-node -r tsconfig-paths/register src/scripts/init-database.ts",
+    "db:reset": "ts-node -r tsconfig-paths/register src/scripts/reset-database.ts --reset-all",
+    "db:reset-deployments": "ts-node -r tsconfig-paths/register src/scripts/reset-database.ts --reset-deployments",
+    "db:cleanup-test": "ts-node -r tsconfig-paths/register src/scripts/reset-database.ts --cleanup-test",
+    "db:cleanup-deployments": "ts-node -r tsconfig-paths/register src/scripts/cleanup-deployment-data.ts",
+    "db:status": "ts-node -r tsconfig-paths/register src/scripts/reset-database.ts --status"
   },
   "keywords": [
     "axi-deploy",

@@ -1,54 +1,90 @@
-import React from 'react';
-import { Card, Typography, Table, Tag, Space, Button, DatePicker, Select, Progress, Row, Col } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Typography, Table, Tag, Space, Button, DatePicker, Select, Progress, Row, Col, message, Spin } from 'antd';
 import { 
   ReloadOutlined, 
   DownloadOutlined,
   FilterOutlined 
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../utils/api';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
+interface DeploymentRecord {
+  id: number;
+  project_name: string;
+  branch: string;
+  status: 'success' | 'failed' | 'running' | 'pending';
+  duration: number;
+  triggered_by: string;
+  created_at: string;
+  commit_hash: string;
+  progress: number;
+}
+
 const DeploymentHistoryPage: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [historyData, setHistoryData] = useState<DeploymentRecord[]>([]);
+  const [filters, setFilters] = useState({
+    project: '',
+    status: '',
+    dateRange: null as any
+  });
 
-  // 模拟历史数据
-  const historyData = [
-    {
-      id: 1,
-      project_name: 'axi-project-dashboard',
-      branch: 'main',
-      status: 'success',
-      duration: 45,
-      triggered_by: '张三',
-      created_at: '2024-01-15 14:30:00',
-      commit_hash: 'a1b2c3d4',
-      progress: 100
-    },
-    {
-      id: 2,
-      project_name: 'axi-star-cloud',
-      branch: 'develop',
-      status: 'failed',
-      duration: 120,
-      triggered_by: '李四',
-      created_at: '2024-01-15 13:15:00',
-      commit_hash: 'e5f6g7h8',
-      progress: 65
-    },
-    {
-      id: 3,
-      project_name: 'axi-docs',
-      branch: 'feature/new-docs',
-      status: 'success',
-      duration: 30,
-      triggered_by: '王五',
-      created_at: '2024-01-15 12:00:00',
-      commit_hash: 'i9j0k1l2',
-      progress: 100
+  // 获取部署历史数据
+  const fetchDeploymentHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/deployments/history');
+      
+      if (response.data.success) {
+        setHistoryData(response.data.data || []);
+      } else {
+        message.error('获取部署历史失败');
+        setHistoryData([]);
+      }
+    } catch (error) {
+      console.error('获取部署历史失败:', error);
+      message.error('获取部署历史失败');
+      setHistoryData([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // 重新部署
+  const handleRedeploy = async (record: DeploymentRecord) => {
+    try {
+      const response = await api.post(`/deployments/${record.id}/redeploy`);
+      if (response.data.success) {
+        message.success('重新部署已触发');
+        fetchDeploymentHistory(); // 刷新数据
+      } else {
+        message.error('重新部署失败');
+      }
+    } catch (error) {
+      console.error('重新部署失败:', error);
+      message.error('重新部署失败');
+    }
+  };
+
+  // 应用筛选
+  const applyFilters = () => {
+    // 这里可以实现筛选逻辑
+    message.info('筛选功能开发中');
+  };
+
+  // 导出数据
+  const exportData = () => {
+    // 这里可以实现导出逻辑
+    message.info('导出功能开发中');
+  };
+
+  useEffect(() => {
+    fetchDeploymentHistory();
+  }, []);
 
   // 计算统计数据
   const totalDeployments = historyData.length;
@@ -114,7 +150,7 @@ const DeploymentHistoryPage: React.FC = () => {
       title: '触发者',
       dataIndex: 'triggered_by',
       key: 'triggered_by',
-      render: (text: string) => <Text className="content-text">{text}</Text>,
+      render: (text: string) => <Text className="content-text">{text || '系统'}</Text>,
     },
     {
       title: '部署时间',
@@ -138,6 +174,7 @@ const DeploymentHistoryPage: React.FC = () => {
             type="link" 
             size="small"
             icon={<ReloadOutlined />}
+            onClick={() => handleRedeploy(record)}
           >
             重新部署
           </Button>
@@ -217,6 +254,8 @@ const DeploymentHistoryPage: React.FC = () => {
               placeholder="选择项目"
               style={{ width: 200 }}
               allowClear
+              value={filters.project}
+              onChange={(value) => setFilters(prev => ({ ...prev, project: value }))}
             >
               <Select.Option value="axi-project-dashboard">axi-project-dashboard</Select.Option>
               <Select.Option value="axi-star-cloud">axi-star-cloud</Select.Option>
@@ -229,6 +268,8 @@ const DeploymentHistoryPage: React.FC = () => {
               placeholder="选择状态"
               style={{ width: 150 }}
               allowClear
+              value={filters.status}
+              onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
             >
               <Select.Option value="success">成功</Select.Option>
               <Select.Option value="failed">失败</Select.Option>
@@ -238,32 +279,48 @@ const DeploymentHistoryPage: React.FC = () => {
           </div>
           <div>
             <Text strong style={{ marginRight: '8px' }}>时间范围:</Text>
-            <RangePicker />
+            <RangePicker 
+              value={filters.dateRange}
+              onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))}
+            />
           </div>
-          <Button type="primary" icon={<FilterOutlined />}>
+          <Button type="primary" icon={<FilterOutlined />} onClick={applyFilters}>
             应用筛选
           </Button>
-          <Button icon={<DownloadOutlined />}>
+          <Button icon={<DownloadOutlined />} onClick={exportData}>
             导出数据
+          </Button>
+          <Button icon={<ReloadOutlined />} onClick={fetchDeploymentHistory}>
+            刷新数据
           </Button>
         </Space>
       </Card>
 
       {/* 历史记录表格 */}
       <Card className="glass-card">
-        <Table
-          columns={columns}
-          dataSource={historyData}
-          rowKey="id"
-          pagination={{
-            total: historyData.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
-          }}
-          className="content-table"
-        />
+        <Spin spinning={loading}>
+          {historyData.length === 0 && !loading ? (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <Text className="content-text-secondary">暂无部署历史数据</Text>
+              <br />
+              <Text className="content-text-secondary">当有部署发生时，数据将自动显示在这里</Text>
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={historyData}
+              rowKey="id"
+              pagination={{
+                total: historyData.length,
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
+              }}
+              className="content-table"
+            />
+          )}
+        </Spin>
       </Card>
       </div>
     </div>

@@ -1,4 +1,6 @@
 import { Deployment, DeploymentCreationAttributes } from '@/database/models/deployment';
+import { DeploymentStep } from '@/database/models/deployment-step';
+import { Project } from '@/database/models/project';
 import { SocketService } from './socket.service';
 import { logger } from '@/utils/logger';
 import { Op } from 'sequelize';
@@ -15,6 +17,18 @@ export interface DeploymentData {
   triggered_by?: string;
   trigger_type: 'push' | 'manual' | 'schedule';
   logs?: string;
+  metadata?: any;
+}
+
+export interface DeploymentStepData {
+  step_name: string;
+  display_name: string;
+  step_order: number;
+  step_type: 'validation' | 'deployment' | 'configuration' | 'service' | 'testing' | 'backup' | 'cleanup';
+  is_required?: boolean;
+  can_retry?: boolean;
+  max_retries?: number;
+  depends_on?: string;
   metadata?: any;
 }
 
@@ -107,6 +121,163 @@ export class DeploymentService {
   }
 
   /**
+   * 创建部署步骤
+   */
+  public async createDeploymentStep(
+    deploymentUuid: string,
+    stepData: DeploymentStepData
+  ): Promise<DeploymentStep> {
+    try {
+      const step = await DeploymentStep.create({
+        deployment_uuid: deploymentUuid,
+        step_name: stepData.step_name,
+        display_name: stepData.display_name,
+        step_order: stepData.step_order,
+        step_type: stepData.step_type,
+        is_required: stepData.is_required ?? true,
+        can_retry: stepData.can_retry ?? true,
+        max_retries: stepData.max_retries ?? 3,
+        depends_on: stepData.depends_on,
+        metadata: stepData.metadata,
+      });
+
+      logger.info(`Created deployment step: ${step.step_name} for deployment: ${deploymentUuid}`);
+
+      // 通过 WebSocket 广播步骤创建事件
+      this.socketService.emitStepCreated({
+        deploymentId: deploymentUuid,
+        stepId: step.uuid,
+        stepName: step.step_name,
+        displayName: step.display_name,
+        stepOrder: step.step_order,
+        stepType: step.step_type,
+      });
+
+      return step;
+    } catch (error) {
+      logger.error('Failed to create deployment step:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 更新部署步骤状态
+   */
+  public async updateDeploymentStepStatus(
+    stepUuid: string,
+    status: 'pending' | 'running' | 'success' | 'failed' | 'skipped' | 'cancelled',
+    progress?: number,
+    logs?: string,
+    errorMessage?: string,
+    resultData?: any
+  ): Promise<DeploymentStep | null> {
+    try {
+      const step = await DeploymentStep.findOne({
+        where: { uuid: stepUuid },
+        include: [{ model: Deployment, as: 'deployment' }],
+      });
+
+      if (!step) {
+        logger.warn(`Deployment step not found: ${stepUuid}`);
+        return null;
+      }
+
+      const updateData: any = { status };
+
+      if (status === 'running' && !step.start_time) {
+        updateData.start_time = new Date();
+        updateData.progress = 0;
+      }
+
+      if (['success', 'failed', 'skipped', 'cancelled'].includes(status)) {
+        updateData.end_time = new Date();
+        if (step.start_time) {
+          updateData.duration = Math.floor((new Date().getTime() - step.start_time.getTime()) / 1000);
+        }
+      }
+
+      if (progress !== undefined) {
+        updateData.progress = progress;
+      }
+
+      if (logs !== undefined) {
+        updateData.logs = logs;
+      }
+
+      if (errorMessage !== undefined) {
+        updateData.error_message = errorMessage;
+      }
+
+      if (resultData !== undefined) {
+        updateData.result_data = JSON.stringify(resultData);
+      }
+
+      await step.update(updateData);
+
+      logger.info(`Updated deployment step ${stepUuid} status to: ${status}`);
+
+      // 通过 WebSocket 广播步骤更新事件
+      this.socketService.emitStepUpdate({
+        deploymentId: step.deployment_uuid,
+        stepId: stepUuid,
+        stepName: step.step_name,
+        status: step.status,
+        progress: step.progress,
+        logs: step.logs,
+        errorMessage: step.error_message,
+        duration: step.duration,
+        startedAt: step.start_time,
+        completedAt: step.end_time,
+      });
+
+      return step;
+    } catch (error) {
+      logger.error(`Failed to update deployment step ${stepUuid}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取部署的详细步骤
+   */
+  public async getDeploymentSteps(deploymentUuid: string): Promise<DeploymentStep[]> {
+    try {
+      const steps = await DeploymentStep.findAll({
+        where: { deployment_uuid: deploymentUuid },
+        order: [['step_order', 'ASC']],
+      });
+
+      return steps;
+    } catch (error) {
+      logger.error(`Failed to get deployment steps for ${deploymentUuid}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 计算部署总进度
+   */
+  public async calculateDeploymentProgress(deploymentUuid: string): Promise<number> {
+    try {
+      const steps = await this.getDeploymentSteps(deploymentUuid);
+      
+      if (steps.length === 0) {
+        return 0;
+      }
+
+      const totalSteps = steps.length;
+      const completedSteps = steps.filter(step => 
+        ['success', 'failed', 'skipped', 'cancelled'].includes(step.status)
+      ).length;
+
+      return Math.round((completedSteps / totalSteps) * 100);
+    } catch (error) {
+      logger.error(`Failed to calculate deployment progress for ${deploymentUuid}:`, error);
+      return 0;
+    }
+  }
+
+  /**
    * 更新部署状态
    */
   public async updateDeploymentStatus(
@@ -128,6 +299,12 @@ export class DeploymentService {
       }
       if (errorMessage !== undefined) {
         updateData.errorMessage = errorMessage;
+      }
+
+      // 如果部署完成，计算总进度
+      if (['success', 'failed'].includes(status)) {
+        const progress = await this.calculateDeploymentProgress(deployment.uuid);
+        updateData.progress = progress;
       }
 
       await deployment.update(updateData);
@@ -196,9 +373,11 @@ export class DeploymentService {
 
       // 构建查询条件
       const whereClause: any = {};
+      
       if (project) {
         whereClause.project_name = project;
       }
+      
       if (status) {
         whereClause.status = status;
       }
@@ -234,6 +413,112 @@ export class DeploymentService {
       };
     } catch (error) {
       logger.error('Failed to get deployments with pagination:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取部署历史数据（用于历史页面）
+   */
+  public async getDeploymentHistory(params: {
+    page?: number;
+    limit?: number;
+    project?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  } = {}): Promise<PaginatedDeployments> {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        project,
+        status,
+        startDate,
+        endDate
+      } = params;
+
+      const offset = (page - 1) * limit;
+
+      // 构建查询条件
+      const whereClause: any = {};
+      
+      if (project) {
+        whereClause.project_name = project;
+      }
+      
+      if (status) {
+        whereClause.status = status;
+      }
+      
+      if (startDate || endDate) {
+        whereClause.created_at = {};
+        if (startDate) {
+          whereClause.created_at[Op.gte] = new Date(startDate);
+        }
+        if (endDate) {
+          whereClause.created_at[Op.lte] = new Date(endDate);
+        }
+      }
+
+      // 获取总数
+      const total = await Deployment.count({ where: whereClause });
+
+      // 获取分页数据
+      const deployments = await Deployment.findAll({
+        where: whereClause,
+        order: [['created_at', 'DESC']],
+        limit,
+        offset,
+        attributes: [
+          'id',
+          'uuid',
+          'project_name',
+          'repository',
+          'branch',
+          'commit_hash',
+          'status',
+          'duration',
+          'triggered_by',
+          'trigger_type',
+          'created_at',
+          'start_time',
+          'end_time',
+          'logs',
+          'metadata'
+        ]
+      });
+
+      // 处理数据格式，添加进度字段
+      const processedDeployments = await Promise.all(deployments.map(async (deployment) => {
+        const deploymentData = deployment.toJSON();
+        
+        // 计算部署进度
+        const progress = await this.calculateDeploymentProgress(deployment.uuid);
+        
+        return {
+          ...deploymentData,
+          progress,
+          // 确保触发者字段有值
+          triggered_by: deploymentData.triggered_by || '系统'
+        };
+      }));
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        data: processedDeployments as any,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1,
+        },
+      };
+    } catch (error) {
+      logger.error('Failed to get deployment history:', error);
       throw error;
     }
   }
@@ -368,6 +653,43 @@ export class DeploymentService {
       return result;
     } catch (error) {
       logger.error('Failed to cleanup old deployments:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 重新部署
+   */
+  public async redeployDeployment(id: number): Promise<boolean> {
+    try {
+      const deployment = await Deployment.findByPk(id);
+      if (!deployment) {
+        logger.warn(`Deployment not found for redeploy: ${id}`);
+        return false;
+      }
+
+      // 创建新的部署记录
+      const newDeploymentData: DeploymentData = {
+        project_name: deployment.project_name,
+        repository: deployment.repository,
+        branch: deployment.branch,
+        commit_hash: deployment.commit_hash,
+        status: 'pending',
+        duration: 0,
+        trigger_type: 'manual',
+        triggered_by: '系统重部署',
+        metadata: {
+          originalDeploymentId: id,
+          redeployReason: 'Manual redeploy from dashboard'
+        }
+      };
+
+      await this.createDeployment(newDeploymentData);
+      logger.info(`Redeployed deployment ${id} for project: ${deployment.project_name}`);
+      
+      return true;
+    } catch (error) {
+      logger.error(`Failed to redeploy deployment ${id}:`, error);
       throw error;
     }
   }
