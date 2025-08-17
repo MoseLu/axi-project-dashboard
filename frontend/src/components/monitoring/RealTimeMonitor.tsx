@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Tag, Button, Spin, Steps, Progress, Timeline } from 'antd';
+import { Card, Row, Col, Tag, Button, Spin, Steps } from 'antd';
 import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { api } from '../../utils/api';
 
@@ -161,7 +161,7 @@ const RealTimeMonitor: React.FC = () => {
               <div style={{ marginTop: '16px' }}>
                 <strong>部署步骤:</strong>
                 <Steps size="small" style={{ marginTop: '8px' }}>
-                  {deployment.steps.map((step: any, index: number) => (
+                  {deployment.steps.map((step: any) => (
                     <Step
                       key={step.id}
                       title={step.display_name}
