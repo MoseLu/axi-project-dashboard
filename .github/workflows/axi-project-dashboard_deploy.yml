@@ -269,6 +269,99 @@ jobs:
           echo "构建包大小:"
           du -sh dist/
 
+      - name: 测试后端服务
+        run: |
+          echo "🧪 开始测试后端服务..."
+          
+          # 启动后端服务进行测试
+          cd dist/backend
+          echo "🔧 启动后端服务进行测试..."
+          
+          # 使用 Node.js 启动后端服务
+          node start-simple.js &
+          BACKEND_PID=$!
+          
+          # 等待服务启动
+          echo "⏳ 等待后端服务启动..."
+          sleep 10
+          
+          # 测试健康检查端点
+          echo "🔍 测试后端健康检查..."
+          for i in {1..5}; do
+            if curl -f http://localhost:8090/health > /dev/null 2>&1; then
+              echo "✅ 后端健康检查通过"
+              break
+            fi
+            if [ $i -eq 5 ]; then
+              echo "❌ 后端健康检查失败"
+              kill $BACKEND_PID 2>/dev/null || true
+              exit 1
+            fi
+            echo "⏳ 等待后端健康检查... ($i/5)"
+            sleep 2
+          done
+          
+          # 测试 API 端点
+          echo "🔍 测试后端 API 端点..."
+          API_RESPONSE=$(curl -s http://localhost:8090/api/status 2>/dev/null || echo "")
+          if [ -n "$API_RESPONSE" ]; then
+            echo "✅ 后端 API 端点测试通过"
+          else
+            echo "❌ 后端 API 端点测试失败"
+            kill $BACKEND_PID 2>/dev/null || true
+            exit 1
+          fi
+          
+          # 停止测试服务
+          kill $BACKEND_PID 2>/dev/null || true
+          echo "✅ 后端服务测试完成"
+
+      - name: 测试前端服务
+        run: |
+          echo "🧪 开始测试前端服务..."
+          
+          # 启动前端服务进行测试
+          cd dist
+          echo "🔧 启动前端服务进行测试..."
+          
+          # 使用 Node.js 启动前端服务
+          node frontend-server.js &
+          FRONTEND_PID=$!
+          
+          # 等待服务启动
+          echo "⏳ 等待前端服务启动..."
+          sleep 10
+          
+          # 测试健康检查端点
+          echo "🔍 测试前端健康检查..."
+          for i in {1..5}; do
+            if curl -f http://localhost:3000/health > /dev/null 2>&1; then
+              echo "✅ 前端健康检查通过"
+              break
+            fi
+            if [ $i -eq 5 ]; then
+              echo "❌ 前端健康检查失败"
+              kill $FRONTEND_PID 2>/dev/null || true
+              exit 1
+            fi
+            echo "⏳ 等待前端健康检查... ($i/5)"
+            sleep 2
+          done
+          
+          # 测试静态文件服务
+          echo "🔍 测试前端静态文件服务..."
+          if curl -f http://localhost:3000/ > /dev/null 2>&1; then
+            echo "✅ 前端静态文件服务测试通过"
+          else
+            echo "❌ 前端静态文件服务测试失败"
+            kill $FRONTEND_PID 2>/dev/null || true
+            exit 1
+          fi
+          
+          # 停止测试服务
+          kill $FRONTEND_PID 2>/dev/null || true
+          echo "✅ 前端服务测试完成"
+
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
