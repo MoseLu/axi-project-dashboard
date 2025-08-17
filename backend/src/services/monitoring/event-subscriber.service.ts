@@ -73,7 +73,7 @@ export class EventSubscriberService {
     const subscriber = redisService.getClient().duplicate();
     
     await subscriber.connect();
-    await subscriber.subscribe(channel, (message) => {
+    await subscriber.subscribe(channel, (message: string) => {
       this.handleDeploymentEvent(message);
     });
     
@@ -86,7 +86,7 @@ export class EventSubscriberService {
     const subscriber = redisService.getClient().duplicate();
     
     await subscriber.connect();
-    await subscriber.subscribe(channel, (message) => {
+    await subscriber.subscribe(channel, (message: string) => {
       this.handleProjectStatusEvent(message);
     });
     
@@ -99,7 +99,7 @@ export class EventSubscriberService {
     const subscriber = redisService.getClient().duplicate();
     
     await subscriber.connect();
-    await subscriber.subscribe(channel, (message) => {
+    await subscriber.subscribe(channel, (message: string) => {
       this.handleSystemEvent(message);
     });
     
@@ -113,18 +113,24 @@ export class EventSubscriberService {
       logger.info(`📥 收到部署事件: ${event.type} - ${event.project}`);
 
       // 转换为 WebhookPayload 格式
-      const webhookPayload = {
+      const webhookPayload: any = {
         project: event.project,
         repository: event.repository,
         branch: event.branch,
         commit_hash: event.commit_hash,
         status: event.status,
-        triggered_by: event.triggered_by,
-        trigger_type: event.trigger_type,
-        step_details: event.metadata.step_name ? {
-          [event.metadata.step_name]: event.metadata.step_status
-        } : undefined
+        trigger_type: event.trigger_type
       };
+
+      if (event.triggered_by) {
+        webhookPayload.triggered_by = event.triggered_by;
+      }
+
+      if (event.metadata.step_name) {
+        webhookPayload.step_details = {
+          [event.metadata.step_name]: event.metadata.step_status
+        };
+      }
 
       // 处理部署事件
       await this.webhookService.handleWebhookEvent(webhookPayload);
