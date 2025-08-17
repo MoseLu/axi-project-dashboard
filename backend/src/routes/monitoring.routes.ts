@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { ProjectMonitorService } from '@/services/monitoring/status-collector.service';
+import { StatusCollectorService } from '@/services/monitoring/status-collector.service';
 import { DeploymentService } from '@/services/deployment.service';
 import { logger } from '@/utils/logger';
 
 const router: Router = Router();
-const projectMonitorService = ProjectMonitorService.getInstance();
+const projectMonitorService = StatusCollectorService.getInstance();
+
 const deploymentService = new DeploymentService();
 
 /**

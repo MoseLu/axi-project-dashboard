@@ -74,9 +74,9 @@ export interface PaginatedDeployments {
 }
 
 export class DeploymentService {
-  private socketService: SocketService;
+  private socketService: SocketService | undefined;
 
-  constructor(socketService: SocketService) {
+  constructor(socketService?: SocketService) {
     this.socketService = socketService;
   }
 
@@ -107,7 +107,7 @@ export class DeploymentService {
       logger.info(`Created deployment record: ${deployment.id} for project: ${data.project_name}`);
 
       // 通过 WebSocket 广播部署事件
-      this.socketService.emitDeploymentStarted({
+      this.socketService?.emitDeploymentStarted({
         id: deployment.id.toString(),
         projectId: data.project_name,
         ...data,
@@ -148,7 +148,7 @@ export class DeploymentService {
       logger.info(`Created deployment step: ${step.step_name} for deployment: ${deploymentUuid}`);
 
       // 通过 WebSocket 广播步骤创建事件
-      this.socketService.emitStepCreated({
+      this.socketService?.emitStepCreated({
         deploymentId: deploymentUuid,
         stepId: step.uuid,
         stepName: step.step_name,
@@ -221,7 +221,7 @@ export class DeploymentService {
       logger.info(`Updated deployment step ${stepUuid} status to: ${status}`);
 
       // 通过 WebSocket 广播步骤更新事件
-      this.socketService.emitStepUpdate({
+      this.socketService?.emitStepUpdate({
         deploymentId: step.deployment_uuid,
         stepId: stepUuid,
         stepName: step.step_name,
@@ -317,7 +317,7 @@ export class DeploymentService {
 
       // 通过 WebSocket 广播部署更新事件
       if (status === 'success') {
-        this.socketService.emitDeploymentCompleted({
+        this.socketService?.emitDeploymentCompleted({
           id: deployment.id.toString(),
           projectId: deployment.project_name,
           status: deployment.status,
@@ -325,7 +325,7 @@ export class DeploymentService {
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
         });
       } else if (status === 'failed') {
-        this.socketService.emitDeploymentFailed({
+        this.socketService?.emitDeploymentFailed({
           id: deployment.id.toString(),
           projectId: deployment.project_name,
           status: deployment.status,
@@ -334,7 +334,7 @@ export class DeploymentService {
           errorMessage: deployment.metadata?.errorMessage || '',
         });
       } else {
-        this.socketService.emitDeploymentUpdated({
+        this.socketService?.emitDeploymentUpdated({
           id: deployment.id.toString(),
           projectId: deployment.project_name,
           status: deployment.status,
@@ -369,7 +369,7 @@ export class DeploymentService {
       });
 
       return deployments.map(deployment => {
-        const deploymentData = deployment.toJSON();
+        const deploymentData = deployment.toJSON() as any;
         return {
           ...deploymentData,
           steps: deploymentData.steps || []
@@ -815,7 +815,7 @@ export class DeploymentService {
     logger.info(`Processing step notification: ${step_name} (${step_status}) for project: ${project}`);
 
     // 通过 WebSocket 广播步骤事件
-    this.socketService.emitStepUpdate({
+    this.socketService?.emitStepUpdate({
       projectId: project,
       deploymentId: deployment_id,
       stepName: step_name,
@@ -850,7 +850,7 @@ export class DeploymentService {
     logger.info(`Processing deployment completion: ${deployment_id} (${status}) for project: ${project}`);
 
     // 通过 WebSocket 广播部署完成事件
-    this.socketService.emitDeploymentCompleted({
+    this.socketService?.emitDeploymentCompleted({
       id: deployment_id,
       projectId: project,
       status,
@@ -881,7 +881,7 @@ export class DeploymentService {
     logger.debug(`Processing log entry: ${level} for deployment: ${deployment_id}`);
 
     // 通过 WebSocket 广播日志事件
-    this.socketService.emitLogEntry({
+    this.socketService?.emitLogEntry({
       projectId: project,
       deploymentId: deployment_id,
       logStreamId: log_stream_id,
@@ -906,7 +906,7 @@ export class DeploymentService {
     logger.info(`Processing metrics update for deployment: ${deployment_id}`);
 
     // 通过 WebSocket 广播指标更新事件
-    this.socketService.emitMetricsUpdate({
+    this.socketService?.emitMetricsUpdate({
       projectId: project,
       deploymentId: deployment_id,
       metrics,

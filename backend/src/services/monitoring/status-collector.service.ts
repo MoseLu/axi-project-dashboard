@@ -49,6 +49,28 @@ export class StatusCollectorService {
     }
   }
 
+  async getProjectsStatus(): Promise<ProjectStatus[]> {
+    try {
+      logger.info('🔍 获取项目状态...');
+      
+      const projects = await Project.findAll({
+        where: { status: 'active' }
+      });
+
+      const statusPromises = projects.map(project => 
+        this.collectProjectStatus(project)
+      );
+
+      const statuses = await Promise.all(statusPromises);
+      logger.info(`✅ 成功获取 ${statuses.length} 个项目状态`);
+      
+      return statuses;
+    } catch (error) {
+      logger.error('❌ 获取项目状态失败:', error);
+      throw error;
+    }
+  }
+
   async collectProjectStatus(project: Project): Promise<ProjectStatus> {
     try {
       const status: ProjectStatus = {
