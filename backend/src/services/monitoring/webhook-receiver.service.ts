@@ -1,5 +1,6 @@
 import { logger } from '@/utils/logger';
-import { Deployment } from '@/database/models/deployment';
+import { 
+  Deployment } from '@/database/models/deployment';
 import { DeploymentStep } from '@/database/models/deployment-step';
 import { Project } from '@/database/models/project';
 

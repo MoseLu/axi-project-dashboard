@@ -23,6 +23,7 @@ import initializeDatabase from '@/scripts/init-database';
 import { ProjectService } from '@/services/project.service';
 import { ProjectMonitorService } from '@/services/project-monitor.service';
 import { SchedulerService } from '@/services/monitoring/scheduler.service';
+import { RealTimeMonitorService } from '@/services/monitoring/real-time-monitor.service';
 
 class Application {
   public app: express.Application;
@@ -36,6 +37,7 @@ class Application {
   private projectService: ProjectService;
   private projectMonitorService: ProjectMonitorService;
   private schedulerService: SchedulerService;
+  private realTimeMonitorService: RealTimeMonitorService;
 
   constructor() {
     this.app = express();
@@ -56,6 +58,7 @@ class Application {
     this.deploymentService = new DeploymentService(this.socketService);
     this.projectService = new ProjectService(this.projectMonitorService);
     this.schedulerService = SchedulerService.getInstance();
+    this.realTimeMonitorService = RealTimeMonitorService.getInstance();
     this.gracefulShutdown = new GracefulShutdown();
 
     this.initializeMiddlewares();
@@ -297,12 +300,12 @@ class Application {
         logger.warn('⚠️ Project monitor service initialization failed:', error);
       }
 
-      // 启动定时任务服务
+      // 启动实时监控服务（包含定时任务和事件订阅）
       try {
-        this.schedulerService.start();
-        logger.info('✅ Scheduler service initialized');
+        await this.realTimeMonitorService.start();
+        logger.info('✅ Real-time monitor service initialized');
       } catch (error) {
-        logger.warn('⚠️ Scheduler service initialization failed:', error);
+        logger.warn('⚠️ Real-time monitor service initialization failed:', error);
       }
 
       // 同步项目部署统计
