@@ -496,6 +496,19 @@ jobs:
             console.log(`🔗 测试URL: ${testUrl}`);
             console.log(`🔌 服务端口: ${servicePort}`);
 
+            // 构建部署配置
+            const deployConfig = {
+              nginx_config: nginxConfig,
+              test_url: testUrl,
+              start_cmd: 'bash start-simple.sh',
+              service_port: servicePort,
+              mysql_config: '',
+              skip_init: false
+            };
+            
+            // 将部署配置编码为base64
+            const deployConfigBase64 = Buffer.from(JSON.stringify(deployConfig)).toString('base64');
+            
             await github.rest.actions.createWorkflowDispatch({
               owner: 'MoseLu',
               repo:  'axi-deploy',
@@ -506,10 +519,7 @@ jobs:
                 source_repo  : `${context.repo.owner}/${context.repo.repo}`,
                 run_id       : process.env.RUN_ID,
                 deploy_type  : 'backend',
-                start_cmd    : 'bash start-simple.sh',
-                service_port : servicePort, // 动态获取的端口
-                nginx_config : nginxConfig,
-                test_url     : testUrl, // 动态构建的测试URL
+                deploy_config: deployConfigBase64,
                 deploy_secrets: deploySecrets
               }
             });
