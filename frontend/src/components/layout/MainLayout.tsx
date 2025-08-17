@@ -16,7 +16,8 @@ import {
   LogoutOutlined,
   UserOutlined as UserIcon,
   BarChartOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  MonitorOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -257,6 +258,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       label: '仪表板',
     },
     {
+      key: 'monitoring',
+      icon: <MonitorOutlined />,
+      label: '监控中心',
+    },
+    {
       key: 'deployments',
       icon: <DeploymentUnitOutlined />,
       label: '部署管理',
@@ -294,6 +300,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {
         key: '/dashboard',
         label: '仪表板概览',
+      },
+    ],
+    monitoring: [
+      {
+        key: '/monitoring',
+        label: '实时监控',
       },
     ],
     deployments: [
@@ -352,6 +364,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       key: '/dashboard',
       icon: <DashboardOutlined />,
       label: '仪表板',
+    },
+    {
+      key: '/monitoring',
+      icon: <MonitorOutlined />,
+      label: '监控中心',
     },
     {
       key: 'deployments',

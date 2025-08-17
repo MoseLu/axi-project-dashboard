@@ -22,6 +22,7 @@ import { GracefulShutdown } from '@/utils/graceful-shutdown';
 import initializeDatabase from '@/scripts/init-database';
 import { ProjectService } from '@/services/project.service';
 import { ProjectMonitorService } from '@/services/project-monitor.service';
+import { SchedulerService } from '@/services/monitoring/scheduler.service';
 
 class Application {
   public app: express.Application;
@@ -34,6 +35,7 @@ class Application {
   private gracefulShutdown: GracefulShutdown;
   private projectService: ProjectService;
   private projectMonitorService: ProjectMonitorService;
+  private schedulerService: SchedulerService;
 
   constructor() {
     this.app = express();
@@ -53,6 +55,7 @@ class Application {
     this.projectMonitorService = new ProjectMonitorService();
     this.deploymentService = new DeploymentService(this.socketService);
     this.projectService = new ProjectService(this.projectMonitorService);
+    this.schedulerService = SchedulerService.getInstance();
     this.gracefulShutdown = new GracefulShutdown();
 
     this.initializeMiddlewares();
@@ -292,6 +295,14 @@ class Application {
         logger.info('✅ Project monitor service initialized');
       } catch (error) {
         logger.warn('⚠️ Project monitor service initialization failed:', error);
+      }
+
+      // 启动定时任务服务
+      try {
+        this.schedulerService.start();
+        logger.info('✅ Scheduler service initialized');
+      } catch (error) {
+        logger.warn('⚠️ Scheduler service initialization failed:', error);
       }
 
       // 同步项目部署统计

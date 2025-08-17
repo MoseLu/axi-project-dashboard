@@ -8,6 +8,7 @@ import DeploymentsPage from './pages/DeploymentsPage';
 import DeploymentHistoryPage from './pages/deployments/DeploymentHistoryPage';
 import DeploymentConfigPage from './pages/deployments/DeploymentConfigPage';
 import ProjectListPage from './pages/projects/ProjectListPage';
+import MonitoringPage from './pages/MonitoringPage';
 import ProfilePage from './pages/ProfilePage';
 import AccountSettingsPage from './pages/AccountSettingsPage';
 import BreadcrumbTestPage from './pages/BreadcrumbTestPage';
@@ -122,6 +123,15 @@ const AppContent: React.FC = () => {
               <ProtectedRoute>
                 <MainLayout>
                   <ProjectListPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* 监控中心 */}
+            <Route path="/monitoring" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <MonitoringPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

@@ -4,6 +4,8 @@ import { ApiResponse } from '@/types';
 import { DeploymentService } from '@/services/deployment.service';
 import authRoutes from './auth.routes';
 import projectRoutes from './projects.routes';
+import webhookRoutes from './webhook.routes';
+import monitoringRoutes from './monitoring.routes';
 
 const router = Router();
 
@@ -12,6 +14,12 @@ router.use('/auth', authRoutes);
 
 // 项目路由
 router.use('/projects', projectRoutes);
+
+// Webhook 路由
+router.use('/webhook', webhookRoutes);
+
+// 监控路由
+router.use('/monitoring', monitoringRoutes);
 
 // Health check route
 router.get('/health', (req: Request, res: Response) => {

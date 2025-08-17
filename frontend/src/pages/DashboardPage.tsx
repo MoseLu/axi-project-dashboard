@@ -5,14 +5,17 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  MonitorOutlined
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { getStatusText } from '../utils/dashboardUtils';
 
 const { Title, Text } = Typography;
 
 const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const {
     deployments,
     metrics,
@@ -123,15 +126,25 @@ const DashboardPage: React.FC = () => {
           <Col xs={24} sm={12} lg={6}>
             <Card className="glass-card" style={{
               minHeight: '120px',
-              overflow: 'hidden'
-            }}>
+              overflow: 'hidden',
+              cursor: 'pointer'
+            }}
+            onClick={() => navigate('/monitoring')}
+            >
               <Statistic
-                title={<span className="content-text-secondary">成功率</span>}
-                value={successRate}
-                suffix="%"
-                prefix={<ArrowUpOutlined style={{ color: '#1890ff' }} />}
-                valueStyle={{ color: '#1890ff', fontSize: '32px', fontWeight: 'bold' }}
+                title={<span className="content-text-secondary">监控中心</span>}
+                value="实时"
+                prefix={<MonitorOutlined style={{ color: '#722ed1' }} />}
+                valueStyle={{ color: '#722ed1', fontSize: '32px', fontWeight: 'bold' }}
               />
+              <div style={{ 
+                fontSize: '12px', 
+                color: '#722ed1', 
+                marginTop: '8px',
+                textAlign: 'center'
+              }}>
+                点击查看实时监控
+              </div>
             </Card>
           </Col>
         </Row>
@@ -167,6 +180,7 @@ const DashboardPage: React.FC = () => {
                 <span className="content-text-secondary">成功: {metrics.successfulDeployments}</span>
                 <span className="content-text-secondary">失败: {metrics.failedDeployments}</span>
                 <span className="content-text-secondary">总计: {metrics.totalDeployments}</span>
+                <span className="content-text-secondary">成功率: {successRate}%</span>
               </div>
             </Card>
           </Col>
