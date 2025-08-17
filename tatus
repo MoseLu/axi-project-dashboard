@@ -1,0 +1,80 @@
+warning: in the working copy of 'backend/src/services/monitoring/webhook-receiver.service.ts', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/run-fix-data.sh b/backend/run-fix-data.sh[m
+[1mdeleted file mode 100644[m
+[1mindex 48deddb..0000000[m
+[1m--- a/backend/run-fix-data.sh[m
+[1m+++ /dev/null[m
+[36m@@ -1,33 +0,0 @@[m
+[31m-#!/bin/bash[m
+[31m-[m
+[31m-echo "🔧 开始修复部署数据..."[m
+[31m-[m
+[31m-# 检查是否在正确的目录[m
+[31m-if [ ! -f "package.json" ]; then[m
+[31m-    echo "❌ 请在 backend 目录中运行此脚本"[m
+[31m-    exit 1[m
+[31m-fi[m
+[31m-[m
+[31m-# 安装依赖（如果需要）[m
+[31m-if [ ! -d "node_modules" ]; then[m
+[31m-    echo "📦 安装依赖..."[m
+[31m-    pnpm install || npm install[m
+[31m-fi[m
+[31m-[m
+[31m-# 运行数据修复脚本[m
+[31m-echo "🔄 运行数据修复脚本..."[m
+[31m-echo "尝试使用 TypeScript 版本..."[m
+[31m-if pnpm run fix:deployment-data 2>/dev/null || npm run fix:deployment-data 2>/dev/null; then[m
+[31m-    echo "✅ TypeScript 版本运行成功"[m
+[31m-else[m
+[31m-    echo "⚠️ TypeScript 版本失败，尝试使用 JavaScript 版本..."[m
+[31m-    if pnpm run fix:deployment-data:js 2>/dev/null || npm run fix:deployment-data:js 2>/dev/null; then[m
+[31m-        echo "✅ JavaScript 版本运行成功"[m
+[31m-    else[m
+[31m-            echo "❌ 两种版本都失败了"[m
+[31m-    echo "尝试直接运行 JavaScript 文件..."[m
+[31m-    node fix-deployment-data.js[m
+[31m-    fi[m
+[31m-fi[m
+[31m-[m
+[31m-echo "✅ 数据修复完成"[m
+warning: in the working copy of 'backend/src/services/monitoring/webhook-receiver.service.ts', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/run-fix-data.sh b/backend/run-fix-data.sh[m
+[1mdeleted file mode 100644[m
+[1mindex 48deddb..0000000[m
+[1m--- a/backend/run-fix-data.sh[m
+[1m+++ /dev/null[m
+[36m@@ -1,33 +0,0 @@[m
+[31m-#!/bin/bash[m
+[31m-[m
+[31m-echo "🔧 开始修复部署数据..."[m
+[31m-[m
+[31m-# 检查是否在正确的目录[m
+[31m-if [ ! -f "package.json" ]; then[m
+[31m-    echo "❌ 请在 backend 目录中运行此脚本"[m
+[31m-    exit 1[m
+[31m-fi[m
+[31m-[m
+[31m-# 安装依赖（如果需要）[m
+[31m-if [ ! -d "node_modules" ]; then[m
+[31m-    echo "📦 安装依赖..."[m
+[31m-    pnpm install || npm install[m
+[31m-fi[m
+[31m-[m
+[31m-# 运行数据修复脚本[m
+[31m-echo "🔄 运行数据修复脚本..."[m
+[31m-echo "尝试使用 TypeScript 版本..."[m
+[31m-if pnpm run fix:deployment-data 2>/dev/null || npm run fix:deployment-data 2>/dev/null; then[m
+[31m-    echo "✅ TypeScript 版本运行成功"[m
+[31m-else[m
+[31m-    echo "⚠️ TypeScript 版本失败，尝试使用 JavaScript 版本..."[m
+[31m-    if pnpm run fix:deployment-data:js 2>/dev/null || npm run fix:deployment-data:js 2>/dev/null; then[m
+[31m-        echo "✅ JavaScript 版本运行成功"[m
+[31m-    else[m
+[31m-            echo "❌ 两种版本都失败了"[m
+[31m-    echo "尝试直接运行 JavaScript 文件..."[m
+[31m-    node fix-deployment-data.js[m
+[31m-    fi[m
+[31m-fi[m
+[31m-[m
+[31m-echo "✅ 数据修复完成"[m
