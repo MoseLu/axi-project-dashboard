@@ -11,6 +11,16 @@ export interface WebhookPayload {
   status: 'pending' | 'running' | 'success' | 'failed' | 'cancelled';
   triggered_by?: string;
   trigger_type: 'push' | 'manual' | 'schedule';
+  step_details?: {
+    validate_artifact?: string;
+    parse_secrets?: string;
+    server_init?: string;
+    deploy_project?: string;
+    configure_nginx?: string;
+    start_service?: string;
+    test_website_static?: string;
+    test_website_backend?: string;
+  };
 }
 
 export class WebhookReceiverService {
@@ -29,6 +39,12 @@ export class WebhookReceiverService {
 
       let deployment = await this.findOrCreateDeployment(payload);
       await this.updateDeploymentStatus(deployment, payload);
+      
+      // 处理步骤详情
+      if (payload.step_details) {
+        await this.handleStepDetails(deployment, payload.step_details);
+      }
+      
       await this.updateProjectStats(payload.project);
       
       logger.info(`✅ Webhook 事件处理完成: ${payload.project}`);
@@ -143,6 +159,88 @@ export class WebhookReceiverService {
       await project.update(updateData);
     } catch (error) {
       logger.error('❌ 更新项目统计失败:', error);
+      throw error;
+    }
+  }
+
+  private async handleStepDetails(deployment: Deployment, stepDetails: any): Promise<void> {
+    try {
+      const stepMappings = {
+        validate_artifact: '验证构建产物',
+        parse_secrets: '解析部署密钥',
+        server_init: '服务器初始化',
+        deploy_project: '部署项目',
+        configure_nginx: '配置Nginx',
+        start_service: '启动服务',
+        test_website_static: '测试网站(静态)',
+        test_website_backend: '测试网站(后端)'
+      };
+
+      for (const [stepKey, stepName] of Object.entries(stepMappings)) {
+        const stepStatus = stepDetails[stepKey];
+        if (stepStatus) {
+          await this.createOrUpdateDeploymentStep(deployment, stepName, stepStatus);
+        }
+      }
+    } catch (error) {
+      logger.error('❌ 处理步骤详情失败:', error);
+      throw error;
+    }
+  }
+
+  private async createOrUpdateDeploymentStep(deployment: Deployment, stepName: string, stepStatus: string): Promise<void> {
+    try {
+      const step = await DeploymentStep.findOne({
+        where: {
+          deployment_uuid: deployment.uuid,
+          step_name: stepName
+        }
+      });
+
+      // 确定步骤类型
+      const stepTypeMap: { [key: string]: 'validation' | 'deployment' | 'configuration' | 'service' | 'testing' | 'backup' | 'cleanup' } = {
+        '验证构建产物': 'validation',
+        '解析部署密钥': 'validation',
+        '服务器初始化': 'configuration',
+        '部署项目': 'deployment',
+        '配置Nginx': 'configuration',
+        '启动服务': 'service',
+        '测试网站(静态)': 'testing',
+        '测试网站(后端)': 'testing'
+      };
+
+      const stepType = stepTypeMap[stepName] || 'deployment';
+      const stepOrder = Object.keys(stepTypeMap).indexOf(stepName) + 1;
+
+      const stepData: any = {
+        deployment_uuid: deployment.uuid,
+        step_name: stepName,
+        display_name: stepName,
+        step_order: stepOrder,
+        step_type: stepType,
+        status: stepStatus as 'pending' | 'running' | 'success' | 'failed' | 'skipped' | 'cancelled',
+        start_time: new Date(),
+        end_time: new Date(),
+        duration: 0,
+        progress: stepStatus === 'success' ? 100 : stepStatus === 'failed' ? 0 : 50,
+        logs: `步骤 ${stepName} ${stepStatus}`,
+        is_required: true,
+        can_retry: true,
+        retry_count: 0,
+        max_retries: 3
+      };
+
+      if (stepStatus === 'failed') {
+        stepData.error_message = `步骤 ${stepName} 执行失败`;
+      }
+
+      if (step) {
+        await step.update(stepData);
+      } else {
+        await DeploymentStep.create(stepData);
+      }
+    } catch (error) {
+      logger.error(`❌ 创建或更新部署步骤失败: ${stepName}`, error);
       throw error;
     }
   }

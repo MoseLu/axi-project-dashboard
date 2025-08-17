@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../sequelize';
+import { DeploymentStep } from './deployment-step';
 
 export interface DeploymentAttributes {
   id: number;
@@ -39,6 +40,9 @@ export class Deployment extends Model<DeploymentAttributes, DeploymentCreationAt
   public metadata?: any;
   public created_at!: string;
   public updated_at!: string;
+
+  // 关联关系
+  public readonly steps?: DeploymentStep[];
 }
 
 Deployment.init(
@@ -151,3 +155,10 @@ Deployment.init(
 );
 
 export default Deployment;
+
+// 定义关联关系
+Deployment.hasMany(DeploymentStep, {
+  foreignKey: 'deployment_uuid',
+  sourceKey: 'uuid',
+  as: 'steps',
+});

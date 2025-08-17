@@ -353,16 +353,30 @@ export class DeploymentService {
   /**
    * 获取最近的部署记录
    */
-  public async getRecentDeployments(limit: number = 10): Promise<Deployment[]> {
+  public async getRecentDeployments(limit: number = 10): Promise<any[]> {
     try {
       const deployments = await Deployment.findAll({
+        include: [
+          {
+            model: DeploymentStep,
+            as: 'steps',
+            attributes: ['id', 'step_name', 'display_name', 'status', 'duration', 'start_time', 'end_time', 'logs', 'error_message'],
+            order: [['step_order', 'ASC']]
+          }
+        ],
         order: [['created_at', 'DESC']],
-        limit,
+        limit: limit
       });
 
-      return deployments;
+      return deployments.map(deployment => {
+        const deploymentData = deployment.toJSON();
+        return {
+          ...deploymentData,
+          steps: deploymentData.steps || []
+        };
+      });
     } catch (error) {
-      logger.error('Failed to get recent deployments:', error);
+      logger.error('❌ 获取最近部署记录失败:', error);
       throw error;
     }
   }
