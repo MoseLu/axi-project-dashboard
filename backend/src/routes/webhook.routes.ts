@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { WebhookReceiverService, WebhookPayload } from '@/services/monitoring/webhook-receiver.service';
 import { logger } from '@/utils/logger';
 
-const router = Router();
+const router: Router = Router();
 const webhookService = WebhookReceiverService.getInstance();
 
 /**
@@ -24,13 +24,13 @@ router.post('/deployment', async (req: Request, res: Response) => {
     // 处理 Webhook 事件
     await webhookService.handleWebhookEvent(payload);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Webhook 事件处理成功'
     });
   } catch (error) {
     logger.error('❌ Webhook 处理失败:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Webhook 处理失败',
       error: error instanceof Error ? error.message : '未知错误'
@@ -73,13 +73,13 @@ router.post('/step', async (req: Request, res: Response) => {
     // 处理步骤更新
     await webhookService.handleWebhookEvent(webhookPayload);
 
-    res.json({
+    return res.json({
       success: true,
       message: '部署步骤更新处理成功'
     });
   } catch (error) {
     logger.error('❌ 部署步骤更新处理失败:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '部署步骤更新处理失败',
       error: error instanceof Error ? error.message : '未知错误'
@@ -106,13 +106,13 @@ router.post('/project-status', async (req: Request, res: Response) => {
     // 这里可以添加项目状态更新的处理逻辑
     logger.info(`📊 项目状态更新: ${payload.project} - ${payload.status_type}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: '项目状态更新处理成功'
     });
   } catch (error) {
     logger.error('❌ 项目状态更新处理失败:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: '项目状态更新处理失败',
       error: error instanceof Error ? error.message : '未知错误'

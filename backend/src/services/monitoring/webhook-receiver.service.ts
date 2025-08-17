@@ -50,16 +50,23 @@ export class WebhookReceiverService {
       });
 
       if (!deployment) {
-        deployment = await Deployment.create({
+        const createData: any = {
           project_name: payload.project,
           repository: payload.repository,
           branch: payload.branch,
           commit_hash: payload.commit_hash,
           status: payload.status,
-          triggered_by: payload.triggered_by,
           trigger_type: payload.trigger_type,
-          start_time: new Date()
-        });
+          start_time: new Date().toISOString(),
+          uuid: `deploy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          duration: 0
+        };
+
+        if (payload.triggered_by) {
+          createData.triggered_by = payload.triggered_by;
+        }
+
+        deployment = await Deployment.create(createData);
       }
 
       return deployment;
@@ -122,13 +129,18 @@ export class WebhookReceiverService {
       const lastDeployment = deploymentStats
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
 
-      await project.update({
+      const updateData: any = {
         total_deployments: totalDeployments,
         successful_deployments: successfulDeployments,
         failed_deployments: failedDeployments,
-        average_deployment_time: averageDeploymentTime,
-        last_deployment: lastDeployment ? new Date(lastDeployment.created_at) : null
-      });
+        average_deployment_time: averageDeploymentTime
+      };
+
+      if (lastDeployment) {
+        updateData.last_deployment = new Date(lastDeployment.created_at);
+      }
+
+      await project.update(updateData);
     } catch (error) {
       logger.error('❌ 更新项目统计失败:', error);
       throw error;

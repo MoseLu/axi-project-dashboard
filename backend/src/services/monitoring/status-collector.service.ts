@@ -8,13 +8,13 @@ const execAsync = promisify(exec);
 export interface ProjectStatus {
   name: string;
   isRunning: boolean;
-  port?: number;
-  memoryUsage?: number;
-  diskUsage?: number;
-  cpuUsage?: number;
-  uptime?: number;
-  url?: string;
-  lastHealthCheck?: Date;
+  port?: number | undefined;
+  memoryUsage?: number | undefined;
+  diskUsage?: number | undefined;
+  cpuUsage?: number | undefined;
+  uptime?: number | undefined;
+  url?: string | undefined;
+  lastHealthCheck?: Date | undefined;
 }
 
 export class StatusCollectorService {
@@ -54,17 +54,22 @@ export class StatusCollectorService {
       const status: ProjectStatus = {
         name: project.name,
         isRunning: false,
-        port: project.port,
-        url: project.url
+        port: project.port || undefined,
+        url: project.url || undefined
       };
 
       status.isRunning = await this.checkProjectRunning(project);
       
       if (status.isRunning) {
-        status.memoryUsage = await this.getProjectMemoryUsage(project);
-        status.diskUsage = await this.getProjectDiskUsage(project);
-        status.cpuUsage = await this.getProjectCpuUsage(project);
-        status.uptime = await this.getProjectUptime(project);
+        const memoryUsage = await this.getProjectMemoryUsage(project);
+        const diskUsage = await this.getProjectDiskUsage(project);
+        const cpuUsage = await this.getProjectCpuUsage(project);
+        const uptime = await this.getProjectUptime(project);
+        
+        status.memoryUsage = memoryUsage || undefined;
+        status.diskUsage = diskUsage || undefined;
+        status.cpuUsage = cpuUsage || undefined;
+        status.uptime = uptime || undefined;
         status.lastHealthCheck = new Date();
       }
 
@@ -149,8 +154,8 @@ export class StatusCollectorService {
       let timeStr = uptimeStr;
       
       if (parts.length > 1) {
-        days = parseInt(parts[0]);
-        timeStr = parts[1];
+        days = parseInt(parts[0] || '0');
+        timeStr = parts[1] || uptimeStr;
       }
       
       const timeParts = timeStr.split(':').map(Number);

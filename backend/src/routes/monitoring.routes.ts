@@ -4,7 +4,7 @@ import { Deployment } from '@/database/models/deployment';
 import { StatusCollectorService } from '@/services/monitoring/status-collector.service';
 import { logger } from '@/utils/logger';
 
-const router = Router();
+const router: Router = Router();
 const statusCollector = StatusCollectorService.getInstance();
 
 /**
