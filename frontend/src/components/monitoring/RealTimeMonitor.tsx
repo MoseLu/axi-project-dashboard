@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, Alert, Button, Space, Badge, Tooltip } from 'antd';
-import { WifiOutlined, WifiOffOutlined, SyncOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Card, Typography, Alert, Button, Space, Badge } from 'antd';
+import { WifiOutlined, WifiOutlined as WifiOffOutlined, SyncOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useSocket } from '../../hooks/useSocket';
 
 const { Title, Text } = Typography;
@@ -10,7 +10,7 @@ interface RealTimeMonitorProps {
 }
 
 export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
-  const { socket, connected, lastEvent, connectionError, isConnecting, reconnect } = useSocket(token);
+  const { connected, lastEvent, connectionError, isConnecting, reconnect } = useSocket(token);
   const [eventCount, setEventCount] = useState(0);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
             text={
               <Space>
                 {status.icon}
-                <Text type={status.color === 'error' ? 'danger' : undefined}>
+                <Text type={status.color === 'error' ? 'danger' : 'secondary'}>
                   {status.text}
                 </Text>
               </Space>
@@ -107,7 +107,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <Text strong>连接状态: </Text>
-          <Text type={status.color === 'error' ? 'danger' : undefined}>
+          <Text type={status.color === 'error' ? 'danger' : 'secondary'}>
             {status.text}
           </Text>
         </div>

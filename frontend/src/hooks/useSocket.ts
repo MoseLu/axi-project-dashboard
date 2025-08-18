@@ -81,9 +81,7 @@ export const useSocket = (token?: string | null) => {
       console.error('Error details:', {
         message: error.message,
         name: error.name,
-        stack: error.stack,
-        description: error.description,
-        context: error.context
+        stack: error.stack
       });
       setConnected(false);
       setIsConnecting(false);

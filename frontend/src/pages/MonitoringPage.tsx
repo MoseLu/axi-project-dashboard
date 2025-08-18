@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography } from 'antd';
-import RealTimeMonitor from '../components/monitoring/RealTimeMonitor';
+import { RealTimeMonitor } from '../components/monitoring/RealTimeMonitor';
 
 const { Title } = Typography;
 
