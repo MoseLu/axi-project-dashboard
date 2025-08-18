@@ -444,7 +444,7 @@ jobs:
 
                          // 2. Nginx 配置 - 使用单行格式避免输出问题
              // 使用8090端口（根据port-config.yml配置）
-             const nginxConfig = 'location /project-dashboard { alias /srv/apps/axi-project-dashboard/frontend; try_files $uri $uri/ /project-dashboard/index.html; } location /project-dashboard/api/ { rewrite ^/project-dashboard/api/(.*) /api/$1 break; proxy_pass http://127.0.0.1:8090; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header X-Forwarded-Prefix /project-dashboard; } location /project-dashboard/ws/ { rewrite ^/project-dashboard/ws/(.*) /socket.io/$1 break; proxy_pass http://127.0.0.1:8090; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection upgrade; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location /project-dashboard/webhook/github { rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break; proxy_pass http://127.0.0.1:8081; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location = /project-dashboard { return 301 /project-dashboard/; }';
+             const nginxConfig = 'location /project-dashboard { alias /srv/apps/axi-project-dashboard/frontend; try_files $uri $uri/ /project-dashboard/index.html; } location /project-dashboard/api/ { rewrite ^/project-dashboard/api/(.*) /api/$1 break; proxy_pass http://127.0.0.1:8090; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header X-Forwarded-Prefix /project-dashboard; } location /project-dashboard/ws/ { proxy_pass http://127.0.0.1:8090; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location /project-dashboard/webhook/github { rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break; proxy_pass http://127.0.0.1:8081; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location = /project-dashboard { return 301 /project-dashboard/; }';
 
             console.log('🚀  触发 axi-deploy/main-deployment.yml …');
             console.log('项目名称:', context.repo.repo);
@@ -512,7 +512,7 @@ jobs:
             const deployConfig = {
               nginx_config: nginxConfig,
               test_url: testUrl,
-              start_cmd: 'bash start-simple.sh',
+              start_cmd: 'bash start-simple.sh --reload',
               service_port: servicePort,
               mysql_config: '',
               skip_init: false
