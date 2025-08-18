@@ -13,7 +13,10 @@ console.log('🚀 启动 axi-project-dashboard 简化后端服务...');
 
 // 创建 Express 应用
 const app = express();
-const server = http.createServer(app);
+// 先创建 HTTP 服务器，不挂载任何监听器
+const server = http.createServer();
+
+// 先初始化 Socket.IO，使其握手请求优先处理
 const io = new SocketIOServer(server, {
   path: '/project-dashboard/ws/socket.io',
   cors: {
@@ -23,6 +26,9 @@ const io = new SocketIOServer(server, {
   },
   transports: ['websocket', 'polling']
 });
+
+// 再把 Express 作为 request 监听器挂载到 server
+server.on('request', app);
 
 // 获取端口配置
 const PORT = process.env.PORT || 8090;
