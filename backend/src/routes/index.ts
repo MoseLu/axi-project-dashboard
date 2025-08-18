@@ -6,6 +6,7 @@ import authRoutes from './auth.routes';
 import projectRoutes from './projects.routes';
 import webhookRoutes from './webhook.routes';
 import monitoringRoutes from './monitoring.routes';
+import portRegistryRoutes from './port-registry.routes';
 
 const router = Router();
 
@@ -20,6 +21,9 @@ router.use('/webhook', webhookRoutes);
 
 // 监控路由
 router.use('/monitoring', monitoringRoutes);
+
+// 端口注册路由
+router.use('/port-registry', portRegistryRoutes);
 
 // Health check route
 router.get('/health', (req: Request, res: Response) => {
