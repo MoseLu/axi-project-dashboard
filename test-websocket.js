@@ -5,7 +5,7 @@ const testConfigs = [
   {
     name: '生产环境测试',
     url: 'wss://redamancy.com.cn',
-    path: '/project-dashboard/ws/socket.io',
+    path: '/ws/socket.io',
     options: {
       transports: ['websocket', 'polling'],
       withCredentials: true,
@@ -16,7 +16,7 @@ const testConfigs = [
   {
     name: '本地测试',
     url: 'http://localhost:8081',
-    path: '/project-dashboard/ws/socket.io',
+    path: '/ws/socket.io',
     options: {
       transports: ['websocket', 'polling'],
       withCredentials: true,

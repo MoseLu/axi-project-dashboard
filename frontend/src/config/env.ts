@@ -19,7 +19,7 @@ const getEnvConfig = (): EnvConfig => {
       apiPrefix: '/project-dashboard/api',
       isProduction: true,
       isDevelopment: false,
-      wsPath: '/project-dashboard/ws',
+      wsPath: '',
       wsPort: 8090 // 生产环境WebSocket端口
     };
   }
@@ -30,7 +30,7 @@ const getEnvConfig = (): EnvConfig => {
     apiPrefix: '/project-dashboard/api',
     isProduction: false,
     isDevelopment: true,
-    wsPath: '/project-dashboard/ws',
+    wsPath: '',
     wsPort: 8081 // 开发环境使用相同端口
   };
 };
