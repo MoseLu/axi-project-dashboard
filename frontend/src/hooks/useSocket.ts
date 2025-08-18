@@ -48,9 +48,8 @@ export const useSocket = (token?: string | null) => {
       console.error('WebSocket connection error:', error);
       console.error('Error details:', {
         message: error.message,
-        description: error.description,
-        context: error.context,
-        type: error.type
+        name: error.name,
+        stack: error.stack
       });
       setConnected(false);
     });
