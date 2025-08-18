@@ -38,7 +38,7 @@ export const useSocket = (token?: string | null) => {
 
     const url = buildWsUrl();
     const options: any = {
-      path: '/ws/socket.io',
+      path: '/project-dashboard/ws/socket.io',
       transports: ['polling', 'websocket'], // 先尝试polling，再尝试websocket
       withCredentials: true,
       // 重连配置 - 减少重连次数
