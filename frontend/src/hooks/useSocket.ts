@@ -8,6 +8,9 @@ export interface SocketEvent {
   timestamp: string | Date;
 }
 
+// 添加WebSocket禁用配置
+const WEBSOCKET_DISABLED = process.env.REACT_APP_WEBSOCKET_DISABLED === 'true';
+
 export const useSocket = (token?: string | null) => {
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
@@ -18,6 +21,13 @@ export const useSocket = (token?: string | null) => {
   const [maxAttempts] = useState(3); // 最大尝试次数
 
   useEffect(() => {
+    // 如果WebSocket被禁用，直接返回
+    if (WEBSOCKET_DISABLED) {
+      console.log('WebSocket功能已禁用');
+      setConnectionError('实时功能暂时不可用，正在维护中');
+      return;
+    }
+
     // 如果已经超过最大尝试次数，停止连接
     if (connectionAttempts >= maxAttempts) {
       console.log(`Maximum connection attempts (${maxAttempts}) reached, stopping reconnection`);
@@ -53,7 +63,8 @@ export const useSocket = (token?: string | null) => {
         auth: options.auth ? { token: options.auth.token ? `${options.auth.token.substring(0, 10)}...` : 'none' } : 'none'
       },
       attempt: connectionAttempts + 1,
-      maxAttempts
+      maxAttempts,
+      disabled: WEBSOCKET_DISABLED
     });
 
     // 如果已有连接，先断开
@@ -165,14 +176,19 @@ export const useSocket = (token?: string | null) => {
 
   return { 
     socket: socketRef.current, 
-    connected, 
+    connected: WEBSOCKET_DISABLED ? false : connected, 
     lastEvent, 
-    connectionError,
-    isConnecting,
+    connectionError: WEBSOCKET_DISABLED ? '实时功能暂时不可用，正在维护中' : connectionError,
+    isConnecting: WEBSOCKET_DISABLED ? false : isConnecting,
     connectionAttempts,
     maxAttempts,
+    disabled: WEBSOCKET_DISABLED,
     // 添加手动重连方法
     reconnect: () => {
+      if (WEBSOCKET_DISABLED) {
+        console.log('WebSocket is disabled, cannot reconnect');
+        return;
+      }
       if (connectionAttempts >= maxAttempts) {
         console.log('Maximum attempts reached, resetting counter');
         setConnectionAttempts(0);

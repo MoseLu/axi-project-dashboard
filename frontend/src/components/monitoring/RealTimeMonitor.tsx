@@ -10,7 +10,7 @@ interface RealTimeMonitorProps {
 }
 
 export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
-  const { connected, lastEvent, connectionError, isConnecting, reconnect, connectionAttempts, maxAttempts } = useSocket(token);
+  const { connected, lastEvent, connectionError, isConnecting, reconnect, connectionAttempts, maxAttempts, disabled } = useSocket(token);
   const [eventCount, setEventCount] = useState(0);
 
   useEffect(() => {
@@ -20,6 +20,15 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
   }, [lastEvent]);
 
   const getConnectionStatus = () => {
+    if (disabled) {
+      return {
+        icon: <WifiOffOutlined />,
+        text: '实时功能维护中',
+        color: 'default',
+        status: 'disabled'
+      };
+    }
+    
     if (isConnecting) {
       return {
         icon: <SyncOutlined spin />,
@@ -67,7 +76,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
         </Space>
       }
       extra={
-        !connected && !isConnecting && (
+        !disabled && !connected && !isConnecting && (
           <Button 
             type="primary" 
             size="small" 
@@ -82,7 +91,24 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
       }
       style={{ marginBottom: 16 }}
     >
-      {connectionError && (
+      {disabled && (
+        <Alert
+          message="实时功能维护中"
+          description={
+            <div>
+              <p>WebSocket实时功能暂时不可用，正在进行服务器维护。</p>
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                其他功能正常工作，预计维护时间：2-4小时
+              </p>
+            </div>
+          }
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      {connectionError && !disabled && (
         <Alert
           message="WebSocket连接问题"
           description={
@@ -129,7 +155,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
         </div>
       </div>
 
-      {lastEvent && (
+      {lastEvent && !disabled && (
         <div style={{ marginTop: 16 }}>
           <Text strong>最新事件: </Text>
           <div style={{ 
@@ -146,7 +172,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
         </div>
       )}
 
-      {!connected && !connectionError && (
+      {!connected && !connectionError && !disabled && (
         <div style={{ marginTop: 16 }}>
           <Text type="secondary">
             WebSocket未连接，实时监控功能不可用。请检查网络连接或联系管理员。
@@ -158,6 +184,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
       {process.env.NODE_ENV === 'development' && (
         <div style={{ marginTop: 16, padding: '8px', background: '#f0f0f0', borderRadius: '4px', fontSize: '12px' }}>
           <Text strong>调试信息:</Text>
+          <div>WebSocket禁用: {disabled ? '是' : '否'}</div>
           <div>连接尝试次数: {connectionAttempts}/{maxAttempts}</div>
           <div>连接状态: {connected ? '已连接' : '未连接'}</div>
           <div>连接中: {isConnecting ? '是' : '否'}</div>
