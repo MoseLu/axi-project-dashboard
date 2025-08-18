@@ -15,6 +15,7 @@ console.log('🚀 启动 axi-project-dashboard 简化后端服务...');
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
+  path: '/project-dashboard/ws/socket.io',
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
