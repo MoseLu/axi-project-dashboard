@@ -10,7 +10,7 @@ interface RealTimeMonitorProps {
 }
 
 export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
-  const { connected, lastEvent, connectionError, isConnecting, reconnect } = useSocket(token);
+  const { connected, lastEvent, connectionError, isConnecting, reconnect, connectionAttempts } = useSocket(token);
   const [eventCount, setEventCount] = useState(0);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
     if (isConnecting) {
       return {
         icon: <SyncOutlined spin />,
-        text: '连接中...',
+        text: `连接中... (第${connectionAttempts}次尝试)`,
         color: 'processing',
         status: 'connecting'
       };
@@ -40,7 +40,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
     
     return {
       icon: <WifiOffOutlined />,
-      text: '未连接',
+      text: connectionAttempts > 0 ? `连接失败 (已尝试${connectionAttempts}次)` : '未连接',
       color: 'error',
       status: 'disconnected'
     };
@@ -90,6 +90,11 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
               <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
                 实时功能暂时不可用，但其他功能正常工作。如果问题持续存在，请联系管理员。
               </p>
+              {connectionAttempts > 0 && (
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  已尝试连接 {connectionAttempts} 次
+                </p>
+              )}
             </div>
           }
           type="warning"
@@ -140,6 +145,17 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
           <Text type="secondary">
             WebSocket未连接，实时监控功能不可用。请检查网络连接或联系管理员。
           </Text>
+        </div>
+      )}
+
+      {/* 添加调试信息 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ marginTop: 16, padding: '8px', background: '#f0f0f0', borderRadius: '4px', fontSize: '12px' }}>
+          <Text strong>调试信息:</Text>
+          <div>连接尝试次数: {connectionAttempts}</div>
+          <div>连接状态: {connected ? '已连接' : '未连接'}</div>
+          <div>连接中: {isConnecting ? '是' : '否'}</div>
+          <div>错误信息: {connectionError || '无'}</div>
         </div>
       )}
     </Card>

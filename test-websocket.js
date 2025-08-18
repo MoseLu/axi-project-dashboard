@@ -1,96 +1,91 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
+const { io } = require('socket.io-client');
 
-const app = express();
-const server = http.createServer(app);
-
-// 启用CORS
-app.use(cors({
-  origin: '*',
-  credentials: true
-}));
-
-// 创建Socket.IO服务器
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-    credentials: true
+// 测试配置
+const testConfigs = [
+  {
+    name: '生产环境测试',
+    url: 'wss://redamancy.com.cn',
+    path: '/project-dashboard/ws/socket.io',
+    options: {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      timeout: 10000,
+      forceNew: true
+    }
   },
-  path: '/project-dashboard/ws/socket.io'
-});
+  {
+    name: '本地测试',
+    url: 'http://localhost:8081',
+    path: '/project-dashboard/ws/socket.io',
+    options: {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      timeout: 10000,
+      forceNew: true
+    }
+  }
+];
 
-// 基本路由
-app.get('/', (req, res) => {
-  res.json({
-    message: 'WebSocket测试服务器正在运行',
-    timestamp: new Date().toISOString(),
-    socketPath: '/project-dashboard/ws/socket.io'
-  });
-});
-
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    message: 'WebSocket测试服务器健康检查通过',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Socket.IO连接处理
-io.on('connection', (socket) => {
-  console.log('客户端连接成功:', socket.id);
+async function testWebSocketConnection(config) {
+  console.log(`\n🔍 测试: ${config.name}`);
+  console.log(`URL: ${config.url}`);
+  console.log(`Path: ${config.path}`);
+  console.log('Options:', JSON.stringify(config.options, null, 2));
   
-  // 发送欢迎消息
-  socket.emit('welcome', {
-    message: '欢迎连接到WebSocket服务器',
-    socketId: socket.id,
-    timestamp: new Date().toISOString()
-  });
-  
-  // 处理心跳
-  socket.on('heartbeat', () => {
-    console.log('收到心跳:', socket.id);
-    socket.emit('heartbeat', {
-      message: '心跳响应',
-      timestamp: new Date().toISOString()
+  return new Promise((resolve) => {
+    const socket = io(config.url, config.options);
+    
+    const timeout = setTimeout(() => {
+      console.log('❌ 连接超时');
+      socket.disconnect();
+      resolve({ success: false, error: 'timeout' });
+    }, 15000);
+    
+    socket.on('connect', () => {
+      clearTimeout(timeout);
+      console.log('✅ 连接成功!');
+      console.log('Socket ID:', socket.id);
+      socket.disconnect();
+      resolve({ success: true });
+    });
+    
+    socket.on('connect_error', (error) => {
+      clearTimeout(timeout);
+      console.log('❌ 连接错误:', error.message);
+      console.log('错误详情:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      resolve({ success: false, error: error.message });
+    });
+    
+    socket.on('disconnect', (reason) => {
+      console.log('🔌 连接断开:', reason);
     });
   });
-  
-  // 处理自定义事件
-  socket.on('event', (data) => {
-    console.log('收到事件:', data);
-    socket.emit('event', {
-      type: 'response',
-      payload: data,
-      timestamp: new Date().toISOString()
-    });
-  });
-  
-  // 处理断开连接
-  socket.on('disconnect', (reason) => {
-    console.log('客户端断开连接:', socket.id, '原因:', reason);
-  });
-});
+}
 
-// 启动服务器
-const PORT = 8081;
-server.listen(PORT, () => {
-  console.log(`🚀 WebSocket测试服务器启动成功！`);
-  console.log(`📡 HTTP服务地址: http://localhost:${PORT}`);
-  console.log(`🔌 WebSocket地址: ws://localhost:${PORT}/project-dashboard/ws`);
-  console.log(`📊 Socket.IO路径: /project-dashboard/ws/socket.io`);
-  console.log(`⏰ 启动时间: ${new Date().toISOString()}`);
-  console.log(`💡 按 Ctrl+C 停止服务器`);
-});
+async function runTests() {
+  console.log('🚀 开始WebSocket连接测试...\n');
+  
+  for (const config of testConfigs) {
+    try {
+      const result = await testWebSocketConnection(config);
+      console.log(`结果: ${result.success ? '✅ 成功' : '❌ 失败'}`);
+      if (!result.success) {
+        console.log(`错误: ${result.error}`);
+      }
+    } catch (error) {
+      console.log(`❌ 测试异常: ${error.message}`);
+    }
+    
+    // 等待一下再进行下一个测试
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+  
+  console.log('\n🏁 测试完成');
+}
 
-// 优雅关闭
-process.on('SIGINT', () => {
-  console.log('\n🛑 正在关闭服务器...');
-  server.close(() => {
-    console.log('✅ 服务器已关闭');
-    process.exit(0);
-  });
-});
+// 运行测试
+runTests().catch(console.error);

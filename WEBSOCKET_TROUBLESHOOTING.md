@@ -1,149 +1,110 @@
-# WebSocket 连接问题故障排除指南
+# WebSocket 故障排除指南
 
 ## 问题描述
 
-如果您看到以下错误信息，说明WebSocket连接失败：
+WebSocket连接失败，错误信息显示"websocket error"，实时监控功能不可用。
 
-```
-WebSocket connection to 'wss://redamancy.com.cn/project-dashboard/ws/socket.io/?EIO=4&transport=websocket' failed
-```
+## 错误分析
 
-## 原因分析
+### 常见错误类型
 
-WebSocket连接失败通常由以下原因造成：
+1. **websocket error** - WebSocket握手失败
+2. **xhr poll error** - 轮询连接失败
+3. **timeout** - 连接超时
+4. **ECONNREFUSED** - 连接被拒绝
+5. **CORS error** - 跨域访问被拒绝
 
-1. **后端服务未启动** - 后端服务没有在8081端口运行
-2. **网络连接问题** - 网络连接不稳定或防火墙阻止
-3. **配置问题** - 前端和后端WebSocket配置不匹配
-4. **代理问题** - nginx代理配置不正确
+### 可能的原因
 
-## 解决方案
+1. **服务器端问题**
+   - Socket.IO服务器未启动
+   - nginx配置错误
+   - 防火墙阻止WebSocket连接
 
-### 1. 启动后端服务
+2. **网络问题**
+   - 网络连接不稳定
+   - 代理服务器配置问题
+   - DNS解析问题
 
-#### 方法一：使用启动脚本（推荐）
+3. **配置问题**
+   - WebSocket路径配置错误
+   - CORS配置不正确
+   - SSL/TLS证书问题
 
-```powershell
-# 在 axi-project-dashboard 根目录下运行
-.\start-backend.ps1
-```
+## 诊断步骤
 
-#### 方法二：手动启动
+### 1. 检查后端服务状态
 
-```powershell
-# 进入后端目录
-cd backend
+```bash
+# 检查后端服务是否运行
+curl -I https://redamancy.com.cn/project-dashboard/api/health
 
-# 安装依赖
-pnpm install
-
-# 启动开发服务器
-pnpm run dev:fast
-```
-
-### 2. 检查服务状态
-
-确认后端服务正在运行：
-
-```powershell
-# 检查8081端口是否被占用
-netstat -ano | findstr :8081
-
-# 检查Node.js进程
-Get-Process | Where-Object {$_.ProcessName -like "*node*"}
+# 检查WebSocket端点
+curl -I https://redamancy.com.cn/project-dashboard/ws/socket.io/
 ```
 
-### 3. 测试WebSocket连接
+### 2. 检查nginx配置
 
-在浏览器控制台中测试：
+```bash
+# 检查nginx配置语法
+nginx -t
+
+# 检查nginx错误日志
+tail -f /var/log/nginx/websocket_error.log
+tail -f /var/log/nginx/error.log
+```
+
+### 3. 检查Socket.IO服务器
+
+```bash
+# 检查后端日志
+docker logs axi-project-dashboard-backend
+
+# 检查Socket.IO服务状态
+curl https://redamancy.com.cn/project-dashboard/websocket-test
+```
+
+### 4. 浏览器调试
+
+在浏览器控制台中运行以下代码：
 
 ```javascript
 // 测试WebSocket连接
-const socket = io('ws://localhost:8081/project-dashboard/ws', {
+const socket = io('wss://redamancy.com.cn', {
   path: '/project-dashboard/ws/socket.io',
-  transports: ['websocket', 'polling']
+  transports: ['polling', 'websocket'],
+  withCredentials: true
 });
 
 socket.on('connect', () => {
-  console.log('WebSocket连接成功');
+  console.log('连接成功:', socket.id);
 });
 
 socket.on('connect_error', (error) => {
-  console.error('WebSocket连接失败:', error);
+  console.error('连接错误:', error);
+});
+
+socket.on('disconnect', (reason) => {
+  console.log('连接断开:', reason);
 });
 ```
 
-### 4. 环境配置检查
+## 解决方案
 
-确保前端环境配置正确：
+### 1. 立即解决方案
 
-- 开发环境：`http://localhost:8081`
-- 生产环境：`https://redamancy.com.cn`
+#### 重启后端服务
+```bash
+# 重启后端容器
+docker restart axi-project-dashboard-backend
 
-### 5. 网络和防火墙检查
-
-- 确保8081端口没有被防火墙阻止
-- 检查网络连接是否正常
-- 如果使用代理，确保代理配置正确
-
-## 常见错误及解决方案
-
-### 错误1：ECONNREFUSED
-```
-Error: connect ECONNREFUSED 127.0.0.1:8081
+# 或者重新部署
+docker-compose down
+docker-compose up -d
 ```
 
-**解决方案**：启动后端服务
-
-### 错误2：Timeout
-```
-Error: timeout
-```
-
-**解决方案**：
-- 检查网络连接
-- 增加连接超时时间
-- 检查防火墙设置
-
-### 错误3：WebSocket Error
-```
-Error: websocket error
-```
-
-**解决方案**：
-- 检查WebSocket路径配置
-- 确认nginx代理配置正确
-- 检查SSL证书（生产环境）
-
-## 开发环境配置
-
-### 前端配置 (frontend/src/config/env.ts)
-
-```typescript
-// 开发环境
-return {
-  baseUrl: 'http://localhost:8081',
-  apiPrefix: '/project-dashboard/api',
-  isProduction: false,
-  isDevelopment: true,
-  wsPath: '/project-dashboard/ws',
-  wsPort: 8081
-};
-```
-
-### 后端配置 (backend/src/config/config.ts)
-
-```typescript
-// 开发环境端口配置
-port: 8081,
-websocketPort: 8081,
-```
-
-## 生产环境配置
-
-### nginx配置
-
-确保nginx正确代理WebSocket连接：
+#### 检查nginx配置
+确保nginx配置中包含正确的WebSocket代理设置：
 
 ```nginx
 location /project-dashboard/ws/ {
@@ -164,43 +125,95 @@ location /project-dashboard/ws/ {
 }
 ```
 
-## 调试技巧
+### 2. 长期解决方案
 
-### 1. 启用详细日志
+#### 更新Socket.IO配置
 
-在浏览器控制台中启用Socket.IO调试：
+在后端 `src/index.ts` 中确保Socket.IO配置正确：
 
-```javascript
-localStorage.debug = '*';
+```typescript
+this.io = new SocketIOServer(this.server, {
+  cors: {
+    origin: config.cors.origin || '*',
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  path: '/project-dashboard/ws/socket.io'
+});
 ```
 
-### 2. 检查网络请求
+#### 前端降级策略
 
-在浏览器开发者工具的Network标签页中：
-- 查看WebSocket连接状态
-- 检查是否有404或500错误
-- 查看请求头和响应头
+如果WebSocket不可用，前端应该：
 
-### 3. 后端日志
+1. 显示友好的错误信息
+2. 提供手动重连按钮
+3. 使用轮询作为备选方案
+4. 确保其他功能正常工作
 
-查看后端服务日志：
-- 检查是否有错误信息
-- 确认WebSocket服务是否正常启动
-- 查看连接和断开日志
+### 3. 监控和告警
+
+#### 添加健康检查
+
+```typescript
+// 在Socket.IO服务中添加健康检查
+app.get('/websocket-health', (req, res) => {
+  const isHealthy = io.engine.clientsCount >= 0;
+  res.json({
+    healthy: isHealthy,
+    clients: io.engine.clientsCount,
+    uptime: process.uptime()
+  });
+});
+```
+
+#### 日志监控
+
+确保记录以下信息：
+- WebSocket连接/断开事件
+- 错误详情和堆栈跟踪
+- 连接尝试次数
+- 客户端信息
+
+## 预防措施
+
+### 1. 配置检查清单
+
+- [ ] Socket.IO服务器正确配置
+- [ ] nginx WebSocket代理配置正确
+- [ ] CORS设置允许WebSocket连接
+- [ ] 防火墙允许WebSocket端口
+- [ ] SSL证书有效（如果使用HTTPS）
+
+### 2. 监控指标
+
+- WebSocket连接数
+- 连接成功率
+- 平均连接时间
+- 错误率
+
+### 3. 自动化测试
+
+定期运行WebSocket连接测试：
+
+```bash
+# 运行测试脚本
+node test-websocket.js
+```
 
 ## 联系支持
 
-如果问题仍然存在，请：
+如果问题持续存在，请提供以下信息：
 
-1. 收集错误日志和截图
-2. 提供环境信息（操作系统、Node.js版本等）
-3. 描述重现步骤
-4. 联系技术支持团队
+1. 错误日志截图
+2. 浏览器控制台输出
+3. 后端服务日志
+4. nginx错误日志
+5. 网络连接测试结果
 
-## 相关文件
+## 相关文档
 
-- `frontend/src/hooks/useSocket.ts` - WebSocket连接逻辑
-- `frontend/src/config/env.ts` - 环境配置
-- `backend/src/index.ts` - 后端服务启动
-- `backend/src/config/config.ts` - 后端配置
-- `config/nginx.conf` - nginx代理配置
+- [Socket.IO 官方文档](https://socket.io/docs/)
+- [nginx WebSocket 代理配置](http://nginx.org/en/docs/http/websocket.html)
+- [WebSocket 故障排除](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications#troubleshooting)
