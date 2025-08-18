@@ -70,12 +70,12 @@ http {
 
     # 上游服务器定义
     upstream backend {
-        server 127.0.0.1:8090;
+        server backend:8090;
         keepalive 32;
     }
 
     upstream frontend {
-        server 127.0.0.1:3000;
+        server frontend:3000;
         keepalive 32;
     }
 
@@ -91,7 +91,7 @@ http {
 
     # WebSocket 上游
     upstream websocket {
-        server 127.0.0.1:8090;
+        server backend:8090;
         keepalive 16;
         
         # WebSocket 特定配置
