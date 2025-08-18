@@ -58,6 +58,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 兼容 /project-dashboard 前缀的反向代理路径
 app.use((req, res, next) => {
+  // 避免破坏 Socket.IO 握手路径
+  if (req.url.startsWith('/project-dashboard/ws/')) {
+    return next();
+  }
   if (req.url.startsWith('/project-dashboard/')) {
     req.url = req.url.replace(/^\/project-dashboard\//, '/');
   }
