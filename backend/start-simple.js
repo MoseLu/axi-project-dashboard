@@ -727,6 +727,162 @@ app.get('/', (req, res) => {
   });
 });
 
+// 监控相关API端点
+app.get('/api/monitoring/projects/status', (req, res) => {
+  console.log('📊 获取项目状态请求');
+  
+  // 模拟项目状态数据
+  const projectsStatus = [
+    {
+      name: 'axi-project-dashboard',
+      isRunning: true,
+      port: 8081,
+      memoryUsage: 45.2,
+      diskUsage: 12.8,
+      cpuUsage: 23.1,
+      uptime: 86400,
+      url: 'https://redamancy.com.cn/project-dashboard',
+      lastHealthCheck: new Date().toISOString()
+    },
+    {
+      name: 'axi-star-cloud',
+      isRunning: true,
+      port: 8082,
+      memoryUsage: 38.7,
+      diskUsage: 15.3,
+      cpuUsage: 18.9,
+      uptime: 43200,
+      url: 'https://redamancy.com.cn/star-cloud',
+      lastHealthCheck: new Date().toISOString()
+    },
+    {
+      name: 'axi-deploy',
+      isRunning: false,
+      port: null,
+      memoryUsage: 0,
+      diskUsage: 8.2,
+      cpuUsage: 0,
+      uptime: 0,
+      url: null,
+      lastHealthCheck: new Date().toISOString()
+    }
+  ];
+  
+  res.json({
+    success: true,
+    data: projectsStatus
+  });
+});
+
+app.get('/api/monitoring/deployments/recent', (req, res) => {
+  console.log('📦 获取最近部署记录请求');
+  
+  const limit = parseInt(req.query.limit) || 10;
+  
+  // 模拟最近部署记录
+  const recentDeployments = [
+    {
+      id: 1,
+      uuid: 'deploy-recent-001',
+      project_name: 'axi-project-dashboard',
+      repository: 'MoseLu/axi-project-dashboard',
+      branch: 'main',
+      commit_hash: 'abc123def456',
+      status: 'success',
+      start_time: '2024-01-15T10:30:00Z',
+      end_time: '2024-01-15T10:35:00Z',
+      duration: 300,
+      triggered_by: 'admin',
+      trigger_type: 'push',
+      created_at: '2024-01-15T10:30:00Z',
+      updated_at: '2024-01-15T10:35:00Z',
+      logs: ['构建开始', '依赖安装完成', '编译成功', '部署完成'],
+      environment: 'production',
+      steps: [
+        {
+          id: 1,
+          step_name: 'validate-artifact',
+          display_name: '验证构建产物',
+          status: 'success',
+          duration: 15,
+          start_time: '2024-01-15T10:30:00Z',
+          end_time: '2024-01-15T10:30:15Z'
+        },
+        {
+          id: 2,
+          step_name: 'parse-secrets',
+          display_name: '解析部署密钥',
+          status: 'success',
+          duration: 8,
+          start_time: '2024-01-15T10:30:15Z',
+          end_time: '2024-01-15T10:30:23Z'
+        },
+        {
+          id: 3,
+          step_name: 'deploy-project',
+          display_name: '部署项目',
+          status: 'success',
+          duration: 277,
+          start_time: '2024-01-15T10:30:23Z',
+          end_time: '2024-01-15T10:35:00Z'
+        }
+      ]
+    },
+    {
+      id: 2,
+      uuid: 'deploy-recent-002',
+      project_name: 'axi-star-cloud',
+      repository: 'MoseLu/axi-star-cloud',
+      branch: 'main',
+      commit_hash: 'def456ghi789',
+      status: 'running',
+      start_time: '2024-01-15T11:00:00Z',
+      end_time: null,
+      duration: 180,
+      triggered_by: 'admin',
+      trigger_type: 'manual',
+      created_at: '2024-01-15T11:00:00Z',
+      updated_at: '2024-01-15T11:03:00Z',
+      logs: ['构建开始', '依赖安装中...'],
+      environment: 'staging',
+      steps: [
+        {
+          id: 1,
+          step_name: 'validate-artifact',
+          display_name: '验证构建产物',
+          status: 'success',
+          duration: 12,
+          start_time: '2024-01-15T11:00:00Z',
+          end_time: '2024-01-15T11:00:12Z'
+        },
+        {
+          id: 2,
+          step_name: 'parse-secrets',
+          display_name: '解析部署密钥',
+          status: 'success',
+          duration: 6,
+          start_time: '2024-01-15T11:00:12Z',
+          end_time: '2024-01-15T11:00:18Z'
+        },
+        {
+          id: 3,
+          step_name: 'deploy-project',
+          display_name: '部署项目',
+          status: 'running',
+          duration: 162,
+          start_time: '2024-01-15T11:00:18Z',
+          end_time: null
+        }
+      ]
+    }
+  ].slice(0, limit);
+  
+  res.json({
+    success: true,
+    data: recentDeployments
+  });
+});
+
 // 404 处理
 app.use('*', (req, res) => {
   res.status(404).json({
