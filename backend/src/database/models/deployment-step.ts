@@ -1,6 +1,5 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
 import { sequelize } from '../sequelize';
-import { Deployment } from './deployment';
 
 export interface DeploymentStepAttributes {
   id: number;
@@ -96,7 +95,7 @@ export class DeploymentStep extends Model<DeploymentStepAttributes, DeploymentSt
   public updated_at!: Date;
   
   // 关联关系
-  public readonly deployment?: Deployment;
+  public readonly deployment?: any;
 }
 
 DeploymentStep.init(
@@ -295,11 +294,14 @@ DeploymentStep.init(
   }
 );
 
-// 定义关联关系
-DeploymentStep.belongsTo(Deployment, {
-  foreignKey: 'deployment_uuid',
-  targetKey: 'uuid',
-  as: 'deployment',
-});
+// 定义关联关系 - 延迟加载以避免循环依赖
+export const setupDeploymentStepAssociations = () => {
+  const { default: Deployment } = require('./deployment');
+  DeploymentStep.belongsTo(Deployment, {
+    foreignKey: 'deployment_uuid',
+    targetKey: 'uuid',
+    as: 'deployment',
+  });
+};
 
 export default DeploymentStep;

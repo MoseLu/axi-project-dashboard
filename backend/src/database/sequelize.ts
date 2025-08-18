@@ -39,6 +39,10 @@ export const testConnection = async (): Promise<void> => {
 // 同步数据库模型
 export const syncDatabase = async (): Promise<void> => {
   try {
+    // 初始化模型关联关系
+    const { initializeModelAssociations } = require('./models/associations');
+    initializeModelAssociations();
+    
     // 使用 force: true 强制重新创建表结构
     await sequelize.sync({ force: true });
     logger.info('✅ Database models synchronized successfully');
