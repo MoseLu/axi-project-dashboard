@@ -1,7 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { logger } from '@/utils/logger';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * WebSocket连接测试端点

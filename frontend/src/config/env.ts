@@ -5,6 +5,7 @@ interface EnvConfig {
   isProduction: boolean;
   isDevelopment: boolean;
   wsPath: string;
+  wsPort?: number;
 }
 
 const getEnvConfig = (): EnvConfig => {
@@ -18,7 +19,8 @@ const getEnvConfig = (): EnvConfig => {
       apiPrefix: '/project-dashboard/api',
       isProduction: true,
       isDevelopment: false,
-      wsPath: '/project-dashboard/ws'
+      wsPath: '/project-dashboard/ws',
+      wsPort: 8090 // 生产环境WebSocket端口
     };
   }
   
@@ -28,7 +30,8 @@ const getEnvConfig = (): EnvConfig => {
     apiPrefix: '/project-dashboard/api',
     isProduction: false,
     isDevelopment: true,
-    wsPath: '/project-dashboard/ws'
+    wsPath: '/project-dashboard/ws',
+    wsPort: 8081 // 开发环境使用相同端口
   };
 };
 
@@ -56,8 +59,16 @@ export const buildStaticUrl = (path: string): string => {
 export const buildWsUrl = (): string => {
   const isHttps = envConfig.baseUrl.startsWith('https://');
   const wsScheme = isHttps ? 'wss' : 'ws';
-  const host = envConfig.baseUrl.replace(/^https?:\/\//, '');
-  return `${wsScheme}://${host}${envConfig.wsPath}`;
+  
+  if (envConfig.isProduction) {
+    // 生产环境：使用域名，不指定端口（由nginx代理）
+    const host = envConfig.baseUrl.replace(/^https?:\/\//, '');
+    return `${wsScheme}://${host}${envConfig.wsPath}`;
+  } else {
+    // 开发环境：使用localhost和指定端口
+    const port = envConfig.wsPort || 8081;
+    return `${wsScheme}://localhost:${port}${envConfig.wsPath}`;
+  }
 };
 
 export default envConfig;
