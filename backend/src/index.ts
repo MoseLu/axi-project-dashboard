@@ -51,7 +51,8 @@ class Application {
         credentials: true
       },
       transports: ['websocket', 'polling'],
-      path: '/project-dashboard/ws/socket.io/'
+      // 与前端 useSocket.ts 中保持一致，结尾不加斜杠
+      path: '/project-dashboard/ws/socket.io'
     });
 
     this.socketService = new SocketService(this.io);
