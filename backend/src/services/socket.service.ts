@@ -81,6 +81,8 @@ export class SocketService {
       this.startHeartbeat();
 
       logger.info('Socket service initialized successfully');
+      logger.info(`Socket.io path: ${this.io.path()}`);
+      logger.info(`Socket.io transports: ${this.io.engine.opts.transports}`);
     } catch (error) {
       logger.error('Failed to initialize socket service:', error);
       throw error;
@@ -91,7 +93,14 @@ export class SocketService {
     try {
       const token = socket.handshake.auth?.token || socket.handshake.query?.token;
       
+      logger.debug(`Socket authentication attempt for socket ${socket.id}:`, {
+        hasAuthToken: !!socket.handshake.auth?.token,
+        hasQueryToken: !!socket.handshake.query?.token,
+        token: token ? `${token.substring(0, 10)}...` : 'none'
+      });
+      
       if (!token || typeof token !== 'string') {
+        logger.warn(`Socket ${socket.id} rejected: No authentication token`);
         return next(new Error('Authentication token required'));
       }
 
@@ -101,7 +110,7 @@ export class SocketService {
       logger.debug(`Socket authentication successful for user: ${decoded.userId}`);
       next();
     } catch (error) {
-      logger.warn('Socket authentication failed:', error);
+      logger.warn(`Socket ${socket.id} authentication failed:`, error);
       next(new Error('Authentication failed'));
     }
   }

@@ -50,7 +50,8 @@ class Application {
         methods: ['GET', 'POST'],
         credentials: true
       },
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      path: '/project-dashboard/ws/socket.io/'
     });
 
     this.socketService = new SocketService(this.io);
