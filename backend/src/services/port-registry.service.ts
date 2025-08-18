@@ -57,11 +57,11 @@ export class PortRegistryService {
       if (preferredPort && await this.isPortAvailable(preferredPort)) {
         port = preferredPort;
       } else {
-        port = await this.findAvailablePort();
-      }
-
-      if (!port) {
-        throw new Error('No available ports in the configured range');
+        const foundPort = await this.findAvailablePort();
+        if (!foundPort) {
+          throw new Error('No available ports in the configured range');
+        }
+        port = foundPort;
       }
 
       // 创建端口注册记录
@@ -71,8 +71,8 @@ export class PortRegistryService {
         port,
         status: 'allocated',
         allocatedAt: new Date(),
-        deploymentId,
-        metadata
+        ...(deploymentId && { deploymentId }),
+        ...(metadata && { metadata })
       };
 
       // 保存到Redis
@@ -174,7 +174,16 @@ export class PortRegistryService {
   public async getAllPortRegistrations(): Promise<PortRegistration[]> {
     try {
       const pattern = `${this.REDIS_KEY_PREFIX}project:*`;
-      const keys = await redisService.keys(pattern);
+      // 使用Redis客户端的scan命令来获取匹配的键
+      const client = redisService.getClient();
+      const keys: string[] = [];
+      let cursor = 0;
+      
+      do {
+        const result = await client.scan(cursor, { MATCH: pattern, COUNT: 100 });
+        cursor = result.cursor;
+        keys.push(...result.keys);
+      } while (cursor !== 0);
       
       const registrations: PortRegistration[] = [];
       for (const key of keys) {
@@ -249,8 +258,8 @@ export class PortRegistryService {
       const data = JSON.stringify(registration);
       
       // 保存到Redis，设置过期时间（24小时）
-      await redisService.setex(projectKey, 86400, data);
-      await redisService.setex(portKey, 86400, data);
+      await redisService.set(projectKey, data, 86400);
+      await redisService.set(portKey, data, 86400);
     } catch (error) {
       logger.error('Failed to save port registration:', error);
       throw error;
@@ -267,7 +276,7 @@ export class PortRegistryService {
       
       if (!allocatedPorts.includes(port)) {
         allocatedPorts.push(port);
-        await redisService.setex(key, 86400, JSON.stringify(allocatedPorts));
+        await redisService.set(key, JSON.stringify(allocatedPorts), 86400);
       }
     } catch (error) {
       logger.error('Failed to add to allocated ports:', error);
@@ -284,7 +293,7 @@ export class PortRegistryService {
       const allocatedPorts = await this.getAllocatedPorts();
       
       const filteredPorts = allocatedPorts.filter(p => p !== port);
-      await redisService.setex(key, 86400, JSON.stringify(filteredPorts));
+      await redisService.set(key, JSON.stringify(filteredPorts), 86400);
     } catch (error) {
       logger.error('Failed to remove from allocated ports:', error);
       throw error;

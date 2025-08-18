@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { portRegistryService, PortAllocationRequest } from '@/services/port-registry.service';
 import { logger } from '@/utils/logger';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * 分配端口给项目
@@ -22,14 +22,14 @@ router.post('/allocate', async (req, res) => {
 
     const registration = await portRegistryService.allocatePort(request);
     
-    res.json({
+    return res.json({
       success: true,
       data: registration,
       message: `Port ${registration.port} allocated successfully`
     });
   } catch (error) {
     logger.error('Port allocation failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Port allocation failed'
     });
@@ -54,14 +54,14 @@ router.put('/mark-in-use/:projectId', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: registration,
       message: `Port ${registration.port} marked as in-use`
     });
   } catch (error) {
     logger.error('Mark port in-use failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to mark port as in-use'
     });
@@ -85,14 +85,14 @@ router.put('/release/:projectId', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: registration,
       message: `Port ${registration.port} released successfully`
     });
   } catch (error) {
     logger.error('Port release failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to release port'
     });
@@ -116,13 +116,13 @@ router.get('/project/:projectId', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: registration
     });
   } catch (error) {
     logger.error('Get project port failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get project port'
     });
@@ -153,13 +153,13 @@ router.get('/port/:port', async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: registration
     });
   } catch (error) {
     logger.error('Get port project failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get port project'
     });
@@ -174,14 +174,14 @@ router.get('/all', async (req, res) => {
   try {
     const registrations = await portRegistryService.getAllPortRegistrations();
     
-    res.json({
+    return res.json({
       success: true,
       data: registrations,
       total: registrations.length
     });
   } catch (error) {
     logger.error('Get all port registrations failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get port registrations'
     });
@@ -196,14 +196,14 @@ router.get('/allocated-ports', async (req, res) => {
   try {
     const ports = await portRegistryService.getAllocatedPorts();
     
-    res.json({
+    return res.json({
       success: true,
       data: ports,
       total: ports.length
     });
   } catch (error) {
     logger.error('Get allocated ports failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to get allocated ports'
     });
@@ -227,7 +227,7 @@ router.get('/check/:port', async (req, res) => {
 
     const isAvailable = await portRegistryService.isPortAvailable(port);
     
-    res.json({
+    return res.json({
       success: true,
       data: {
         port,
@@ -236,7 +236,7 @@ router.get('/check/:port', async (req, res) => {
     });
   } catch (error) {
     logger.error('Check port availability failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to check port availability'
     });
@@ -251,13 +251,13 @@ router.post('/cleanup', async (req, res) => {
   try {
     await portRegistryService.cleanupExpiredRegistrations();
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Cleanup completed successfully'
     });
   } catch (error) {
     logger.error('Port registry cleanup failed:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error instanceof Error ? error.message : 'Failed to cleanup port registry'
     });

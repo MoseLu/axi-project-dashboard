@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Button, Modal, Form, Input, Select, Tag, Space, message, Popconfirm, Tooltip } from 'antd';
-import { ReloadOutlined, PlusOutlined, DeleteOutlined, EyeOutlined } from '@ant-design/icons';
+import { ReloadOutlined, PlusOutlined, EyeOutlined } from '@ant-design/icons';
 import { api } from '../../utils/api';
 
 const { Option } = Select;
@@ -213,7 +213,7 @@ const PortRegistryManager: React.FC = () => {
       title: '操作',
       key: 'actions',
       width: 200,
-      render: (_, record: PortRegistration) => (
+      render: (_: any, record: PortRegistration) => (
         <Space>
           <Tooltip title="查看详情">
             <Button
