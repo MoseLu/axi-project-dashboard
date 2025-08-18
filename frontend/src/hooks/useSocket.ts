@@ -15,19 +15,25 @@ export const useSocket = (token?: string | null) => {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [maxAttempts] = useState(3); // 最大尝试次数
 
   useEffect(() => {
+    // 如果已经超过最大尝试次数，停止连接
+    if (connectionAttempts >= maxAttempts) {
+      console.log(`Maximum connection attempts (${maxAttempts}) reached, stopping reconnection`);
+      setConnectionError('连接失败次数过多，请检查网络连接或联系管理员');
+      setIsConnecting(false);
+      return;
+    }
+
     const url = buildWsUrl();
     const options: any = {
       path: '/project-dashboard/ws/socket.io',
       transports: ['polling', 'websocket'], // 先尝试polling，再尝试websocket
       withCredentials: true,
-      // 重连配置
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000, // 增加超时时间
+      // 重连配置 - 减少重连次数
+      reconnection: false, // 禁用自动重连，手动控制
+      timeout: 10000, // 减少超时时间
       // 调试配置
       forceNew: true,
       autoConnect: true,
@@ -46,7 +52,8 @@ export const useSocket = (token?: string | null) => {
         ...options,
         auth: options.auth ? { token: options.auth.token ? `${options.auth.token.substring(0, 10)}...` : 'none' } : 'none'
       },
-      attempt: connectionAttempts + 1
+      attempt: connectionAttempts + 1,
+      maxAttempts
     });
 
     // 如果已有连接，先断开
@@ -80,15 +87,18 @@ export const useSocket = (token?: string | null) => {
       
       // 根据断开原因提供不同的处理
       if (reason === 'io server disconnect') {
-        // 服务器主动断开，尝试重连
-        console.log('Server disconnected, attempting to reconnect...');
-        socket.connect();
+        // 服务器主动断开，不自动重连
+        console.log('Server disconnected');
+        setConnectionError('服务器主动断开连接');
       } else if (reason === 'io client disconnect') {
         // 客户端主动断开
         console.log('Client disconnected');
       } else {
         // 其他原因（网络问题等）
         console.log('Connection lost due to:', reason);
+        if (connectionAttempts < maxAttempts) {
+          setConnectionError('连接断开，请手动重试');
+        }
       }
     });
     
@@ -115,40 +125,17 @@ export const useSocket = (token?: string | null) => {
         errorMessage = '轮询连接失败，请检查网络连接';
       } else if (error.message.includes('CORS')) {
         errorMessage = '跨域访问被拒绝，请联系管理员检查CORS配置';
+      } else if (error.message.includes('502')) {
+        errorMessage = '服务器代理错误(502)，请联系管理员检查nginx配置';
       }
       
       setConnectionError(errorMessage);
       
       // 如果连接尝试次数过多，停止重连
-      if (connectionAttempts >= 3) {
+      if (connectionAttempts >= maxAttempts) {
         console.log('Too many connection attempts, stopping reconnection');
-        setConnectionError('连接失败次数过多，请刷新页面重试');
+        setConnectionError('连接失败次数过多，请刷新页面重试或联系管理员');
       }
-    });
-
-    socket.on('reconnect', (attemptNumber) => {
-      console.log('WebSocket reconnected after', attemptNumber, 'attempts');
-      setConnected(true);
-      setConnectionError(null);
-      setIsConnecting(false);
-      setConnectionAttempts(0);
-    });
-
-    socket.on('reconnect_error', (error) => {
-      console.error('WebSocket reconnection error:', error);
-      setConnectionError('重连失败，请检查网络连接');
-      setIsConnecting(false);
-    });
-
-    socket.on('reconnect_failed', () => {
-      console.error('WebSocket reconnection failed');
-      setConnectionError('连接失败，实时功能不可用，但其他功能正常');
-      setIsConnecting(false);
-    });
-    
-    socket.on('event', (evt: SocketEvent) => setLastEvent(evt));
-    socket.on('heartbeat', () => {
-      console.log('WebSocket heartbeat received');
     });
 
     // 设置连接超时
@@ -157,7 +144,7 @@ export const useSocket = (token?: string | null) => {
         setConnectionError('连接超时，实时功能不可用');
         setIsConnecting(false);
       }
-    }, 25000);
+    }, 15000);
 
     return () => {
       clearTimeout(connectionTimeout);
@@ -168,7 +155,7 @@ export const useSocket = (token?: string | null) => {
       }
       socketRef.current = null;
     };
-  }, [token, connectionAttempts]);
+  }, [token, connectionAttempts, maxAttempts]);
 
   return { 
     socket: socketRef.current, 
@@ -177,8 +164,13 @@ export const useSocket = (token?: string | null) => {
     connectionError,
     isConnecting,
     connectionAttempts,
+    maxAttempts,
     // 添加手动重连方法
     reconnect: () => {
+      if (connectionAttempts >= maxAttempts) {
+        console.log('Maximum attempts reached, resetting counter');
+        setConnectionAttempts(0);
+      }
       if (socketRef.current) {
         console.log('Manual reconnection attempt');
         socketRef.current.connect();

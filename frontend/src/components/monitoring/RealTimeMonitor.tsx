@@ -10,7 +10,7 @@ interface RealTimeMonitorProps {
 }
 
 export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
-  const { connected, lastEvent, connectionError, isConnecting, reconnect, connectionAttempts } = useSocket(token);
+  const { connected, lastEvent, connectionError, isConnecting, reconnect, connectionAttempts, maxAttempts } = useSocket(token);
   const [eventCount, setEventCount] = useState(0);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
     if (isConnecting) {
       return {
         icon: <SyncOutlined spin />,
-        text: `连接中... (第${connectionAttempts}次尝试)`,
+        text: `连接中... (第${connectionAttempts}/${maxAttempts}次尝试)`,
         color: 'processing',
         status: 'connecting'
       };
@@ -40,7 +40,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
     
     return {
       icon: <WifiOffOutlined />,
-      text: connectionAttempts > 0 ? `连接失败 (已尝试${connectionAttempts}次)` : '未连接',
+      text: connectionAttempts > 0 ? `连接失败 (${connectionAttempts}/${maxAttempts}次尝试)` : '未连接',
       color: 'error',
       status: 'disconnected'
     };
@@ -74,8 +74,9 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
             icon={<SyncOutlined />}
             onClick={reconnect}
             loading={isConnecting}
+            disabled={connectionAttempts >= maxAttempts}
           >
-            重连
+            {connectionAttempts >= maxAttempts ? '重置重连' : '重连'}
           </Button>
         )
       }
@@ -92,7 +93,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
               </p>
               {connectionAttempts > 0 && (
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  已尝试连接 {connectionAttempts} 次
+                  已尝试连接 {connectionAttempts}/{maxAttempts} 次
                 </p>
               )}
             </div>
@@ -102,8 +103,13 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
           icon={<ExclamationCircleOutlined />}
           style={{ marginBottom: 16 }}
           action={
-            <Button size="small" onClick={reconnect} loading={isConnecting}>
-              重试连接
+            <Button 
+              size="small" 
+              onClick={reconnect} 
+              loading={isConnecting}
+              disabled={connectionAttempts >= maxAttempts}
+            >
+              {connectionAttempts >= maxAttempts ? '重置重连' : '重试连接'}
             </Button>
           }
         />
@@ -152,7 +158,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({ token }) => {
       {process.env.NODE_ENV === 'development' && (
         <div style={{ marginTop: 16, padding: '8px', background: '#f0f0f0', borderRadius: '4px', fontSize: '12px' }}>
           <Text strong>调试信息:</Text>
-          <div>连接尝试次数: {connectionAttempts}</div>
+          <div>连接尝试次数: {connectionAttempts}/{maxAttempts}</div>
           <div>连接状态: {connected ? '已连接' : '未连接'}</div>
           <div>连接中: {isConnecting ? '是' : '否'}</div>
           <div>错误信息: {connectionError || '无'}</div>
