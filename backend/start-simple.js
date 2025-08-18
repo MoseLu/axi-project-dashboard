@@ -774,8 +774,9 @@ app.get('/api/monitoring/projects/status', (req, res) => {
   });
 });
 
-app.get('/api/monitoring/deployments/recent', (req, res) => {
-  console.log('📦 获取最近部署记录请求');
+// 兼容前端请求的端点
+app.get('/api/deployments/recent', (req, res) => {
+  console.log('📦 获取最近部署记录请求 (兼容端点)');
   
   const limit = parseInt(req.query.limit) || 10;
   
