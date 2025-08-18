@@ -16,7 +16,7 @@ export const useSocket = (token?: string | null) => {
   useEffect(() => {
     const url = buildWsUrl();
     const options: any = {
-      path: '/project-dashboard/ws/socket.io',
+      path: '/ws/socket.io',
       transports: ['websocket', 'polling'],
       withCredentials: true,
     };

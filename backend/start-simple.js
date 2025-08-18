@@ -15,7 +15,7 @@ console.log('🚀 启动 axi-project-dashboard 简化后端服务...');
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {
-  path: '/project-dashboard/ws/socket.io',
+  path: '/ws/socket.io',
   cors: {
     origin: process.env.CORS_ORIGIN || '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
@@ -754,17 +754,6 @@ app.get('/api/monitoring/projects/status', (req, res) => {
       cpuUsage: 18.9,
       uptime: 43200,
       url: 'https://redamancy.com.cn/star-cloud',
-      lastHealthCheck: new Date().toISOString()
-    },
-    {
-      name: 'axi-deploy',
-      isRunning: false,
-      port: null,
-      memoryUsage: 0,
-      diskUsage: 8.2,
-      cpuUsage: 0,
-      uptime: 0,
-      url: null,
       lastHealthCheck: new Date().toISOString()
     }
   ];
