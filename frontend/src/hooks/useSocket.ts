@@ -138,6 +138,12 @@ export const useSocket = (token?: string | null) => {
       }
     });
 
+    // 添加事件监听器
+    socket.on('event', (evt: SocketEvent) => setLastEvent(evt));
+    socket.on('heartbeat', () => {
+      console.log('WebSocket heartbeat received');
+    });
+
     // 设置连接超时
     const connectionTimeout = setTimeout(() => {
       if (!connected && !isConnecting) {
