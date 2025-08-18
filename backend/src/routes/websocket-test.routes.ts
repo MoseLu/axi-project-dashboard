@@ -5,9 +5,9 @@ const router = Router();
 
 /**
  * WebSocket连接测试端点
- * GET /api/websocket-test
+ * GET /websocket-test
  */
-router.get('/websocket-test', (req, res) => {
+router.get('/', (req, res) => {
   try {
     logger.info('WebSocket test endpoint accessed', {
       headers: req.headers,
@@ -47,9 +47,9 @@ router.get('/websocket-test', (req, res) => {
 
 /**
  * Socket.IO路径测试
- * GET /api/websocket-test/path
+ * GET /websocket-test/path
  */
-router.get('/websocket-test/path', (req, res) => {
+router.get('/path', (req, res) => {
   try {
     const socketPath = '/project-dashboard/ws/socket.io/';
     const testUrl = `${req.protocol}://${req.get('host')}${socketPath}`;
