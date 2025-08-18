@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { WebhookReceiverService, WebhookPayload } from '@/services/monitoring/webhook-receiver.service';
+import { incrementWebhookCounter } from '@/observability/prometheus';
 import { logger } from '@/utils/logger';
 
 const router: Router = Router();
@@ -23,6 +24,7 @@ router.post('/deployment', async (req: Request, res: Response) => {
 
     // 处理 Webhook 事件
     await webhookService.handleWebhookEvent(payload);
+    try { incrementWebhookCounter('deployment', 'success'); } catch (_) {}
 
     return res.json({
       success: true,
@@ -30,6 +32,7 @@ router.post('/deployment', async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('❌ Webhook 处理失败:', error);
+    try { incrementWebhookCounter('deployment', 'error'); } catch (_) {}
     return res.status(500).json({
       success: false,
       message: 'Webhook 处理失败',
@@ -72,6 +75,7 @@ router.post('/step', async (req: Request, res: Response) => {
 
     // 处理步骤更新
     await webhookService.handleWebhookEvent(webhookPayload);
+    try { incrementWebhookCounter('step', 'success'); } catch (_) {}
 
     return res.json({
       success: true,
@@ -79,6 +83,7 @@ router.post('/step', async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('❌ 部署步骤更新处理失败:', error);
+    try { incrementWebhookCounter('step', 'error'); } catch (_) {}
     return res.status(500).json({
       success: false,
       message: '部署步骤更新处理失败',

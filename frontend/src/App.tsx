@@ -21,10 +21,12 @@ import { SettingsProvider, useSettings } from './contexts/SettingsContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import ThemeTransitionManager from './components/theme/ThemeTransitionManager';
+import { useSocket } from './hooks/useSocket';
 
 const AppContent: React.FC = () => {
   const { settings } = useSettings();
-  const { } = useAuth();
+  const { token } = useAuth();
+  useSocket(token); // 初始化全局 socket 连接（无状态依赖）
   const [themeConfig, setThemeConfig] = useState(() => {
     return {
       algorithm: settings.theme === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,

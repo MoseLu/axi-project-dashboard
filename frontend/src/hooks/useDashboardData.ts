@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { DeploymentDetail, Metrics, Pagination } from '../types/dashboard';
 import { buildApiUrl } from '../config/env';
+import { useAuth } from '../contexts/AuthContext';
+import { useSocket } from './useSocket';
 
 interface UseDashboardDataReturn {
   deployments: DeploymentDetail[];
@@ -22,6 +24,8 @@ interface UseDashboardDataReturn {
 }
 
 export const useDashboardData = (): UseDashboardDataReturn => {
+  const { token } = useAuth();
+  const { lastEvent } = useSocket(token);
   const [deployments, setDeployments] = useState<DeploymentDetail[]>([]);
   const [metrics, setMetrics] = useState<Metrics>({
     totalDeployments: 0,
@@ -91,11 +95,16 @@ export const useDashboardData = (): UseDashboardDataReturn => {
 
   useEffect(() => {
     fetchData();
-    
-    // 每30秒刷新一次数据
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [pagination.page, pagination.limit, sortBy, sortOrder, filterProject, filterStatus]);
+
+  // 当收到 WS 事件（部署/步骤/指标）时，触发一次快速刷新
+  useEffect(() => {
+    if (!lastEvent) return;
+    const t = setTimeout(fetchData, 500);
+    return () => clearTimeout(t);
+  }, [lastEvent]);
 
   const handleSort = (field: string) => {
     if (sortBy === field) {

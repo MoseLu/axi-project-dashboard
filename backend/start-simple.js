@@ -2,6 +2,8 @@
 
 const express = require('express');
 const http = require('http');
+const { Server: SocketIOServer } = require('socket.io');
+const client = require('prom-client');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -12,6 +14,14 @@ console.log('🚀 启动 axi-project-dashboard 简化后端服务...');
 // 创建 Express 应用
 const app = express();
 const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
+});
 
 // 获取端口配置
 const PORT = process.env.PORT || 8090;
@@ -45,6 +55,45 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// 兼容 /project-dashboard 前缀的反向代理路径
+app.use((req, res, next) => {
+  if (req.url.startsWith('/project-dashboard/')) {
+    req.url = req.url.replace(/^\/project-dashboard\//, '/');
+  }
+  next();
+});
+
+// Prometheus 指标
+const register = new client.Registry();
+client.collectDefaultMetrics({ register, prefix: 'axi_dashboard_' });
+const httpHistogram = new client.Histogram({
+  name: 'axi_dashboard_http_request_duration_seconds',
+  help: 'HTTP request duration in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  buckets: [0.05, 0.1, 0.3, 0.5, 1, 2, 5, 10]
+});
+register.registerMetric(httpHistogram);
+const webhookCounter = new client.Counter({
+  name: 'axi_dashboard_webhook_events_total',
+  help: 'Total number of webhook events received',
+  labelNames: ['type', 'status']
+});
+register.registerMetric(webhookCounter);
+const socketGauge = new client.Gauge({
+  name: 'axi_dashboard_socket_connections',
+  help: 'Current number of active WebSocket connections'
+});
+register.registerMetric(socketGauge);
+
+// HTTP 指标中间件
+app.use((req, res, next) => {
+  const end = httpHistogram.startTimer({ method: req.method, route: req.path });
+  res.on('finish', () => {
+    try { end({ status_code: String(res.statusCode) }); } catch (e) {}
+  });
+  next();
+});
+
 // 请求日志中间件
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -62,6 +111,16 @@ app.get('/health', (req, res) => {
     version: '1.0.0',
     dataSource: 'real'
   });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics/prometheus', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.send(await register.metrics());
+  } catch (e) {
+    res.status(500).send('# error');
+  }
 });
 
 // API 状态端点
@@ -561,16 +620,66 @@ app.post('/api/upload/avatar', (req, res) => {
 // Webhook端点
 app.post('/api/webhooks/deployment', (req, res) => {
   console.log('🔗 部署Webhook请求:', req.body);
-  
+  try { webhookCounter.labels({ type: 'deployment', status: 'success' }).inc(); } catch (e) {}
+  try {
+    const payload = req.body || {};
+    const event = {
+      type: payload.type || 'deployment.updated',
+      payload,
+      timestamp: new Date().toISOString()
+    };
+    io.emit('event', event);
+  } catch (e) {}
   res.json({
     success: true,
     message: 'Webhook接收成功'
   });
 });
 
+// 兼容 /api/webhook/deployment（无复数）
+app.post('/api/webhook/deployment', (req, res) => {
+  console.log('🔗 部署Webhook请求(兼容):', req.body);
+  try { webhookCounter.labels({ type: 'deployment', status: 'success' }).inc(); } catch (e) {}
+  try {
+    const payload = req.body || {};
+    const event = {
+      type: payload.type || 'deployment.updated',
+      payload,
+      timestamp: new Date().toISOString()
+    };
+    io.emit('event', event);
+  } catch (e) {}
+  res.json({ success: true, message: 'Webhook接收成功' });
+});
+
+// 步骤级 Webhook（兼容 axi-deploy 标准）
+app.post('/api/webhook/step', (req, res) => {
+  console.log('🔗 部署步骤Webhook:', req.body);
+  try { webhookCounter.labels({ type: 'step', status: 'success' }).inc(); } catch (e) {}
+  try {
+    const payload = req.body || {};
+    const event = {
+      type: 'deployment.step',
+      payload,
+      timestamp: new Date().toISOString()
+    };
+    io.emit('event', event);
+  } catch (e) {}
+  res.json({ success: true, message: '步骤Webhook接收成功' });
+});
+
 app.post('/api/webhooks/github', (req, res) => {
   console.log('🔗 GitHub Webhook请求:', req.body);
-  
+  try { webhookCounter.labels({ type: 'github', status: 'success' }).inc(); } catch (e) {}
+  try {
+    const payload = req.body || {};
+    const event = {
+      type: 'system.github.webhook',
+      payload,
+      timestamp: new Date().toISOString()
+    };
+    io.emit('event', event);
+  } catch (e) {}
   res.json({
     success: true,
     message: 'GitHub Webhook接收成功'
@@ -660,6 +769,14 @@ server.listen(PORT, () => {
   setInterval(() => {
     console.log(`💓 心跳信号 - ${new Date().toISOString()} - 服务运行正常 - 端口: ${PORT}`);
   }, 30000); // 每30秒发送一次心跳
+});
+
+// Socket.IO 连接统计
+io.on('connection', (socket) => {
+  try { socketGauge.set(io.engine.clientsCount || io.of('/').sockets.size || 0); } catch (e) {}
+  socket.on('disconnect', () => {
+    try { socketGauge.set(io.engine.clientsCount || io.of('/').sockets.size || 0); } catch (e) {}
+  });
 });
 
 // 添加错误处理

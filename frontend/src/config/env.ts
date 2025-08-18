@@ -4,6 +4,7 @@ interface EnvConfig {
   apiPrefix: string;
   isProduction: boolean;
   isDevelopment: boolean;
+  wsPath: string;
 }
 
 const getEnvConfig = (): EnvConfig => {
@@ -17,6 +18,7 @@ const getEnvConfig = (): EnvConfig => {
       apiPrefix: '/project-dashboard/api',
       isProduction: true,
       isDevelopment: false,
+      wsPath: '/project-dashboard/ws'
     };
   }
   
@@ -26,6 +28,7 @@ const getEnvConfig = (): EnvConfig => {
     apiPrefix: '/project-dashboard/api',
     isProduction: false,
     isDevelopment: true,
+    wsPath: '/project-dashboard/ws'
   };
 };
 
@@ -47,6 +50,14 @@ export const buildPageUrl = (path: string): string => {
 // 静态资源 URL 构建器
 export const buildStaticUrl = (path: string): string => {
   return `${envConfig.baseUrl}${path}`;
+};
+
+// WebSocket URL 构建器
+export const buildWsUrl = (): string => {
+  const isHttps = envConfig.baseUrl.startsWith('https://');
+  const wsScheme = isHttps ? 'wss' : 'ws';
+  const host = envConfig.baseUrl.replace(/^https?:\/\//, '');
+  return `${wsScheme}://${host}${envConfig.wsPath}`;
 };
 
 export default envConfig;

@@ -4,6 +4,7 @@ import { config } from '@/config/config';
 import { logger } from '@/utils/logger';
 import { redisService } from './redis.service';
 import { MetricsService } from './metrics.service';
+import { setSocketConnections } from '@/observability/prometheus';
 
 interface SocketUser {
   userId: string;
@@ -129,6 +130,7 @@ export class SocketService {
       logger.error('Error recording socket connection:', error);
     });
 
+    try { setSocketConnections(this.getConnectedSocketCount()); } catch (_) {}
     logger.info(`User ${userId} connected via socket ${socket.id}`);
   }
 
@@ -219,6 +221,7 @@ export class SocketService {
         logger.error('Error recording socket disconnection:', error);
       });
 
+      try { setSocketConnections(this.getConnectedSocketCount()); } catch (_) {}
       logger.info(`User ${userId} disconnected from socket ${socket.id}`);
     }
   }

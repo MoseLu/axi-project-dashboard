@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import express from 'express';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -16,6 +17,7 @@ import { authMiddleware } from '@/middleware/auth.middleware';
 import { routes } from '@/routes';
 import { SocketService } from '@/services/socket.service';
 import { MetricsService } from '@/services/metrics.service';
+import { httpRequestDurationSeconds, getPrometheusMetrics } from '@/observability/prometheus';
 import { HealthCheckService } from '@/services/health.service';
 import { DeploymentService } from '@/services/deployment.service';
 import { GracefulShutdown } from '@/utils/graceful-shutdown';
@@ -117,7 +119,13 @@ class Application {
 
     // 指标收集
     this.app.use((req, res, next) => {
-      this.metricsService.recordRequest(req.method, req.path);
+      const end = httpRequestDurationSeconds.startTimer({ method: req.method, route: req.path });
+      res.on('finish', () => {
+        try {
+          this.metricsService.recordRequest(req.method, req.path);
+          end({ status_code: String(res.statusCode) });
+        } catch (_) {}
+      });
       next();
     });
   }
@@ -167,7 +175,7 @@ class Application {
       }
     });
 
-    // 指标端点
+    // 指标端点（JSON）
     this.app.get('/metrics', async (req, res) => {
       try {
         const metrics = await this.metricsService.getMetrics();
@@ -178,6 +186,18 @@ class Application {
           success: false,
           message: 'Failed to get metrics'
         });
+      }
+    });
+
+    // Prometheus 指标端点（text/plain）
+    this.app.get('/metrics/prometheus', async (req, res) => {
+      try {
+        const output = await getPrometheusMetrics();
+        res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+        res.send(output);
+      } catch (error) {
+        logger.error('Failed to get prometheus metrics:', error);
+        res.status(500).send('# error');
       }
     });
 

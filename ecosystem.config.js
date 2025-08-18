@@ -2,6 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'dashboard-backend',
+      // 使用简化后端（内置 WS 与 Prometheus 代理），确保生产先打通
       script: 'backend/start-simple.js',
       cwd: process.env.PM2_CWD || '/srv/apps/axi-project-dashboard',
       instances: 1,
@@ -19,7 +20,7 @@ module.exports = {
         MYSQL_USER: 'root',
         MYSQL_PASSWORD: '123456',
         MYSQL_DATABASE: 'project_dashboard',
-        SKIP_DB_INIT: 'false', // 启用数据库初始化（模仿 axi-star-cloud 策略：表不存在则创建，已存在则跳过）
+        SKIP_DB_INIT: 'false', // 启用数据库连接与初始化
         REDIS_URI: 'redis://localhost:6379',
         
         // 安全配置
@@ -49,6 +50,7 @@ module.exports = {
         // WebSocket 配置
         WS_HEARTBEAT_INTERVAL: 30000,
         WS_MAX_CONNECTIONS: 500,
+        METRICS_ENABLED: true,
         
         // 通知配置
         NOTIFICATION_ENABLED: true,
