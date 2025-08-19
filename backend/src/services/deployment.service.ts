@@ -6,6 +6,26 @@ import { logger } from '@/utils/logger';
 import { Op } from 'sequelize';
 import { metrics } from '@/middleware/prometheus.middleware';
 
+// 定义 SocketEventType 枚举
+enum SocketEventType {
+  CONNECTION_ESTABLISHED = 'connection_established',
+  USER_CONNECTED = 'user_connected',
+  USER_DISCONNECTED = 'user_disconnected',
+  DEPLOYMENT_STARTED = 'deployment_started',
+  DEPLOYMENT_UPDATED = 'deployment_updated',
+  DEPLOYMENT_COMPLETED = 'deployment_completed',
+  DEPLOYMENT_FAILED = 'deployment_failed',
+  STEP_CREATED = 'step_created',
+  STEP_STARTED = 'step_started',
+  STEP_UPDATED = 'step_updated',
+  STEP_COMPLETED = 'step_completed',
+  STEP_FAILED = 'step_failed',
+  STEP_RETRYING = 'step_retrying',
+  LOG_ENTRY = 'log_entry',
+  SYSTEM_ALERT = 'system_alert',
+  METRICS_UPDATE = 'metrics_update'
+}
+
 export interface DeploymentData {
   project_name: string;
   repository: string;
@@ -112,7 +132,7 @@ export class DeploymentService {
         id: deployment.id.toString(),
         projectId: data.project_name,
         ...data,
-      }, 'DEPLOYMENT_STARTED');
+      }, SocketEventType.DEPLOYMENT_STARTED);
 
       return deployment;
     } catch (error) {
@@ -160,7 +180,7 @@ export class DeploymentService {
         displayName: step.display_name,
         stepOrder: step.step_order,
         stepType: step.step_type,
-      }, deploymentUuid, deployment?.project_name || 'unknown', 'STEP_CREATED');
+      }, deploymentUuid, deployment?.project_name || 'unknown', SocketEventType.STEP_CREATED);
 
       return step;
     } catch (error) {
@@ -239,7 +259,7 @@ export class DeploymentService {
         duration: step.duration,
         startedAt: step.start_time,
         completedAt: step.end_time,
-      }, step.deployment_uuid, deployment?.project_name || 'unknown', 'STEP_UPDATED');
+      }, step.deployment_uuid, step.deployment?.project_name || 'unknown', SocketEventType.STEP_UPDATED);
 
       return step;
     } catch (error) {
@@ -342,7 +362,7 @@ export class DeploymentService {
           status: deployment.status,
           duration: deployment.duration,
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
-        }, 'DEPLOYMENT_COMPLETED');
+        }, SocketEventType.DEPLOYMENT_COMPLETED);
       } else if (status === 'failed') {
         this.socketService?.broadcastDeploymentEvent({
           id: deployment.id.toString(),
@@ -351,7 +371,7 @@ export class DeploymentService {
           duration: deployment.duration,
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
           errorMessage: deployment.metadata?.errorMessage || '',
-        }, 'DEPLOYMENT_FAILED');
+        }, SocketEventType.DEPLOYMENT_FAILED);
       } else {
         this.socketService?.broadcastDeploymentEvent({
           id: deployment.id.toString(),
@@ -359,7 +379,7 @@ export class DeploymentService {
           status: deployment.status,
           duration: deployment.duration,
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
-        }, 'DEPLOYMENT_UPDATED');
+        }, SocketEventType.DEPLOYMENT_UPDATED);
       }
 
       return deployment;
@@ -848,7 +868,7 @@ export class DeploymentService {
       duration,
       startedAt: started_at,
       completedAt: completed_at,
-    }, deployment_id, project, 'STEP_UPDATED');
+    }, deployment_id, project, SocketEventType.STEP_UPDATED);
   }
 
   /**
@@ -882,7 +902,7 @@ export class DeploymentService {
       logs,
       startedAt: started_at,
       completedAt: completed_at,
-    }, 'DEPLOYMENT_COMPLETED');
+    }, SocketEventType.DEPLOYMENT_COMPLETED);
   }
 
   /**
