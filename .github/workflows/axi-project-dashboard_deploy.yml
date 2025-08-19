@@ -375,6 +375,8 @@ jobs:
   trigger-deploy:
     needs: build
     runs-on: ubuntu-latest
+    env:
+      RUN_ID: ${{ github.run_id }}
 
     steps:
       - name: 触发 axi-deploy 部署
@@ -391,21 +393,7 @@ jobs:
             console.log('⏳ 等待artifact完全可用...');
             await new Promise(resolve => setTimeout(resolve, 5000)); // 等待5秒
             
-            // 再次检查 workflow run 状态
-            console.log('🔍 检查 workflow run 状态...');
-            const run = await github.rest.actions.getWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: process.env.RUN_ID
-            });
-            
-            console.log('📊 Workflow run 状态:', run.data.status);
-            console.log('📊 Workflow run 结论:', run.data.conclusion);
-            
-            if (run.data.status !== 'completed') {
-              console.log('⏳ Workflow run 尚未完成，继续等待...');
-              await new Promise(resolve => setTimeout(resolve, 5000)); // 再等待5秒
-            }
+
 
             // 构建 Nginx 配置 - 使用单行格式避免输出问题
             // 使用8090端口（根据port-config.yml配置）
