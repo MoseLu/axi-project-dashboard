@@ -18,6 +18,9 @@ import { routes } from '@/routes';
 import { SocketService } from '@/services/socket.service';
 import { MetricsService } from '@/services/metrics.service';
 import { httpRequestDurationSeconds, getPrometheusMetrics } from '@/observability/prometheus';
+import { prometheusMiddleware } from '@/middleware/prometheus.middleware';
+import { metricsRouter } from '@/routes/metrics.routes';
+import { healthRouter } from '@/routes/health.routes';
 import { HealthCheckService } from '@/services/health.service';
 import { DeploymentService } from '@/services/deployment.service';
 import { GracefulShutdown } from '@/utils/graceful-shutdown';
@@ -119,6 +122,9 @@ class Application {
       next();
     });
 
+    // Prometheus 指标收集中间件
+    this.app.use(prometheusMiddleware);
+
     // 指标收集
     this.app.use((req, res, next) => {
       const end = httpRequestDurationSeconds.startTimer({ method: req.method, route: req.path });
@@ -142,40 +148,11 @@ class Application {
       next();
     }, routes);
 
-    // 健康检查端点 - 简化版本，确保总是可用
-    this.app.get('/health', async (req, res) => {
-      try {
-        // 尝试使用健康检查服务，如果不可用则返回基本状态
-        if (this.healthService) {
-          const healthStatus = await this.healthService.getHealthStatus();
-          res.status(healthStatus.status === 'healthy' ? 200 : 503).json(healthStatus);
-        } else {
-          // 基本健康检查
-          res.status(200).json({
-            status: 'healthy',
-            message: 'axi-project-dashboard API is running',
-            timestamp: new Date().toISOString(),
-            uptime: process.uptime(),
-            version: process.env.npm_package_version || '1.0.0',
-            services: {
-              http: 'up',
-              database: 'unknown',
-              redis: 'unknown'
-            }
-          });
-        }
-      } catch (error) {
-        logger.error('Health check failed:', error);
-        // 即使出错也返回200，表明HTTP服务本身是正常的
-        res.status(200).json({
-          status: 'partial',
-          message: 'HTTP server is running, but some services may be unavailable',
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime(),
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-    });
+    // 健康检查路由
+    this.app.use('/health', healthRouter);
+
+    // Prometheus 指标路由
+    this.app.use('/metrics', metricsRouter);
 
     // 指标端点（JSON）
     this.app.get('/metrics', async (req, res) => {

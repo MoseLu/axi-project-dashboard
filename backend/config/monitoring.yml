@@ -1,0 +1,115 @@
+prometheus:
+  enabled: true
+  port: 9090
+  path: /metrics
+  retention:
+    time: 30d
+    size: 10GB
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+grafana:
+  enabled: true
+  url: http://localhost:3000
+  admin_password: admin123
+  dashboards:
+    - name: system-overview
+      title: 系统概览
+      uid: system-overview
+      description: 系统整体运行状态监控
+    - name: application-monitoring
+      title: 应用监控
+      uid: app-monitoring
+      description: 应用程序性能监控
+    - name: deployment-tracking
+      title: 部署跟踪
+      uid: deployment-tracking
+      description: 部署状态和进度跟踪
+    - name: websocket-monitoring
+      title: WebSocket监控
+      uid: websocket-monitoring
+      description: WebSocket连接状态监控
+
+alerting:
+  enabled: true
+  rules:
+    - name: high_cpu_usage
+      condition: system_cpu_usage_percent > 80
+      duration: 5m
+      severity: warning
+      summary: "CPU使用率过高"
+      description: "系统CPU使用率超过80%，持续5分钟"
+    - name: high_memory_usage
+      condition: system_memory_usage_percent > 85
+      duration: 5m
+      severity: warning
+      summary: "内存使用率过高"
+      description: "系统内存使用率超过85%，持续5分钟"
+    - name: high_disk_usage
+      condition: system_disk_usage_percent > 90
+      duration: 5m
+      severity: critical
+      summary: "磁盘使用率过高"
+      description: "系统磁盘使用率超过90%，持续5分钟"
+    - name: deployment_failed
+      condition: deployment_status == 0
+      duration: 1m
+      severity: critical
+      summary: "部署失败"
+      description: "检测到部署失败"
+    - name: websocket_connection_drop
+      condition: websocket_active_connections < 1
+      duration: 2m
+      severity: warning
+      summary: "WebSocket连接断开"
+      description: "WebSocket连接数量异常下降"
+    - name: high_error_rate
+      condition: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+      duration: 2m
+      severity: critical
+      summary: "错误率过高"
+      description: "HTTP 5xx错误率超过10%"
+
+notifications:
+  email:
+    enabled: true
+    smtp_host: smtp.example.com
+    smtp_port: 587
+    smtp_user: alert@example.com
+    smtp_password: your_password
+    from: alert@example.com
+    to: admin@example.com
+  webhook:
+    enabled: true
+    url: https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+  dingtalk:
+    enabled: false
+    webhook_url: https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN
+
+targets:
+  - name: axi-project-dashboard
+    url: http://localhost:8090/metrics
+    interval: 15s
+  - name: axi-star-cloud
+    url: http://localhost:8080/metrics
+    interval: 15s
+  - name: nginx
+    url: http://localhost/nginx_status
+    interval: 30s
+  - name: mysql
+    url: http://localhost:9104/metrics
+    interval: 30s
+  - name: redis
+    url: http://localhost:9121/metrics
+    interval: 30s
+
+logging:
+  level: info
+  format: json
+  output:
+    - file: logs/app.log
+    - console
+  rotation:
+    max_size: 100MB
+    max_files: 10
+    max_age: 30d

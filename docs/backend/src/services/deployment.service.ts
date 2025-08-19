@@ -4,6 +4,7 @@ import { Project } from '@/database/models/project';
 import { SocketService } from './socket.service';
 import { logger } from '@/utils/logger';
 import { Op } from 'sequelize';
+import { metrics } from '@/middleware/prometheus.middleware';
 
 export interface DeploymentData {
   project_name: string;
@@ -312,6 +313,18 @@ export class DeploymentService {
       }
 
       await deployment.update(updateData);
+
+      // 更新 Prometheus 指标
+      metrics.deploymentStatus.set({
+        project: deployment.project_name,
+        status: deployment.status
+      }, status === 'success' ? 1 : 0);
+
+      if (deployment.duration) {
+        metrics.deploymentDuration.observe({
+          project: deployment.project_name
+        }, deployment.duration);
+      }
 
       logger.info(`Updated deployment ${id} status to: ${status}`);
 
