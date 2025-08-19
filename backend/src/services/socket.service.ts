@@ -15,7 +15,6 @@ interface SocketUser {
   subscriptions: Set<string>;
 }
 
-// 临时类型定义
 enum SocketEventType {
   CONNECTION_ESTABLISHED = 'connection_established',
   USER_CONNECTED = 'user_connected',
@@ -102,7 +101,6 @@ export class SocketService {
 
       // 更新连接指标
       metrics.activeConnections.set(this.connectedUsers.size);
-      });
       
       if (!token || typeof token !== 'string') {
         logger.warn(`Socket ${socket.id} rejected: No authentication token`);
@@ -147,7 +145,10 @@ export class SocketService {
     // 更新 Prometheus 指标
     metrics.activeConnections.set(this.getConnectedSocketCount());
 
-    try { setSocketConnections(this.getConnectedSocketCount()); } catch (_) {}
+    try { 
+      setSocketConnections(this.getConnectedSocketCount()); 
+    } catch (_) {}
+    
     logger.info(`User ${userId} connected via socket ${socket.id}`);
   }
 
@@ -203,11 +204,6 @@ export class SocketService {
       this.handleHeartbeat(socket);
     });
 
-    // 处理请求用户列表
-    socket.on('request:users', () => {
-      this.sendConnectedUsers(socket);
-    });
-
     // 处理错误
     socket.on('error', (error) => {
       logger.error(`Socket error for ${socket.id}:`, error);
@@ -215,159 +211,111 @@ export class SocketService {
   }
 
   private handleDisconnection(socket: Socket): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    
-    if (socketUser) {
-      const { userId } = socketUser;
-      
-      // 清理连接记录
-      this.connectedUsers.delete(socket.id);
-      
-      const userSocketSet = this.userSockets.get(userId);
-      if (userSocketSet) {
-        userSocketSet.delete(socket.id);
-        if (userSocketSet.size === 0) {
-          this.userSockets.delete(userId);
-          // 广播用户断开连接事件
-          this.broadcastUserEvent(userId, SocketEventType.USER_DISCONNECTED);
-        }
-      }
-
-      // 记录指标 (异步执行，不阻塞)
-      this.metricsService.recordSocketDisconnection().catch(error => {
-        logger.error('Error recording socket disconnection:', error);
-      });
-
-      // 更新 Prometheus 指标
-      metrics.activeConnections.set(this.getConnectedSocketCount());
-
-      try { setSocketConnections(this.getConnectedSocketCount()); } catch (_) {}
-      logger.info(`User ${userId} disconnected from socket ${socket.id}`);
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) {
+      logger.warn(`Socket ${socket.id} disconnected but not found in connected users`);
+      return;
     }
+
+    const userId = user.userId;
+
+    // 清理用户连接
+    this.connectedUsers.delete(socket.id);
+
+    // 清理用户到Socket的映射
+    const userSocketSet = this.userSockets.get(userId);
+    if (userSocketSet) {
+      userSocketSet.delete(socket.id);
+      if (userSocketSet.size === 0) {
+        this.userSockets.delete(userId);
+      }
+    }
+
+    // 广播用户断开连接事件
+    this.broadcastUserEvent(userId, SocketEventType.USER_DISCONNECTED);
+
+    // 更新指标
+    metrics.activeConnections.set(this.getConnectedSocketCount());
+    try { 
+      setSocketConnections(this.getConnectedSocketCount()); 
+    } catch (_) {}
+
+    logger.info(`User ${userId} disconnected from socket ${socket.id}`);
   }
 
   private handleProjectSubscription(socket: Socket, projectId: string): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    if (!socketUser) return;
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) {
+      logger.warn(`Socket ${socket.id} tried to subscribe to project ${projectId} but not found in connected users`);
+      return;
+    }
 
-    // 加入项目房间
-    socket.join(`project:${projectId}`);
-    socketUser.subscriptions.add(`project:${projectId}`);
-    socketUser.lastActivity = new Date();
+    user.subscriptions.add(`project:${projectId}`);
+    user.lastActivity = new Date();
 
-    logger.debug(`User ${socketUser.userId} subscribed to project ${projectId}`);
-    
-    // 发送订阅确认
-    socket.emit('subscription:confirmed', {
-      type: 'project',
-      id: projectId,
-      timestamp: new Date()
-    });
+    logger.debug(`User ${user.userId} subscribed to project ${projectId}`);
+    socket.emit('subscription:confirmed', { type: 'project', projectId });
   }
 
   private handleProjectUnsubscription(socket: Socket, projectId: string): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    if (!socketUser) return;
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) {
+      return;
+    }
 
-    // 离开项目房间
-    socket.leave(`project:${projectId}`);
-    socketUser.subscriptions.delete(`project:${projectId}`);
-    socketUser.lastActivity = new Date();
+    user.subscriptions.delete(`project:${projectId}`);
+    user.lastActivity = new Date();
 
-    logger.debug(`User ${socketUser.userId} unsubscribed from project ${projectId}`);
-    
-    // 发送取消订阅确认
-    socket.emit('unsubscription:confirmed', {
-      type: 'project',
-      id: projectId,
-      timestamp: new Date()
-    });
+    logger.debug(`User ${user.userId} unsubscribed from project ${projectId}`);
+    socket.emit('unsubscription:confirmed', { type: 'project', projectId });
   }
 
   private handleDeploymentSubscription(socket: Socket, deploymentId: string): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    if (!socketUser) return;
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) {
+      logger.warn(`Socket ${socket.id} tried to subscribe to deployment ${deploymentId} but not found in connected users`);
+      return;
+    }
 
-    // 加入部署房间
-    socket.join(`deployment:${deploymentId}`);
-    socketUser.subscriptions.add(`deployment:${deploymentId}`);
-    socketUser.lastActivity = new Date();
+    user.subscriptions.add(`deployment:${deploymentId}`);
+    user.lastActivity = new Date();
 
-    logger.debug(`User ${socketUser.userId} subscribed to deployment ${deploymentId}`);
-    
-    // 发送订阅确认
-    socket.emit('subscription:confirmed', {
-      type: 'deployment',
-      id: deploymentId,
-      timestamp: new Date()
-    });
+    logger.debug(`User ${user.userId} subscribed to deployment ${deploymentId}`);
+    socket.emit('subscription:confirmed', { type: 'deployment', deploymentId });
   }
 
   private handleDeploymentUnsubscription(socket: Socket, deploymentId: string): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    if (!socketUser) return;
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) {
+      return;
+    }
 
-    // 离开部署房间
-    socket.leave(`deployment:${deploymentId}`);
-    socketUser.subscriptions.delete(`deployment:${deploymentId}`);
-    socketUser.lastActivity = new Date();
+    user.subscriptions.delete(`deployment:${deploymentId}`);
+    user.lastActivity = new Date();
 
-    logger.debug(`User ${socketUser.userId} unsubscribed from deployment ${deploymentId}`);
-    
-    // 发送取消订阅确认
-    socket.emit('unsubscription:confirmed', {
-      type: 'deployment',
-      id: deploymentId,
-      timestamp: new Date()
-    });
+    logger.debug(`User ${user.userId} unsubscribed from deployment ${deploymentId}`);
+    socket.emit('unsubscription:confirmed', { type: 'deployment', deploymentId });
   }
 
   private handleHeartbeat(socket: Socket): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    if (socketUser) {
-      socketUser.lastActivity = new Date();
-      socket.emit('heartbeat:ack', { timestamp: new Date() });
+    const user = this.connectedUsers.get(socket.id);
+    if (user) {
+      user.lastActivity = new Date();
+      socket.emit('heartbeat:ack');
     }
   }
 
   private sendConnectionEstablished(socket: Socket): void {
-    const socketUser = this.connectedUsers.get(socket.id);
-    if (!socketUser) return;
-
     const event: SocketEvent = {
       type: SocketEventType.CONNECTION_ESTABLISHED,
       payload: {
-        userId: socketUser.userId,
-        connectedAt: socketUser.connectedAt,
-        serverTime: new Date()
+        socketId: socket.id,
+        timestamp: new Date().toISOString()
       },
-      timestamp: new Date(),
-      userId: socketUser.userId
+      timestamp: new Date()
     };
 
-    socket.emit('event', event);
-  }
-
-  private sendConnectedUsers(socket: Socket): void {
-    const connectedUsersList = Array.from(this.userSockets.keys()).map(userId => {
-      const socketIds = this.userSockets.get(userId)!;
-      const firstSocket = Array.from(socketIds)[0];
-      if (!firstSocket) return null;
-      
-      const socketUser = this.connectedUsers.get(firstSocket);
-      
-      return {
-        userId,
-        connectedAt: socketUser?.connectedAt,
-        socketCount: socketIds.size
-      };
-    }).filter(Boolean);
-
-    socket.emit('users:list', {
-      users: connectedUsersList,
-      total: connectedUsersList.length,
-      timestamp: new Date()
-    });
+    socket.emit('connection:established', event);
   }
 
   private broadcastUserEvent(userId: string, eventType: SocketEventType): void {
@@ -378,252 +326,152 @@ export class SocketService {
       userId
     };
 
-    this.io.emit('event', event);
+    // 广播给所有连接的客户端
+    this.io.emit('user:event', event);
   }
 
-  private startHeartbeat(): void {
-    this.heartbeatInterval = setInterval(() => {
-      const now = new Date();
-      const timeout = config.websocket.heartbeatInterval * 2; // 2x heartbeat interval
-
-      // 检查并清理超时连接
-      for (const [socketId, socketUser] of this.connectedUsers) {
-        const timeSinceLastActivity = now.getTime() - socketUser.lastActivity.getTime();
-        
-        if (timeSinceLastActivity > timeout) {
-          logger.warn(`Cleaning up inactive socket: ${socketId}`);
-          const socket = this.io.sockets.sockets.get(socketId);
-          if (socket) {
-            socket.disconnect();
-          }
-        }
-      }
-
-      // 发送心跳到所有连接的客户端
-      this.io.emit('heartbeat', { timestamp: now });
-      
-    }, config.websocket.heartbeatInterval);
-  }
-
-  // ===================================
-  // 公共方法 - 发送事件
-  // ===================================
-
-  public emitDeploymentStarted(deployment: Deployment): void {
+  public broadcastDeploymentEvent(deployment: Deployment, eventType: SocketEventType): void {
     const event: SocketEvent = {
-      type: SocketEventType.DEPLOYMENT_STARTED,
+      type: eventType,
       payload: deployment,
       timestamp: new Date(),
       projectId: deployment.projectId,
       deploymentId: deployment.id
     };
 
-    this.io.to(`project:${deployment.projectId}`).emit('event', event);
-    logger.debug(`Emitted deployment started event for ${deployment.id}`);
+    // 广播给所有订阅了该项目的用户
+    this.broadcastToProjectSubscribers(deployment.projectId, 'deployment:event', event);
   }
 
-  public emitDeploymentUpdated(deployment: Deployment): void {
+  public broadcastDeploymentStepEvent(step: DeploymentStep, deploymentId: string, projectId: string, eventType: SocketEventType): void {
     const event: SocketEvent = {
-      type: SocketEventType.DEPLOYMENT_UPDATED,
-      payload: deployment,
-      timestamp: new Date(),
-      projectId: deployment.projectId,
-      deploymentId: deployment.id
-    };
-
-    this.io.to(`project:${deployment.projectId}`).emit('event', event);
-    this.io.to(`deployment:${deployment.id}`).emit('event', event);
-  }
-
-  public emitDeploymentCompleted(deployment: Deployment): void {
-    const event: SocketEvent = {
-      type: SocketEventType.DEPLOYMENT_COMPLETED,
-      payload: deployment,
-      timestamp: new Date(),
-      projectId: deployment.projectId,
-      deploymentId: deployment.id
-    };
-
-    this.io.to(`project:${deployment.projectId}`).emit('event', event);
-    this.io.to(`deployment:${deployment.id}`).emit('event', event);
-  }
-
-  public emitDeploymentFailed(deployment: Deployment): void {
-    const event: SocketEvent = {
-      type: SocketEventType.DEPLOYMENT_FAILED,
-      payload: deployment,
-      timestamp: new Date(),
-      projectId: deployment.projectId,
-      deploymentId: deployment.id
-    };
-
-    this.io.to(`project:${deployment.projectId}`).emit('event', event);
-    this.io.to(`deployment:${deployment.id}`).emit('event', event);
-  }
-
-  public emitStepCreated(stepData: any): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_CREATED,
-      payload: stepData,
-      timestamp: new Date(),
-      projectId: stepData.projectId,
-      deploymentId: stepData.deploymentId
-    };
-
-    this.io.to(`deployment:${stepData.deploymentId}`).emit('event', event);
-  }
-
-  public emitStepStarted(step: DeploymentStep, deploymentId: string, projectId: string): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_STARTED,
+      type: eventType,
       payload: step,
       timestamp: new Date(),
       projectId,
       deploymentId
     };
 
-    this.io.to(`deployment:${deploymentId}`).emit('event', event);
+    // 广播给所有订阅了该部署的用户
+    this.broadcastToDeploymentSubscribers(deploymentId, 'deployment:step:event', event);
   }
 
-  public emitStepUpdated(step: DeploymentStep, deploymentId: string, projectId: string): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_UPDATED,
-      payload: step,
-      timestamp: new Date(),
-      projectId,
-      deploymentId
-    };
-
-    this.io.to(`deployment:${deploymentId}`).emit('event', event);
-  }
-
-  public emitStepCompleted(step: DeploymentStep, deploymentId: string, projectId: string): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_COMPLETED,
-      payload: step,
-      timestamp: new Date(),
-      projectId,
-      deploymentId
-    };
-
-    this.io.to(`deployment:${deploymentId}`).emit('event', event);
-  }
-
-  public emitStepFailed(step: DeploymentStep, deploymentId: string, projectId: string): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_FAILED,
-      payload: step,
-      timestamp: new Date(),
-      projectId,
-      deploymentId
-    };
-
-    this.io.to(`deployment:${deploymentId}`).emit('event', event);
-  }
-
-  public emitStepRetrying(step: DeploymentStep, deploymentId: string, projectId: string): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_RETRYING,
-      payload: step,
-      timestamp: new Date(),
-      projectId,
-      deploymentId
-    };
-
-    this.io.to(`deployment:${deploymentId}`).emit('event', event);
-  }
-
-  public emitLogEntry(log: any, deploymentId?: string, projectId?: string): void {
+  public broadcastLogEntry(logEntry: any, projectId: string, deploymentId?: string): void {
     const event: SocketEvent = {
       type: SocketEventType.LOG_ENTRY,
-      payload: log,
+      payload: logEntry,
       timestamp: new Date(),
-      projectId: projectId || log.projectId,
-      deploymentId: deploymentId || log.deploymentId
+      projectId,
+      deploymentId
     };
 
-    if (deploymentId || log.deploymentId) {
-      this.io.to(`deployment:${deploymentId || log.deploymentId}`).emit('event', event);
-    }
-    if (projectId || log.projectId) {
-      this.io.to(`project:${projectId || log.projectId}`).emit('event', event);
+    if (deploymentId) {
+      this.broadcastToDeploymentSubscribers(deploymentId, 'log:entry', event);
+    } else {
+      this.broadcastToProjectSubscribers(projectId, 'log:entry', event);
     }
   }
 
-  public emitSystemAlert(alert: any): void {
+  public broadcastSystemAlert(alert: any): void {
     const event: SocketEvent = {
       type: SocketEventType.SYSTEM_ALERT,
       payload: alert,
       timestamp: new Date()
     };
 
-    this.io.emit('event', event);
+    // 广播给所有连接的客户端
+    this.io.emit('system:alert', event);
   }
 
-  public emitMetricsUpdate(metrics: any): void {
+  public broadcastMetricsUpdate(metrics: any): void {
     const event: SocketEvent = {
       type: SocketEventType.METRICS_UPDATE,
       payload: metrics,
-      timestamp: new Date(),
-      projectId: metrics.projectId,
-      deploymentId: metrics.deploymentId
+      timestamp: new Date()
     };
 
-    if (metrics.deploymentId) {
-      this.io.to(`deployment:${metrics.deploymentId}`).emit('event', event);
-    }
-    if (metrics.projectId) {
-      this.io.to(`project:${metrics.projectId}`).emit('event', event);
+    // 广播给所有连接的客户端
+    this.io.emit('metrics:update', event);
+  }
+
+  private broadcastToProjectSubscribers(projectId: string, eventName: string, event: SocketEvent): void {
+    for (const [socketId, user] of this.connectedUsers) {
+      if (user.subscriptions.has(`project:${projectId}`)) {
+        const socket = this.io.sockets.sockets.get(socketId);
+        if (socket) {
+          socket.emit(eventName, event);
+        }
+      }
     }
   }
 
-  // 新增的WebSocket通知方法
-  public emitStepUpdate(stepData: any): void {
-    const event: SocketEvent = {
-      type: SocketEventType.STEP_UPDATED,
-      payload: stepData,
-      timestamp: new Date(),
-      projectId: stepData.projectId,
-      deploymentId: stepData.deploymentId
-    };
-
-    this.io.to(`deployment:${stepData.deploymentId}`).emit('event', event);
-    this.io.to(`project:${stepData.projectId}`).emit('event', event);
+  private broadcastToDeploymentSubscribers(deploymentId: string, eventName: string, event: SocketEvent): void {
+    for (const [socketId, user] of this.connectedUsers) {
+      if (user.subscriptions.has(`deployment:${deploymentId}`)) {
+        const socket = this.io.sockets.sockets.get(socketId);
+        if (socket) {
+          socket.emit(eventName, event);
+        }
+      }
+    }
   }
 
-  // ===================================
-  // 实用方法
-  // ===================================
+  private startHeartbeat(): void {
+    // 每30秒检查一次心跳
+    this.heartbeatInterval = setInterval(() => {
+      const now = new Date();
+      const timeout = 60 * 1000; // 60秒超时
 
-  public getConnectedUserCount(): number {
-    return this.userSockets.size;
+      for (const [socketId, user] of this.connectedUsers) {
+        if (now.getTime() - user.lastActivity.getTime() > timeout) {
+          logger.warn(`Socket ${socketId} timed out, disconnecting`);
+          const socket = this.io.sockets.sockets.get(socketId);
+          if (socket) {
+            socket.disconnect();
+          }
+        }
+      }
+    }, 30000);
   }
 
   public getConnectedSocketCount(): number {
     return this.connectedUsers.size;
   }
 
-  public isUserConnected(userId: string): boolean {
-    return this.userSockets.has(userId);
+  public getConnectedUserCount(): number {
+    return this.userSockets.size;
   }
 
-  public getUserSocketIds(userId: string): string[] {
-    const socketSet = this.userSockets.get(userId);
-    return socketSet ? Array.from(socketSet) : [];
+  public getConnectedUsers(): Map<string, SocketUser> {
+    return new Map(this.connectedUsers);
   }
 
-  public async close(): Promise<void> {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
+  public disconnectUser(userId: string): void {
+    const userSocketSet = this.userSockets.get(userId);
+    if (userSocketSet) {
+      for (const socketId of userSocketSet) {
+        const socket = this.io.sockets.sockets.get(socketId);
+        if (socket) {
+          socket.disconnect();
+        }
+      }
+      this.userSockets.delete(userId);
     }
+  }
 
-    // 断开所有连接
-    this.io.disconnectSockets(true);
-    
-    // 清理数据
-    this.connectedUsers.clear();
-    this.userSockets.clear();
+  public async shutdown(): Promise<void> {
+    try {
+      if (this.heartbeatInterval) {
+        clearInterval(this.heartbeatInterval);
+      }
 
-    logger.info('Socket service closed');
+      // 断开所有连接
+      this.io.disconnectSockets();
+
+      logger.info('Socket service shutdown completed');
+    } catch (error) {
+      logger.error('Error during socket service shutdown:', error);
+      throw error;
+    }
   }
 }
