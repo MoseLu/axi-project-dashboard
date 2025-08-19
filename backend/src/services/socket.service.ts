@@ -40,7 +40,7 @@ interface SocketEvent {
   timestamp: Date;
   userId?: string;
   projectId?: string;
-  deploymentId?: string;
+  deploymentId?: string | undefined;
 }
 
 interface Deployment {

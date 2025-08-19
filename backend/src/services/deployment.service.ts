@@ -108,11 +108,11 @@ export class DeploymentService {
       logger.info(`Created deployment record: ${deployment.id} for project: ${data.project_name}`);
 
       // 通过 WebSocket 广播部署事件
-      this.socketService?.emitDeploymentStarted({
+      this.socketService?.broadcastDeploymentEvent({
         id: deployment.id.toString(),
         projectId: data.project_name,
         ...data,
-      });
+      }, 'DEPLOYMENT_STARTED');
 
       return deployment;
     } catch (error) {
@@ -149,14 +149,18 @@ export class DeploymentService {
       logger.info(`Created deployment step: ${step.step_name} for deployment: ${deploymentUuid}`);
 
       // 通过 WebSocket 广播步骤创建事件
-      this.socketService?.emitStepCreated({
+      const deployment = await Deployment.findOne({ where: { uuid: deploymentUuid } });
+      this.socketService?.broadcastDeploymentStepEvent({
+        id: step.uuid,
+        name: step.step_name,
+        status: step.status,
         deploymentId: deploymentUuid,
         stepId: step.uuid,
         stepName: step.step_name,
         displayName: step.display_name,
         stepOrder: step.step_order,
         stepType: step.step_type,
-      });
+      }, deploymentUuid, deployment?.project_name || 'unknown', 'STEP_CREATED');
 
       return step;
     } catch (error) {
@@ -222,18 +226,20 @@ export class DeploymentService {
       logger.info(`Updated deployment step ${stepUuid} status to: ${status}`);
 
       // 通过 WebSocket 广播步骤更新事件
-      this.socketService?.emitStepUpdate({
+      this.socketService?.broadcastDeploymentStepEvent({
+        id: stepUuid,
+        name: step.step_name,
+        status: step.status,
         deploymentId: step.deployment_uuid,
         stepId: stepUuid,
         stepName: step.step_name,
-        status: step.status,
         progress: step.progress,
         logs: step.logs,
         errorMessage: step.error_message,
         duration: step.duration,
         startedAt: step.start_time,
         completedAt: step.end_time,
-      });
+      }, step.deployment_uuid, deployment?.project_name || 'unknown', 'STEP_UPDATED');
 
       return step;
     } catch (error) {
@@ -330,30 +336,30 @@ export class DeploymentService {
 
       // 通过 WebSocket 广播部署更新事件
       if (status === 'success') {
-        this.socketService?.emitDeploymentCompleted({
+        this.socketService?.broadcastDeploymentEvent({
           id: deployment.id.toString(),
           projectId: deployment.project_name,
           status: deployment.status,
           duration: deployment.duration,
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
-        });
+        }, 'DEPLOYMENT_COMPLETED');
       } else if (status === 'failed') {
-        this.socketService?.emitDeploymentFailed({
+        this.socketService?.broadcastDeploymentEvent({
           id: deployment.id.toString(),
           projectId: deployment.project_name,
           status: deployment.status,
           duration: deployment.duration,
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
           errorMessage: deployment.metadata?.errorMessage || '',
-        });
+        }, 'DEPLOYMENT_FAILED');
       } else {
-        this.socketService?.emitDeploymentUpdated({
+        this.socketService?.broadcastDeploymentEvent({
           id: deployment.id.toString(),
           projectId: deployment.project_name,
           status: deployment.status,
           duration: deployment.duration,
           timestamp: deployment.end_time || deployment.start_time || deployment.created_at,
-        });
+        }, 'DEPLOYMENT_UPDATED');
       }
 
       return deployment;
@@ -828,11 +834,13 @@ export class DeploymentService {
     logger.info(`Processing step notification: ${step_name} (${step_status}) for project: ${project}`);
 
     // 通过 WebSocket 广播步骤事件
-    this.socketService?.emitStepUpdate({
+    this.socketService?.broadcastDeploymentStepEvent({
+      id: deployment_id,
+      name: step_name,
+      status: step_status,
       projectId: project,
       deploymentId: deployment_id,
       stepName: step_name,
-      status: step_status,
       timestamp,
       workflowName: workflow_name,
       workflowId: workflow_id,
@@ -840,7 +848,7 @@ export class DeploymentService {
       duration,
       startedAt: started_at,
       completedAt: completed_at,
-    });
+    }, deployment_id, project, 'STEP_UPDATED');
   }
 
   /**
@@ -863,7 +871,7 @@ export class DeploymentService {
     logger.info(`Processing deployment completion: ${deployment_id} (${status}) for project: ${project}`);
 
     // 通过 WebSocket 广播部署完成事件
-    this.socketService?.emitDeploymentCompleted({
+    this.socketService?.broadcastDeploymentEvent({
       id: deployment_id,
       projectId: project,
       status,
@@ -874,7 +882,7 @@ export class DeploymentService {
       logs,
       startedAt: started_at,
       completedAt: completed_at,
-    });
+    }, 'DEPLOYMENT_COMPLETED');
   }
 
   /**
@@ -894,7 +902,7 @@ export class DeploymentService {
     logger.debug(`Processing log entry: ${level} for deployment: ${deployment_id}`);
 
     // 通过 WebSocket 广播日志事件
-    this.socketService?.emitLogEntry({
+    this.socketService?.broadcastLogEntry({
       projectId: project,
       deploymentId: deployment_id,
       logStreamId: log_stream_id,
@@ -902,7 +910,7 @@ export class DeploymentService {
       message,
       timestamp,
       source,
-    });
+    }, project, deployment_id);
   }
 
   /**
@@ -919,7 +927,7 @@ export class DeploymentService {
     logger.info(`Processing metrics update for deployment: ${deployment_id}`);
 
     // 通过 WebSocket 广播指标更新事件
-    this.socketService?.emitMetricsUpdate({
+    this.socketService?.broadcastMetricsUpdate({
       projectId: project,
       deploymentId: deployment_id,
       metrics,

@@ -33,7 +33,7 @@ router.get('/health', async (req, res) => {
     res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       services: {
         database: 'error',
         prometheus: 'ok',
@@ -56,7 +56,7 @@ router.get('/ready', async (req, res) => {
     res.status(503).json({
       status: 'not_ready',
       timestamp: new Date().toISOString(),
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     });
   }
 });
