@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Spin, Alert } from 'antd';
-import { useDashboardData } from '../../hooks/useDashboardData';
 import { api } from '../../utils/api';
 
 interface MetricsData {
