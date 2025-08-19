@@ -1,0 +1,572 @@
+name: Build & Deploy AXI Project Dashboard
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ────────────────────── 构建应用 ──────────────────────
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ github.run_id }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false      # 让下面一步显式安装，日志更清晰
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: |
+          echo "🔧 安装项目依赖..."
+          # 彻底清理所有可能的冲突
+          rm -rf node_modules pnpm-lock.yaml
+          # 重新安装依赖，使用干净的安装
+          echo "📝 重新安装项目依赖..."
+          pnpm install --no-frozen-lockfile --shamefully-hoist
+          # 前端服务器依赖已经在 package.json 中，无需额外安装
+          echo "✅ 依赖安装完成"
+          # 验证关键依赖
+          echo "🔍 验证关键依赖..."
+          ls -la node_modules/depd/ || echo "⚠️ depd 模块未找到"
+          ls -la node_modules/express/ || echo "⚠️ express 模块未找到"
+          ls -la node_modules/helmet/ || echo "⚠️ helmet 模块未找到"
+          ls -la node_modules/compression/ || echo "⚠️ compression 模块未找到"
+
+      - name: 检查项目结构
+        run: |
+          echo "🔍 检查项目结构..."
+          echo "当前目录: $(pwd)"
+          echo "项目根目录内容:"
+          ls -la
+          echo "后端目录内容:"
+          ls -la backend/ || echo "backend 目录不存在"
+          echo "前端目录内容:"
+          ls -la frontend/ || echo "frontend 目录不存在"
+
+      - name: 构建后端
+        working-directory: backend
+        run: |
+          echo "🔧 开始构建后端..."
+          # 彻底清理所有可能的冲突
+          rm -rf node_modules dist pnpm-lock.yaml
+          # 安装所有依赖（包括 devDependencies 用于构建）
+          pnpm install --no-frozen-lockfile --shamefully-hoist
+          # 确保关键依赖存在
+          echo "🔍 验证构建依赖..."
+          ls node_modules/typescript || echo "❌ TypeScript 缺失"
+          ls node_modules/depd || echo "❌ depd 缺失"
+          ls node_modules/express || echo "❌ express 缺失"
+          # 构建项目
+          echo "🔨 开始TypeScript编译..."
+          npx tsc
+          echo "✅ 后端构建完成"
+          echo "构建产物:"
+          ls -la dist/ || echo "dist目录不存在"
+          ls -la dist/*.js || echo "编译的JS文件不存在"
+
+      - name: 构建前端
+        working-directory: frontend
+        env:
+          REACT_APP_API_URL: https://redamancy.com.cn/project-dashboard/api
+          REACT_APP_WS_URL: wss://redamancy.com.cn/project-dashboard/ws
+          REACT_APP_ENV: production
+        run: |
+          echo "🔧 开始构建前端..."
+          pnpm run build
+          echo "✅ 前端构建完成"
+          echo "构建产物:"
+          ls -la dist/ || echo "dist 目录不存在"
+
+      - name: 准备后端生产依赖
+        working-directory: backend
+        run: |
+          echo "🔧 准备后端生产依赖..."
+          
+          # 彻底清理所有可能的冲突（但保留构建产物）
+          rm -rf node_modules pnpm-lock.yaml
+          # 注意：不要删除 dist 目录，因为它是构建产物
+          
+          # 重新安装生产依赖，使用干净的安装
+          echo "🔧 重新安装生产依赖..."
+          pnpm install --prod --no-frozen-lockfile --shamefully-hoist
+          
+          # 验证Express依赖完整性
+          echo "🔍 验证Express依赖完整性..."
+          CRITICAL_DEPS="express merge-descriptors depd debug encodeurl utils-merge escape-html finalhandler fresh parseurl body-parser"
+          MISSING_CRITICAL=""
+          
+          for dep in $CRITICAL_DEPS; do
+            if [ ! -d "node_modules/$dep" ]; then
+              echo "❌ 缺失依赖: $dep"
+              MISSING_CRITICAL="$MISSING_CRITICAL $dep"
+            else
+              echo "✅ 依赖存在: $dep"
+            fi
+          done
+          
+          if [ -n "$MISSING_CRITICAL" ]; then
+            echo "🔧 手动安装缺失的关键依赖..."
+            pnpm add $MISSING_CRITICAL --prod --shamefully-hoist
+          fi
+          
+          # 验证关键Express依赖
+          echo "🔍 验证Express依赖完整性..."
+          CRITICAL_DEPS="express merge-descriptors depd debug encodeurl utils-merge escape-html finalhandler fresh parseurl body-parser"
+          MISSING_CRITICAL=""
+          
+          for dep in $CRITICAL_DEPS; do
+            if [ ! -d "node_modules/$dep" ]; then
+              MISSING_CRITICAL="$MISSING_CRITICAL $dep"
+            fi
+          done
+          
+          if [ -n "$MISSING_CRITICAL" ]; then
+            echo "❌ 仍有关键依赖缺失: $MISSING_CRITICAL"
+            echo "🔧 手动安装缺失的关键依赖..."
+            pnpm add $MISSING_CRITICAL --prod
+          fi
+          
+          # 前端服务器依赖已经在根目录 package.json 中，无需额外安装
+          echo "✅ Express依赖安装完成"
+          
+          # 最终验证
+          echo "📋 最终依赖检查..."
+          ls node_modules/express || echo "❌ express 缺失"
+          ls node_modules/merge-descriptors || echo "❌ merge-descriptors 缺失"
+          ls node_modules/depd || echo "❌ depd 缺失"
+          ls node_modules/debug || echo "❌ debug 缺失"
+          ls node_modules/encodeurl || echo "❌ encodeurl 缺失"
+          ls node_modules/finalhandler || echo "❌ finalhandler 缺失"
+          ls node_modules/mysql2 || echo "❌ mysql2 缺失"
+          ls node_modules/module-alias || echo "❌ module-alias 缺失"
+          
+          # 报告依赖统计
+          TOTAL_DEPS=$(ls node_modules 2>/dev/null | wc -l || echo '0')
+          echo "📊 总依赖包数量: $TOTAL_DEPS"
+          
+          if [ "$TOTAL_DEPS" -lt 80 ]; then
+            echo "⚠️ 依赖包数量偏少 ($TOTAL_DEPS < 80)，可能存在依赖缺失"
+          else
+            echo "✅ 依赖包数量正常 ($TOTAL_DEPS >= 80)"
+          fi
+          
+          # 检查Express模块完整性
+          echo "🔍 验证Express模块完整性..."
+          if [ -f "node_modules/express/package.json" ]; then
+            echo "✅ Express主模块存在"
+          else
+            echo "❌ Express主模块损坏"
+            exit 1
+          fi
+          
+          # 将 node_modules 复制到临时目录
+          mkdir -p ../temp_backend_deps
+          cp -r node_modules ../temp_backend_deps/
+          echo "✅ 后端依赖准备完成"
+
+      - name: 准备部署文件
+        run: |
+          echo "🔧 准备部署文件..."
+          mkdir -p dist
+          
+          # 复制根目录的 package.json 文件（关键修复）
+          echo "📁 复制根目录 package.json..."
+          cp package.json dist/
+          echo "✅ 根目录 package.json 复制完成"
+          
+          # 复制整个 backend 目录（包含所有文件）
+          echo "📁 复制整个 backend 目录..."
+          cp -r backend dist/
+          
+          # 覆盖构建产物和依赖
+          cp -r backend/dist/* dist/backend/
+          cp -r temp_backend_deps/node_modules dist/
+          
+          # 确保脚本文件有执行权限
+          chmod +x dist/backend/run-fix-data.sh 2>/dev/null || true
+          
+          echo "✅ backend 目录复制完成"
+          echo "📁 backend 目录内容:"
+          ls -la dist/backend/
+          
+          # 验证关键构建产物
+          echo "🔍 验证后端构建产物..."
+          ls -la dist/backend/ || echo "❌ backend构建产物不存在"
+          
+          # 验证Express核心依赖
+          echo "🔍 验证Express依赖链..."
+          ls -la dist/node_modules/express/ || echo "❌ express依赖不存在"
+          ls -la dist/node_modules/merge-descriptors/ || echo "❌ merge-descriptors依赖不存在"
+          ls -la dist/node_modules/depd/ || echo "❌ depd依赖不存在"
+          ls -la dist/node_modules/debug/ || echo "❌ debug依赖不存在"
+          ls -la dist/node_modules/finalhandler/ || echo "❌ finalhandler依赖不存在"
+          ls -la dist/node_modules/body-parser/ || echo "❌ body-parser依赖不存在"
+          
+          # 计算依赖数量
+          DEP_COUNT=$(ls dist/node_modules/ | wc -l)
+          echo "📊 依赖包数量: $DEP_COUNT"
+          
+          if [ "$DEP_COUNT" -lt 50 ]; then
+            echo "⚠️ 依赖包数量偏少，可能安装不完整"
+          else
+            echo "✅ 依赖包数量正常"
+          fi
+          
+          # 复制前端构建产物
+          cp -r frontend/dist dist/frontend
+          
+          # 创建前端服务器文件
+          echo "🔧 创建 frontend-server.js 文件..."
+          cp frontend-server.js dist/ 2>/dev/null || echo "⚠️ frontend-server.js 不存在，将在部署时创建"
+          
+          # 复制配置文件
+          cp ecosystem.config.js dist/
+          
+          # 复制启动脚本
+          cp start.sh dist/
+          cp start-simple.sh dist/
+          cp start-standard.sh dist/ || echo "⚠️ start-standard.sh 不存在，将使用默认启动脚本"
+          
+          chmod +x dist/start.sh
+          chmod +x dist/start-simple.sh
+          chmod +x dist/start-standard.sh 2>/dev/null || true
+          
+          # 验证根目录关键文件
+          echo "🔍 验证根目录关键文件..."
+          ls -la dist/package.json || echo "❌ package.json 不存在"
+          ls -la dist/ecosystem.config.js || echo "❌ ecosystem.config.js 不存在"
+          ls -la dist/start.sh || echo "❌ start.sh 不存在"
+          
+          echo "✅ 部署文件准备完成"
+          echo "部署包内容:"
+          ls -la dist/
+
+      - name: 验证构建产物
+        run: |
+          echo "🔍 验证构建产物..."
+          if [ ! -d "dist" ]; then
+            echo "❌ dist 目录不存在"
+            exit 1
+          fi
+          
+          if [ -z "$(ls -A dist)" ]; then
+            echo "❌ dist 目录为空"
+            exit 1
+          fi
+          
+          echo "✅ 构建产物验证通过"
+          echo "构建包大小:"
+          du -sh dist/
+
+      - name: 验证构建产物完整性
+        run: |
+          echo "🔍 验证构建产物完整性..."
+          
+          # 验证后端构建产物
+          echo "📁 验证后端构建产物..."
+          if [ -f "dist/backend/index.js" ]; then
+            echo "✅ 后端主文件存在"
+          else
+            echo "❌ 后端主文件缺失"
+            exit 1
+          fi
+          
+          if [ -d "dist/node_modules" ]; then
+            echo "✅ 后端依赖存在"
+          else
+            echo "❌ 后端依赖缺失"
+            exit 1
+          fi
+          
+          # 验证前端构建产物
+          echo "📁 验证前端构建产物..."
+          if [ -d "dist/frontend" ]; then
+            echo "✅ 前端构建产物存在"
+            ls -la dist/frontend/
+          else
+            echo "❌ 前端构建产物缺失"
+            exit 1
+          fi
+          
+          # 验证配置文件
+          echo "📁 验证配置文件..."
+          if [ -f "dist/package.json" ]; then
+            echo "✅ package.json 存在"
+          else
+            echo "❌ package.json 缺失"
+            exit 1
+          fi
+          
+          if [ -f "dist/ecosystem.config.js" ]; then
+            echo "✅ ecosystem.config.js 存在"
+          else
+            echo "❌ ecosystem.config.js 缺失"
+            exit 1
+          fi
+          
+          if [ -f "dist/start.sh" ]; then
+            echo "✅ start.sh 存在"
+          else
+            echo "❌ start.sh 缺失"
+            exit 1
+          fi
+          
+          echo "✅ 构建产物完整性验证通过"
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-axi-project-dashboard
+          path: dist/
+          retention-days: 1
+          if-no-files-found: error
+
+      - name: 验证上传
+        run: |
+          echo "🔍 验证上传结果..."
+          echo "上传退出码: $?"
+          echo "构建包内容:"
+          ls -la dist/ || echo "dist 目录不存在"
+
+  # ────────────────────── 部署说明 ──────────────────────
+  deployment-info:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 部署信息
+        run: |
+          echo "🎉 构建完成！"
+          echo "=========================================="
+          echo "📋 构建信息:"
+          echo "- 项目名称: ${{ github.repository }}"
+          echo "- 构建ID: ${{ github.run_id }}"
+          echo "- 分支: ${{ github.ref_name }}"
+          echo "- 提交: ${{ github.sha }}"
+          echo ""
+          echo "📦 构建产物:"
+          echo "- 产物名称: dist-axi-project-dashboard"
+          echo "- 产物内容: 前端构建、后端构建、依赖、配置"
+          echo "- 保留天数: 1天"
+          echo ""
+          echo "🚀 部署流程:"
+          echo "- axi-deploy 将通过 workflow_run 事件自动触发部署"
+          echo "- 部署将在构建完成后自动开始"
+          echo "- 服务测试将在 axi-deploy 中统一执行"
+          echo "- 无需手动操作"
+          echo ""
+          echo "🌐 访问地址:"
+          echo "- Web界面: https://redamancy.com.cn/project-dashboard/"
+          echo "- API: https://redamancy.com.cn/project-dashboard/api/"
+          echo "- 健康检查: https://redamancy.com.cn/project-dashboard/api/health"
+          echo "=========================================="
+
+  # ────────────────────── 触发远程部署 ──────────────────────
+  trigger-deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    env:                      # 把需要的值全部注入环境变量
+      RUN_ID: ${{ needs.build.outputs.run_id }}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_PORT: ${{ secrets.SERVER_PORT }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SERVER_KEY: ${{ secrets.SERVER_KEY }}
+      DEPLOY_CENTER_PAT: ${{ secrets.DEPLOY_CENTER_PAT }}
+
+    steps:
+      - name: 调试SSH配置
+        run: |
+          echo "🔍 调试SSH连接配置..."
+          echo "服务器地址: ${{ secrets.SERVER_HOST }}"
+          echo "服务器用户: ${{ secrets.SERVER_USER }}" 
+          echo "服务器端口: ${{ secrets.SERVER_PORT }}"
+          echo "SSH密钥长度: $(echo '${{ secrets.SERVER_KEY }}' | wc -c)"
+          echo "Deploy Center PAT 是否存在: $([ -n '${{ secrets.DEPLOY_CENTER_PAT }}' ] && echo '是' || echo '否')"
+          
+          # 详细的SSH密钥格式检查
+          echo "🔑 SSH密钥格式分析:"
+          SSH_KEY='${{ secrets.SERVER_KEY }}'
+          echo "第一行: $(echo "$SSH_KEY" | head -1)"
+          echo "最后一行: $(echo "$SSH_KEY" | tail -1)"
+          
+          if echo "$SSH_KEY" | grep -q "BEGIN OPENSSH PRIVATE KEY"; then
+            echo "✅ 检测到 OpenSSH 格式私钥"
+          elif echo "$SSH_KEY" | grep -q "BEGIN RSA PRIVATE KEY"; then
+            echo "⚠️  检测到传统 RSA 格式私钥 - 可能需要转换为 OpenSSH 格式"
+          elif echo "$SSH_KEY" | grep -q "BEGIN EC PRIVATE KEY"; then
+            echo "✅ 检测到 EC 格式私钥"
+          elif echo "$SSH_KEY" | grep -q "BEGIN PRIVATE KEY"; then
+            echo "✅ 检测到 PKCS#8 格式私钥"
+          else
+            echo "❌ 无法识别的密钥格式"
+          fi
+          
+          # 密钥行数检查
+          KEY_LINES=$(echo "$SSH_KEY" | wc -l)
+          echo "密钥行数: $KEY_LINES"
+          
+          if [ "$KEY_LINES" -lt 5 ]; then
+            echo "⚠️  密钥行数过少，可能不完整"
+          fi
+          
+          # 验证关键参数
+          echo "📋 参数验证:"
+          echo "- SERVER_HOST: $([ -n '${{ secrets.SERVER_HOST }}' ] && echo '✅' || echo '❌')"
+          echo "- SERVER_USER: $([ -n '${{ secrets.SERVER_USER }}' ] && echo '✅' || echo '❌')"
+          echo "- SERVER_PORT: $([ -n '${{ secrets.SERVER_PORT }}' ] && echo '✅' || echo '❌')"
+          echo "- SERVER_KEY: $([ -n '${{ secrets.SERVER_KEY }}' ] && echo '✅' || echo '❌')"
+          echo "- DEPLOY_CENTER_PAT: $([ -n '${{ secrets.DEPLOY_CENTER_PAT }}' ] && echo '✅' || echo '❌')"
+
+      - name: 触发部署
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.DEPLOY_CENTER_PAT }}
+          script: |
+            // 1. 打包机密（为了避开 workflow_call 10 条 secret 限制）
+            const deploySecrets = Buffer.from(JSON.stringify({
+              SERVER_HOST: process.env.SERVER_HOST,
+              SERVER_PORT: process.env.SERVER_PORT,
+              SERVER_USER: process.env.SERVER_USER,
+              SERVER_KEY : process.env.SERVER_KEY,
+              DEPLOY_CENTER_PAT: process.env.DEPLOY_CENTER_PAT
+            })).toString('base64');
+
+                         // 2. Nginx 配置 - 使用单行格式避免输出问题
+             // 使用8090端口（根据port-config.yml配置）
+             const nginxConfig = 'location /project-dashboard { alias /srv/apps/axi-project-dashboard/frontend; try_files $uri $uri/ /project-dashboard/index.html; } location /project-dashboard/api/ { rewrite ^/project-dashboard/api/(.*) /api/$1 break; proxy_pass http://127.0.0.1:8090; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; proxy_set_header X-Forwarded-Prefix /project-dashboard; } location /project-dashboard/ws/ { proxy_pass http://127.0.0.1:8090; proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header Connection "upgrade"; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location /project-dashboard/webhook/github { rewrite ^/project-dashboard/webhook/github(.*) /api/webhooks/github$1 break; proxy_pass http://127.0.0.1:8081; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; } location = /project-dashboard { return 301 /project-dashboard/; }';
+
+            console.log('🚀  触发 axi-deploy/main-deployment.yml …');
+            console.log('项目名称:', context.repo.repo);
+            console.log('源仓库:', `${context.repo.owner}/${context.repo.repo}`);
+            console.log('运行ID:', process.env.RUN_ID);
+
+            // 等待一段时间确保artifact完全可用
+            console.log('⏳ 等待artifact完全可用...');
+            await new Promise(resolve => setTimeout(resolve, 5000)); // 等待5秒
+            
+            // 再次检查 workflow run 状态
+            console.log('🔍 检查 workflow run 状态...');
+            const run = await github.rest.actions.getWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: process.env.RUN_ID
+            });
+            
+            console.log('📊 Workflow run 状态:', run.data.status);
+            console.log('📊 Workflow run 结论:', run.data.conclusion);
+            
+            if (run.data.status !== 'completed') {
+              console.log('⏳ Workflow run 尚未完成，继续等待...');
+              await new Promise(resolve => setTimeout(resolve, 5000)); // 再等待5秒
+            }
+
+            // 动态获取项目端口和构建测试URL
+            const projectName = context.repo.repo;
+            let servicePort = '8090'; // 默认端口
+            let testUrl = `https://redamancy.com.cn/project-dashboard/health`; // 默认使用 /health 端点
+            
+            // 尝试从 axi-deploy 的 port-config.yml 获取端口配置
+            try {
+              console.log('🔍 尝试获取端口配置...');
+              const portConfigResponse = await github.rest.repos.getContent({
+                owner: 'MoseLu',
+                repo: 'axi-deploy',
+                path: 'port-config.yml',
+                ref: 'master'
+              });
+              
+              if (portConfigResponse.data && portConfigResponse.data.content) {
+                const portConfigContent = Buffer.from(portConfigResponse.data.content, 'base64').toString();
+                console.log('📋 端口配置文件内容:', portConfigContent);
+                
+                // 解析 YAML 内容查找项目端口
+                const projectMatch = portConfigContent.match(new RegExp(`^  ${projectName}:\\s*\\n\\s*port:\\s*(\\d+)`, 'm'));
+                if (projectMatch) {
+                  servicePort = projectMatch[1];
+                  console.log(`✅ 从端口配置获取到端口: ${servicePort}`);
+                } else {
+                  console.log(`⚠️ 项目 ${projectName} 在端口配置中未找到，使用默认端口: ${servicePort}`);
+                }
+              }
+            } catch (error) {
+              console.log('⚠️ 无法获取端口配置，使用默认端口:', error.message);
+            }
+            
+            // 构建测试URL - 使用 /health 端点（简化后端服务提供的端点）
+            testUrl = `https://redamancy.com.cn/project-dashboard/health`;
+            console.log(`🔗 测试URL: ${testUrl}`);
+            console.log(`🔌 服务端口: ${servicePort}`);
+
+            // 构建部署配置
+            const deployConfig = {
+              nginx_config: nginxConfig,
+              test_url: testUrl,
+              start_cmd: 'bash start-simple.sh --reload',
+              service_port: servicePort,
+              mysql_config: '',
+              skip_init: false
+            };
+            
+            // 将部署配置编码为base64
+            const deployConfigBase64 = Buffer.from(JSON.stringify(deployConfig)).toString('base64');
+            
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'MoseLu',
+              repo:  'axi-deploy',
+              workflow_id: 'main-deployment.yml',
+              ref: 'master',
+              inputs: {
+                project      : context.repo.repo,
+                source_repo  : `${context.repo.owner}/${context.repo.repo}`,
+                run_id       : process.env.RUN_ID,
+                deploy_type  : 'backend',
+                deploy_config: deployConfigBase64,
+                deploy_secrets: deploySecrets
+              }
+            });
+
+            console.log('✅  部署工作流已成功触发！');
+            
+            // 通知部署仪表板 - 部署开始
+            console.log('📤 通知部署仪表板 - 部署开始...');
+            try {
+              const startNotificationData = {
+                project: context.repo.repo,
+                status: 'running',
+                duration: 0,
+                timestamp: new Date().toISOString(),
+                sourceRepo: `${context.repo.owner}/${context.repo.repo}`,
+                runId: process.env.RUN_ID,
+                deployType: 'backend',
+                serverHost: process.env.SERVER_HOST,
+                logs: '部署已开始，正在执行...'
+              };
+              
+              const response = await fetch('https://redamancy.com.cn/project-dashboard/api/webhooks/deployment', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'User-Agent': 'axi-project-dashboard/1.0'
+                },
+                body: JSON.stringify(startNotificationData)
+              });
+              
+              if (response.ok) {
+                console.log('✅ 部署开始通知发送成功');
+              } else {
+                console.log('⚠️ 部署开始通知发送失败:', response.status);
+              }
+            } catch (error) {
+              console.log('⚠️ 部署开始通知发送失败:', error.message);
+            }
